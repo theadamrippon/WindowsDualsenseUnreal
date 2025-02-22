@@ -39,5 +39,6 @@ Result
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/DS_Led.jpg)
 
 
+## Contributions
 
-
+Thanks to the [DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.

@@ -1,0 +1,28 @@
+﻿{
+	"FileVersion": 3,
+	"Version": 1,
+	"VersionName": "1.0.0",
+	"FriendlyName": "WindowsDualsense_ds5w",
+	"Description": "Dualsense PS5 device for Windows platforms. Zero Configs. Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone",
+	"Category": "Input Devices",
+	"CreatedBy": "Rafael Valoto",
+	"CreatedByURL": "https://github.com/rafaelvaloto/WindowsDualsenseUnreal",
+	"DocsURL": "https://github.com/rafaelvaloto/WindowsDualsenseUnreal",
+	"MarketplaceURL": "",
+	"IsExperimentalVersion": true,
+    "EngineVersion": "5.4.0",
+	"EnabledByDefault": true,
+	"Modules": [
+		{
+			"Name": "WindowsDualsense_ds5w",
+			"Type": "Runtime",
+			"LoadingPhase": "PreDefault"
+		}
+	],
+	"RuntimeDependencies": [
+		{
+			"Path": "ThirdParty/DualSenseWindows_V0.1/ds5w_x64.dll",
+			"Type": "Runtime"
+		}
+	]
+}

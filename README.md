@@ -23,9 +23,4 @@ Após reiniciar a engine aparecerá no canto inferior direito a seguinte mensage
 
 Não precisa mapear as teclas, por padrão o plugin já mapeia para o padrao Gamepad, voce pode testar usando Enhancement Input.
 
-[![Watch the video](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/videoframe_10)](https://1drv.ms/v/s!AnZ76IcB1AdshghrsNCVdLXU0741)
-
-Teclas especiais
-
-[![Watch the video](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/videoframe_10)](https://1drv.ms/v/s!AnZ76IcB1AdshghrsNCVdLXU0741)
-
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)

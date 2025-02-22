@@ -7,7 +7,7 @@
 ## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
 
 # Installation
-Download the compiled plugin Win64x
+Download the compiled plugin **Windows x64**
 [Download plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w.zip)
 
 Extract the file to

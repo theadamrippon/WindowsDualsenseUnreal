@@ -27,3 +27,17 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 You can test it using Enhancement Input.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)
+
+### O plugin é compatível com Force Feedback nativo da unreal, exemplo:
+
+Config
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Feedback.png)
+
+Result
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/DS_Led.jpg)
+
+
+
+

@@ -28,7 +28,7 @@ You can test it using Enhancement Input.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)
 
-### O plugin é compatível com Force Feedback nativo da unreal, exemplo:
+### The plugin is compatible with Unreal's native Blueprints Force Feedback, for example:
 
 Config
 

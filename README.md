@@ -23,14 +23,9 @@ Após reiniciar a engine aparecerá no canto inferior direito a seguinte mensage
 
 Não precisa mapear as teclas, por padrão o plugin já mapeia para o padrao Gamepad, voce pode testar usando Enhancement Input.
 
-<video controls width="600" preload="auto">
-  <source src="blob:https://1drv.ms/v/s!AnZ76IcB1AdshghrsNCVdLXU0741" type="video/mp4">
-  Seu navegador não suporta a reprodução de vídeos.
-</video>
+[![Watch the video](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/videoframe_10)](https://1drv.ms/v/s!AnZ76IcB1AdshghrsNCVdLXU0741)
 
 Teclas especiais
 
-<video controls width="600" preload="auto">
-  <source src="blob:https://1drv.ms/v/s!AnZ76IcB1Adshgr3swo1wx52TKkp">
-  Your browser doesn't support video.
-</video>
+[![Watch the video](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/videoframe_10)](https://1drv.ms/v/s!AnZ76IcB1AdshghrsNCVdLXU0741)
+

@@ -6,21 +6,24 @@
 
 ## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
 
-# Instalação
-Faça o download do plugin compilado
+# Installation
+Download the compiled plugin
 [Download plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w.zip)
 
-Descompacte o arquivo em 
+Extract the file to
+
 ```C:\Program Files\Epic Games\UE_[version]\Engine\Plugins```
 
-Agora habilite o plugin no editor unreal, ligue seu dispositivo dualsense e reinicie o editor
+Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
+
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/PluginsEngine.png)
 
 
-Após reiniciar a engine aparecerá no canto inferior direito a seguinte mensagem
+After restarting the engine, the following message will appear in the bottom right corner:
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/IsConnection.png)
 
-Não precisa mapear as teclas, por padrão o plugin já mapeia para o padrao Gamepad, voce pode testar usando Enhancement Input.
+You don’t need to map the keys. By default, the plugin already maps the standard Gamepad layout.
+You can test it using Enhancement Input.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)

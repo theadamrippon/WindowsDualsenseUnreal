@@ -19,7 +19,7 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 		FPlatformUserId UserId = i > 0 ? DeviceInstances->AllocateNewUserId() : FPlatformUserId::CreateFromInternalId(i);
 		FInputDeviceId InputDeviceId = i > 0 ? DeviceInstances->AllocateNewInputDeviceId() : FInputDeviceId::CreateFromInternalId(i);
 
-		EInputDeviceConnectionState ConnectionState =
+		const EInputDeviceConnectionState ConnectionState =
 			DualSenseLibraryInstance->IsConnected(i)
 				? EInputDeviceConnectionState::Connected
 				: EInputDeviceConnectionState::Disconnected;

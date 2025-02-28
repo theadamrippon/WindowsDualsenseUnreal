@@ -5,6 +5,7 @@
 #include "DualSenseLibrary.h"
 #include "Windows/WindowsApplication.h"
 
+
 FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler):
 	FGenericPlatformInputDeviceMapper(true, false),
 	MessageHandler(InMessageHandler)
@@ -42,20 +43,9 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 		SetLightColor(ControllerId, ColorProperty->Color);
 	}
 	
-	if (Property->Name == "InputDeviceTriggerResistance")
+	if (Property->Name != "InputDeviceLightColor")
 	{
-		if (const FInputDeviceTriggerResistanceProperty* DeviceTriggerResistanceProperty = static_cast<const FInputDeviceTriggerResistanceProperty*>(Property))
-		{
-			UDualSenseLibrary::SetTriggerResistance(ControllerId, *DeviceTriggerResistanceProperty);
-		}
-	}
-
-	if (Property->Name == "InputDeviceTriggerVibration")
-	{
-		if (const FInputDeviceTriggerVibrationProperty* TriggerVibrationProperty = static_cast<const FInputDeviceTriggerVibrationProperty*>(Property))
-		{
-			UDualSenseLibrary::SetTriggerVibration(ControllerId, *TriggerVibrationProperty);
-		}
+		UDualSenseLibrary::SetTriggers(ControllerId, Property);
 	}
 	
 	UDualSenseLibrary::SendOut(ControllerId);
@@ -70,6 +60,33 @@ void FDualSenseInputDevice::ResetLightColor(int32 ControllerId)
 {
 }
 
+void FDualSenseInputDevice::SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues& Values)
+{
+	if (Hand == static_cast<int32>(EControllerHand::Left))
+	{
+		const FHapticFeedbackValues Left = Values;
+		UDualSenseLibrary::SetHapticFeedbackValues(ControllerId, Hand, &Left);
+	}
+
+	// Configurar pulsos no gatilho direito (R2)
+	else if (Hand == static_cast<int32>(EControllerHand::Right))
+	{
+		const FHapticFeedbackValues Right = Values;
+		UDualSenseLibrary::SetHapticFeedbackValues(ControllerId, Hand, &Right);
+	}
+}
+
+void FDualSenseInputDevice::GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const
+{
+	MinFrequency = 0.0f; // Frequência mínima suportada
+	MaxFrequency = 1.0f; // Frequência máxima suportada
+}
+
+void FDualSenseInputDevice::SetChannelValue(int32 ControllerId, FForceFeedbackChannelType ChannelType, float Value)
+{
+	UE_LOG(LogTemp, Error, TEXT("FForceFeedbackChannelType"));
+}
+
 const TSharedRef<FGenericApplicationMessageHandler>& FDualSenseInputDevice::GetMessageHandler()
 {
 	return MessageHandler;
@@ -77,8 +94,9 @@ const TSharedRef<FGenericApplicationMessageHandler>& FDualSenseInputDevice::GetM
 
 bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 {
-	return false;
+	return true;
 }
+
 
 void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values)
 {

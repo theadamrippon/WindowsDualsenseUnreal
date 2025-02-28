@@ -266,7 +266,7 @@ bool UDualSenseLibrary::UpdateInput(
 
 		// Analog left
 		const FVector2D LeftStick(InputState[InputDeviceId.GetId()].leftStick.x / 128.0f,
-		                          InputState[InputDeviceId.GetId()].leftStick.y / 128.0f);;
+		                          InputState[InputDeviceId.GetId()].leftStick.y / 128.0f);
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftStick_Left.GetFName(), UserId, InputDeviceId,
 		                                          LeftStick.X);
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftStick_Up.GetFName(), UserId, InputDeviceId,
@@ -289,8 +289,8 @@ bool UDualSenseLibrary::UpdateInput(
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightTrigger.GetFName(), UserId, InputDeviceId,
 		                                          RightTrigger);
 
-		OutputState[InputDeviceId.GetId()].leftRumble = InputState[InputDeviceId.GetId()].leftTriggerFeedback;
-		OutputState[InputDeviceId.GetId()].rightRumble = InputState[InputDeviceId.GetId()].rightTriggerFeedback;
+		UE_LOG(LogTemp, Log, TEXT("Left leftTriggerFeedback: %d"), InputState[InputDeviceId.GetId()].leftTriggerFeedback);
+		UE_LOG(LogTemp, Log, TEXT("Left rightTriggerFeedback: %d"), InputState[InputDeviceId.GetId()].rightTriggerFeedback);
 		return true;
 	}
 	return false;
@@ -628,57 +628,112 @@ void UDualSenseLibrary::SetVibration(int32 ControllerId, FForceFeedbackValues Vi
 	OutputState[ControllerId].rightRumble = max(ConvertTo255(Vibration.LeftSmall), ConvertTo255(Vibration.RightSmall));
 }
 
-void UDualSenseLibrary::SetTriggerVibration(int32 ControllerId,
-                                            const FInputDeviceTriggerVibrationProperty& TriggerVibrationProperty)
+void UDualSenseLibrary::SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues* Values)
 {
-	if (!OutputState.Contains(ControllerId))
+	
+	if (Hand == static_cast<int32>(EControllerHand::Left))
 	{
-		return;
+		int Freq = ConvertTo255(Values->Frequency); 
+		OutputState[ControllerId].leftTriggerEffect.EffectEx.frequency = Freq;
+		
+		
+		UE_LOG(LogTemp, Error, TEXT("Left Amplitude %f"),  Values->Amplitude);
+		UE_LOG(LogTemp, Error, TEXT("Left Frequency %f"), Values->Frequency);
+		UE_LOG(LogTemp, Error, TEXT("Left Frequency %d"), Freq);
 	}
 
-	if (TriggerVibrationProperty.AffectedTriggers == EInputDeviceTriggerMask::All)
+	// Configurar pulsos no gatilho direito (R2)
+	else if (Hand == static_cast<int32>(EControllerHand::Right))
 	{
-		OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
-		OutputState[ControllerId].rightTriggerEffect.Continuous.startPosition = 0;
-		OutputState[ControllerId].rightTriggerEffect.Continuous.force = TriggerVibrationProperty.VibrationFrequency;
+		int Freq = ConvertTo255(Values->Frequency);
+		OutputState[ControllerId].rightTriggerEffect.EffectEx.frequency = Freq;
+		UE_LOG(LogTemp, Error, TEXT("Right Amplitude %f"), Values->Amplitude);
+		UE_LOG(LogTemp, Error, TEXT("Right Frequency %f"), Values->Frequency);
 	}
+
+	SendOut(ControllerId);
+	
 }
 
-void UDualSenseLibrary::SetTriggerResistance(int32 ControllerId,
-                                             const FInputDeviceTriggerResistanceProperty& TriggerResistenceProperty)
+void UDualSenseLibrary::ProcessHapticFeedbackBuffer(const FHapticFeedbackBuffer& HapticBuffer)
 {
-	if (!OutputState.Contains(ControllerId))
+	// Verifica se há dados no buffer
+	if (HapticBuffer.RawData && !HapticBuffer.bFinishedPlaying)
 	{
-		return;
-	}
-
-	if (TriggerResistenceProperty.AffectedTriggers == EInputDeviceTriggerMask::All)
-	{
-		if (OutputState.Contains(ControllerId))
+		// Valida buffer e índice
+		if (
+			static_cast<int>(HapticBuffer.CurrentSampleIndex[0]) >= HapticBuffer.BufferLength ||
+			(HapticBuffer.bUseStereo && static_cast<int>(HapticBuffer.CurrentSampleIndex[1]) >= HapticBuffer.BufferLength)
+		)
 		{
-			OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-			OutputState[ControllerId].leftTriggerEffect.Section.startPosition = TriggerResistenceProperty.EndStrengh;
-			OutputState[ControllerId].leftTriggerEffect.Section.endPosition = TriggerResistenceProperty.EndStrengh;
-			OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
-			OutputState[ControllerId].leftTriggerEffect.Continuous.startPosition = TriggerResistenceProperty.
-				StartPosition;
-			OutputState[ControllerId].leftTriggerEffect.Continuous.force = ConvertForceTriggersTo255(
-				TriggerResistenceProperty.EndStrengh);
+			UE_LOG(LogTemp, Error, TEXT("Buffer out of bounds or invalid!"));
+			return;
+		}
 
-			OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-			OutputState[ControllerId].rightTriggerEffect.Section.startPosition = TriggerResistenceProperty.
-				StartPosition;
-			OutputState[ControllerId].rightTriggerEffect.Section.endPosition = TriggerResistenceProperty.EndPosition;
-			OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
-			OutputState[ControllerId].rightTriggerEffect.Continuous.startPosition = TriggerResistenceProperty.
-				StartPosition;
-			OutputState[ControllerId].rightTriggerEffect.Continuous.force = ConvertForceTriggersTo255(
-				TriggerResistenceProperty.EndStrengh);
+		const uint8* BufferData = HapticBuffer.RawData + HapticBuffer.CurrentPtr;
+
+		UE_LOG(LogTemp, Error, TEXT("Buffer %p"), BufferData);
+
+		// Verifica se é estéreo
+		if (HapticBuffer.bUseStereo)
+		{
+			uint8 LeftSample = FMath::Clamp(BufferData[HapticBuffer.CurrentSampleIndex[0]] * HapticBuffer.ScaleFactor, 0.0f, 255.0f);
+			uint8 RightSample = FMath::Clamp(BufferData[HapticBuffer.CurrentSampleIndex[1]] * HapticBuffer.ScaleFactor, 0.0f, 255.0f);
+
+			UE_LOG(LogTemp, Error, TEXT("Left Sample %d"), LeftSample);
+			UE_LOG(LogTemp, Error, TEXT("Right Sample %d"), RightSample);
+		}
+		else
+		{
+			uint8 MonoSample = FMath::Clamp(BufferData[HapticBuffer.CurrentSampleIndex[0]] * HapticBuffer.ScaleFactor, 0.0f, 255.0f);
+			UE_LOG(LogTemp, Error, TEXT("Mono Sample %d"), MonoSample);
 		}
 	}
 }
 
-int UDualSenseLibrary::ConvertForceTriggersTo255(int Value)
+
+void UDualSenseLibrary::SetTriggers(int32 ControllerId, const FInputDeviceProperty* TriggerResistenceProperty)
+{
+	if (!OutputState.Contains(ControllerId))
+	{
+		return;
+	}
+
+	UE_LOG(LogTemp, Error, TEXT("Name: %s"), *TriggerResistenceProperty->Name.ToString())
+
+	if (TriggerResistenceProperty->Name == FName("InputDeviceTriggerResistance"))
+	{
+		if (OutputState.Contains(ControllerId))
+		{
+			const FInputDeviceTriggerResistanceProperty* Resistance = static_cast<const FInputDeviceTriggerResistanceProperty*>(TriggerResistenceProperty);
+			if (Resistance->AffectedTriggers == EInputDeviceTriggerMask::Left)
+			{
+				OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
+				OutputState[ControllerId].leftTriggerEffect.EffectEx.keepEffect = false;
+				OutputState[ControllerId].leftTriggerEffect.Section.startPosition = Resistance->StartPosition;
+				OutputState[ControllerId].leftTriggerEffect.Section.endPosition = Resistance->EndPosition;
+				OutputState[ControllerId].leftTriggerEffect.EffectEx.frequency = 0.0f;
+				OutputState[ControllerId].leftTriggerEffect.EffectEx.beginForce = ConvertForceTriggersTo255(Resistance->StartStrengh);
+				OutputState[ControllerId].leftTriggerEffect.EffectEx.middleForce = 128;
+				OutputState[ControllerId].leftTriggerEffect.EffectEx.endForce = ConvertForceTriggersTo255(Resistance->EndStrengh);
+			}
+			
+			if (Resistance->AffectedTriggers == EInputDeviceTriggerMask::Right)
+			{
+				OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
+				OutputState[ControllerId].rightTriggerEffect.EffectEx.keepEffect = false;
+				OutputState[ControllerId].rightTriggerEffect.Section.startPosition = Resistance->StartPosition;
+				OutputState[ControllerId].rightTriggerEffect.Section.endPosition = Resistance->EndPosition;
+				OutputState[ControllerId].rightTriggerEffect.EffectEx.frequency = 1.0f;
+				OutputState[ControllerId].rightTriggerEffect.EffectEx.middleForce = 128;
+				OutputState[ControllerId].rightTriggerEffect.EffectEx.beginForce = ConvertForceTriggersTo255(Resistance->StartStrengh);
+				OutputState[ControllerId].rightTriggerEffect.EffectEx.endForce = ConvertForceTriggersTo255(Resistance->EndStrengh);
+			}
+		}
+	}
+}
+
+int UDualSenseLibrary::ConvertForceTriggersTo255(int32 Value)
 {
 	float Min = 0;
 	float Max = 7;

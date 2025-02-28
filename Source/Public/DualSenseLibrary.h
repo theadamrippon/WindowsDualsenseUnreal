@@ -28,16 +28,16 @@ public:
 		const FInputDeviceId InputDeviceId
 	);
 
+	static void ProcessHapticFeedbackBuffer(const FHapticFeedbackBuffer& HapticBuffer);
 	static bool Reconnect(int32 ControllerId);
 	static void UpdateColorOutput(int32 ControllerId, FColor Color);
 	static void SetVibration(int32 ControllerId, FForceFeedbackValues Vibration);
-	static void SetTriggerVibration(int32 ControllerId,
-	                                const FInputDeviceTriggerVibrationProperty& TriggerVibrationProperty);
-	static void SetTriggerResistance(int32 ControllerId,
-	                                 const FInputDeviceTriggerResistanceProperty& TriggerResistenceProperty);
+	static void SetTriggers(int32 ControllerId, const FInputDeviceProperty* Property);
+
+	static void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const  FHapticFeedbackValues* Values);
 
 	static void SendOut(int32 ControllerId);
-	static int ConvertForceTriggersTo255(int Value);
+	static int ConvertForceTriggersTo255(int32 Value);
 	static int ConvertTo255(float Value);
 
 	static int32 ControllersCount;
@@ -50,6 +50,7 @@ private:
 	static TMap<int32, DS5W::DeviceContext> DeviceContexts;
 	static TMap<int32, bool> IsInitialized;
 
+	
 
 	static void CheckCrossInput(
 		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,

@@ -7,40 +7,48 @@
 ## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
 
 ```
-// Usage methods available via C++ or Blueprints. 
-// "It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
-SetDisableHaptics(false);
+#include "DualSenseProxy.h"
 
-// Reset buffer all values 
-UDualSenseProxy::ResetEffects(0);
+void APlayerController::BeginPlay()
+{
+    Super::BeginPlay();
+	
+    int32 ControllerId = 0; 
 
-// Stop triggers effects
-UDualSenseProxy::StopAllTriggersEffects(0);
-UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Left);
-UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Right);
+    // Usage methods available via C++ or Blueprints. 
+    // "It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
+    SetDisableHaptics(false);
 
-// Normalize triggers
-UDualSenseProxy::EffectNoResitance(0, EControllerHand::Left);
-UDualSenseProxy::EffectNoResitance(0, EControllerHand::Right);
+    // Reset buffer all values 
+    UDualSenseProxy::ResetEffects(ControllerId);
 
-// Start position max value 9 | Force max value 8
-UDualSenseProxy::EffectContinuousResitance(0, 5, 8, EControllerHand::Left); 
-UDualSenseProxy::EffectContinuousResitance(0, 1, 4, EControllerHand::Right);
+    // Stop triggers effects
+    UDualSenseProxy::StopAllTriggersEffects(0);
+    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Left);
+    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Right);
 
-// Start and end positions max value 9
-UDualSenseProxy::EffectSectionResitance(0, 1, 9, EControllerHand::Left); 
-UDualSenseProxy::EffectContinuousResitance(0, 5, 9, EControllerHand::Right);
+    // Normalize triggers
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
 
-// Example Haptics Effects...
+    // Start position max value 9 | Force max value 8
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
 
+    // Start and end positions max value 9
+    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 9, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 9, EControllerHand::Right);
 
-// Start position max value 9 | Forces max value 8 
-UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 5, EControllerHand::Left, true);
-UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 6, EControllerHand::Right, true);
+    // Example Haptics Effects...
 
-// SetHapticsByValue is a method of PlayerController.
-SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
-SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
+    // Start position max value 9 | Forces max value 8 
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 9, 0, 0, 5, EControllerHand::Left, true);
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 9, 0, 0, 6, EControllerHand::Right, true);
+
+    // SetHapticsByValue is a method of PlayerController.
+    SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
+    SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
+}
 
 ```
 

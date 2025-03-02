@@ -7,8 +7,8 @@
 ## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
 
 ```
-// Usage methods available via C++ or Blueprints.
-// "It is necessary to change the value to false if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
+// Usage methods available via C++ or Blueprints. 
+// "It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
 SetDisableHaptics(false);
 
 // Reset buffer all values 

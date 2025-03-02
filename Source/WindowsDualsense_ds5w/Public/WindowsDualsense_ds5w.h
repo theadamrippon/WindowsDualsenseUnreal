@@ -13,16 +13,14 @@
 class FWindowsDualsense_ds5wModule : public IInputDeviceModule
 {
 public:
-	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
-	
-	/** IModuleInterface implementation */
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
+	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
 
 private:
 	void* DS5WdllHandle = nullptr;
 	TSharedPtr<FDualSenseInputDevice> DeviceInstances;
 	UDualSenseLibrary* DualSenseLibraryInstance = nullptr;
 
-	void RegisterCustomKeys();
+	static void RegisterCustomKeys();
 };

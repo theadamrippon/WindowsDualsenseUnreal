@@ -4,8 +4,6 @@
 
 #include "CoreMinimal.h"
 #include "IHapticDevice.h"
-#include "Haptics/HapticFeedbackEffect_Base.h"
-#include "Haptics/HapticFeedbackEffect_Buffer.h"
 #include "Runtime/InputDevice/Public/IInputDevice.h"
 
 /**
@@ -18,19 +16,6 @@ public:
 	~FDualSenseInputDevice() = default;
 
 
-	void PlayHapticFeedbackEffect(int32 ControllerId, const UHapticFeedbackEffect_Base* HapticEffect)
-	{
-		if (const UHapticFeedbackEffect_Buffer* BufferEffect = Cast<UHapticFeedbackEffect_Buffer>(HapticEffect))
-		{
-			UE_LOG(LogTemp, Error, TEXT("BufferEffect: %s"), *BufferEffect->GetName())
-		}
-		else
-		{
-			UE_LOG(LogTemp, Warning, TEXT("HapticEffect não é do tipo Buffer"));
-		}
-	}
-
-
 	virtual void Tick(float DeltaTime) override;
 	virtual void SendControllerEvents() override {};
 	virtual void SetMessageHandler(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override {};
@@ -38,6 +23,7 @@ public:
 	virtual bool SupportsForceFeedback(int32 ControllerId) override;
 	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values) override;
 	virtual void SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property) override;
+	virtual void SetChannelValue(int32 ControllerId, FForceFeedbackChannelType ChannelType, float Value) override {};
 
 	virtual void SetLightColor(int32 ControllerId, FColor Color) override;
 	virtual void ResetLightColor(int32 ControllerId) override;
@@ -74,8 +60,7 @@ public:
 	virtual void GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const override;
 	virtual float GetHapticAmplitudeScale() const override { return 1.0f; }
 
-	virtual void SetChannelValue (int32 ControllerId, FForceFeedbackChannelType ChannelType, float Value) override;
-	const TSharedRef<FGenericApplicationMessageHandler>& GetMessageHandler();
+	const TSharedRef<FGenericApplicationMessageHandler>& GetMessageHandler() const;
 	
 private:
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;

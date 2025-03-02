@@ -33,6 +33,7 @@ UDualSenseProxy::EffectContinuousResitance(0, 5, 9, EControllerHand::Right);
 
 // Example Haptics Effects...
 
+
 // Start position max value 9 | Forces max value 8 
 UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 5, EControllerHand::Left, true);
 UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 6, EControllerHand::Right, true);

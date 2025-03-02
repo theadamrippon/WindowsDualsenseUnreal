@@ -6,6 +6,41 @@
 
 ## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
 
+```
+// Usage methods available via C++ or Blueprints.
+// "It is necessary to change the value to false if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
+SetDisableHaptics(false);
+
+// Reset buffer all values 
+UDualSenseProxy::ResetEffects(0);
+
+// Stop triggers effects
+UDualSenseProxy::StopAllTriggersEffects(0);
+UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Left);
+UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Right);
+
+// Normalize triggers
+UDualSenseProxy::EffectNoResitance(0, EControllerHand::Left);
+UDualSenseProxy::EffectNoResitance(0, EControllerHand::Right);
+
+// Start position max value 9 | Force max value 8
+UDualSenseProxy::EffectContinuousResitance(0, 5, 8, EControllerHand::Left); 
+UDualSenseProxy::EffectContinuousResitance(0, 1, 4, EControllerHand::Right);
+
+// Start and end positions max value 9
+UDualSenseProxy::EffectSectionResitance(0, 1, 9, EControllerHand::Left); 
+UDualSenseProxy::EffectContinuousResitance(0, 5, 9, EControllerHand::Right);
+
+// Start position max value 9 | Forces max value 8 | KeepEffect bool 
+UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 5, EControllerHand::Left, true);
+UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 6, EControllerHand::Right, true);
+
+// After SetTriggerHapticFeedbackEffect SetHapticsByValue is a method of PlayerController, set frequency haptic feedback.
+SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
+SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
+
+```
+
 # Installation
 Download the compiled plugin **Windows x64**
 [Download plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w.zip)

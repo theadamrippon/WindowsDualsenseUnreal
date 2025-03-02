@@ -31,11 +31,13 @@ UDualSenseProxy::EffectContinuousResitance(0, 1, 4, EControllerHand::Right);
 UDualSenseProxy::EffectSectionResitance(0, 1, 9, EControllerHand::Left); 
 UDualSenseProxy::EffectContinuousResitance(0, 5, 9, EControllerHand::Right);
 
-// Start position max value 9 | Forces max value 8 | KeepEffect bool 
+// Example Haptics Effects...
+
+// Start position max value 9 | Forces max value 8 
 UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 5, EControllerHand::Left, true);
 UDualSenseProxy::SetTriggerHapticFeedbackEffect(0, 9, 0, 0, 6, EControllerHand::Right, true);
 
-// After SetTriggerHapticFeedbackEffect SetHapticsByValue is a method of PlayerController, set frequency haptic feedback.
+// SetHapticsByValue is a method of PlayerController.
 SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
 SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
 

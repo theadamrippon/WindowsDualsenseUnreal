@@ -24,7 +24,6 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 			if (!UDualSenseLibrary::IsConnected(Device.GetId()))
 			{
 				MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Disconnected;
-				ReconnectState(Device);
 			}
 
 			if (
@@ -32,6 +31,7 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 				MappedInputDevices[Device].ConnectionState == EInputDeviceConnectionState::Disconnected)
 			{
 				MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Connected;
+				ReconnectState(Device);
 			}
 			
 			if (

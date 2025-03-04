@@ -12,27 +12,30 @@ TMap<int32, DS5W::_DS5InputState> UDualSenseLibrary::InputState;
 TMap<int32, DS5W::DS5OutputState> UDualSenseLibrary::OutputState;
 TMap<int32, DS5W::DeviceContext> UDualSenseLibrary::DeviceContexts;
 
-TMap<int32, uint8> UDualSenseLibrary::LeftTriggerFeedback;
-TMap<int32, uint8> UDualSenseLibrary::RightTriggerFeedback;
+TMap<int32, bool> UDualSenseLibrary::EnableAccelerometer;
+TMap<int32, bool> UDualSenseLibrary::EnableGyroscope;
+TMap<int32, bool> UDualSenseLibrary::EnableTouch1;
+TMap<int32, bool> UDualSenseLibrary::EnableTouch2;
+
+TMap<int32, float> UDualSenseLibrary::BatteryLevel;
+TMap<int32, int32> UDualSenseLibrary::LeftTriggerFeedback;
+TMap<int32, int32> UDualSenseLibrary::RightTriggerFeedback;
 TMap<FInputDeviceId, TMap<FName, bool>> UDualSenseLibrary::ButtonStates;
 
 int32 UDualSenseLibrary::ControllersCount = 0;
 TMap<int32, bool> UDualSenseLibrary::IsInitialized;
 
-struct TriggerEffect
-{
-	unsigned char effectType;  // Tipo de efeito, por exemplo: Section + resistência + vibração
-	unsigned char startPosition; // Posição inicial da seção (0-255 ou 0-25, dependendo do seu sistema)
-	unsigned char endPosition;   // Posição final da seção
-	unsigned char force;         // Força aplicada na seção
-	unsigned char vibrationForce; // Intensidade da vibração
-	unsigned char frequency;      // Frequência da vibração
-};
+UDualSenseLibrary::FOnDeviceRegistered UDualSenseLibrary::DeviceRegisteredEvent;
 
-bool UDualSenseLibrary::Reconnect(const int32 ControllerId)
+bool UDualSenseLibrary::Reconnect(int32 ControllerId)
 {
 	if (!DeviceContexts.Contains(ControllerId))
 	{
+		if (ControllersCount == 0)
+		{
+			return InitializeLibrary();
+		}
+		
 		return false;
 	}
 
@@ -40,7 +43,7 @@ bool UDualSenseLibrary::Reconnect(const int32 ControllerId)
 	{
 		return true;
 	}
-
+	
 	return false;
 }
 
@@ -74,7 +77,7 @@ bool UDualSenseLibrary::Connection()
 		{
 			ZeroMemory(&OutputState[i], sizeof(DS5W::DS5OutputState));
 		}
-		
+
 		if (InputState.Contains(i))
 		{
 			ZeroMemory(&InputState[i], sizeof(DS5W::_DS5InputState));
@@ -94,13 +97,21 @@ bool UDualSenseLibrary::Connection()
 				UE_LOG(LogTemp, Error, TEXT("Error DeviceInputState: %d"), i);
 				continue;
 			}
-			
+
 			OutputState.Add(i, DS5W::DS5OutputState());
 			InputState.Add(i, InState);
 			DeviceContexts.Add(i, Context);
+
+			BatteryLevel.Add(i, 0.0f);
 			
 			LeftTriggerFeedback.Add(i, 0);
 			RightTriggerFeedback.Add(i, 0);
+			
+			EnableAccelerometer.Add(i, false);
+			EnableGyroscope.Add(i, false);
+			EnableTouch1.Add(i, false);
+			EnableTouch2.Add(i, false);
+
 			if (IsInitialized.Contains(i))
 			{
 				IsInitialized[i] = true;
@@ -136,15 +147,20 @@ void UDualSenseLibrary::ShutdownLibrary()
 		{
 			ZeroMemory(&OutputState[i], sizeof(DS5W::DS5OutputState));
 			ZeroMemory(&InputState[i], sizeof(DS5W::DS5InputState));
+
 			DS5W::freeDeviceContext(&DeviceContexts[i]);
 			UE_LOG(LogTemp, Log, TEXT("DualSense ControllerId %d disconnected with success."), i);
 		}
 	}
 
+	EnableTouch1.Reset();
+	EnableTouch2.Reset();
+	EnableGyroscope.Reset();
+	EnableAccelerometer.Reset();
 	IsInitialized.Reset();
 }
 
-bool UDualSenseLibrary::IsConnected(const int32 ControllerId)
+bool UDualSenseLibrary::IsConnected(int32 ControllerId)
 {
 	if (!IsInitialized.Contains(ControllerId))
 	{
@@ -154,7 +170,7 @@ bool UDualSenseLibrary::IsConnected(const int32 ControllerId)
 	return IsInitialized[ControllerId];
 }
 
-void UDualSenseLibrary::SetConnectionIsValid(const int32 ControllerId, const bool IsValid)
+void UDualSenseLibrary::SetConnectionIsValid(int32 ControllerId, bool IsValid)
 {
 	if (!IsInitialized.Contains(ControllerId))
 	{
@@ -174,14 +190,14 @@ void UDualSenseLibrary::SendOut(const int32 ControllerId)
 	DS5W::setDeviceOutputState(&DeviceContexts[ControllerId], &OutputState[ControllerId]);
 }
 
-uint8 UDualSenseLibrary::GetTrirggersFeedback(const int32 ControllerId, const EControllerHand& Hand)
+int32 UDualSenseLibrary::GetTrirggersFeedback(int32 ControllerId, EControllerHand& HandTrigger)
 {
 	if (!LeftTriggerFeedback.Contains(ControllerId) && !RightTriggerFeedback.Contains(ControllerId))
 	{
 		return 0;
 	}
 
-	if (Hand == EControllerHand::Left)
+	if (HandTrigger == EControllerHand::Left)
 	{
 		return LeftTriggerFeedback[ControllerId];
 	}
@@ -232,6 +248,12 @@ bool UDualSenseLibrary::UpdateInput(
 		const auto ButtonsAndDpad = InputState[InputDeviceId.GetId()].buttonsAndDpad;
 		const auto ButtonsA = InputState[InputDeviceId.GetId()].buttonsA;
 		const auto ButtonsB = InputState[InputDeviceId.GetId()].buttonsB;
+		
+		if (BatteryLevel.Contains(InputDeviceId.GetId()))
+		{
+			const float Level = static_cast<float>(InputState[InputDeviceId.GetId()].battery.level) / 255.0f;
+			BatteryLevel.Add(InputDeviceId.GetId(), FMath::Clamp(Level, 0.0f, 1.0f));
+		}
 
 		if (
 			LeftTriggerFeedback.Contains(InputDeviceId.GetId()) &&
@@ -314,6 +336,68 @@ bool UDualSenseLibrary::UpdateInput(
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightTrigger.GetFName(), UserId, InputDeviceId,
 		                                          TriggerR);
 
+		
+		if (EnableTouch1.Contains(InputDeviceId.GetId()) && EnableTouch2.Contains(InputDeviceId.GetId()))
+		{
+			// Accelerometer, Gyroscope and Touchs
+			const unsigned int MaxX = 2000;
+			const unsigned int MaxY = 2048;
+
+			if (EnableTouch1[InputDeviceId.GetId()])
+			{
+				DS5W::Touch TouchPoint1 = InputState[InputDeviceId.GetId()].touchPoint1;
+				float Touch1X = (2.0f * TouchPoint1.x / MaxX) - 1.0f;
+				float Touch1Y = (2.0f * TouchPoint1.y / MaxY) - 1.0f;
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);	
+			}
+
+			if (EnableTouch2[InputDeviceId.GetId()])
+			{
+				DS5W::Touch TouchPoint2 = InputState[InputDeviceId.GetId()].touchPoint2;
+				float Touch2X = (2.0f * TouchPoint2.x / MaxX) - 1.0f;
+				float Touch2Y = (2.0f * TouchPoint2.y / MaxY) - 1.0f;
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch2X);
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);	
+			}
+		}
+		
+
+		if (
+			EnableAccelerometer.Contains(InputDeviceId.GetId()) &&
+			EnableGyroscope.Contains(InputDeviceId.GetId())
+		)
+		{
+			DS5W::Vector3 Accelerometer = InputState[InputDeviceId.GetId()].accelerometer;
+			DS5W::Vector3 Gyroscope = InputState[InputDeviceId.GetId()].gyroscope;
+
+			if (EnableAccelerometer[InputDeviceId.GetId()])
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Accelerometer: %hd, %hd, %hd"), Accelerometer.x, Accelerometer.y, Accelerometer.z);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.x);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.y);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.z);	
+			}
+			
+			if (EnableGyroscope[InputDeviceId.GetId()])
+			{
+				UE_LOG(LogTemp, Warning, TEXT("Gyroscope: %hd, %hd, %hd"), Gyroscope.x, Gyroscope.y, Gyroscope.z);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.x);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.y);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.z);	
+			}
+
+			if (EnableGyroscope[InputDeviceId.GetId()] && EnableAccelerometer[InputDeviceId.GetId()])
+			{
+				FVector Tilt = FVector(Accelerometer.x, Accelerometer.y, Accelerometer.z) + FVector(Gyroscope.x, Gyroscope.y, Gyroscope.z);
+				UE_LOG(LogTemp, Warning, TEXT("Tilt: %s"), *Tilt.ToString());
+				
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.X);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Y);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Z);		
+			}
+		}
+
 		return true;
 	}
 	return false;
@@ -331,7 +415,7 @@ void UDualSenseLibrary::UpdateColorOutput(const int32 ControllerId, const FColor
 	OutputState[ControllerId].lightbar.b = Color.B;
 }
 
-void UDualSenseLibrary::SetVibration(const int32 ControllerId, const FForceFeedbackValues Vibration)
+void UDualSenseLibrary::SetVibration(int32 ControllerId, const FForceFeedbackValues& Vibration)
 {
 	if (!OutputState.Contains(ControllerId))
 	{
@@ -343,8 +427,7 @@ void UDualSenseLibrary::SetVibration(const int32 ControllerId, const FForceFeedb
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand,
-                                                const FHapticFeedbackValues* Values)
+void UDualSenseLibrary::SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues* Values)
 {
 	// Config (L2)
 	if (Hand == static_cast<int32>(EControllerHand::Left) || Hand == static_cast<int32>(EControllerHand::AnyHand))
@@ -361,7 +444,7 @@ void UDualSenseLibrary::SetHapticFeedbackValues(const int32 ControllerId, const 
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::SetTriggers(const int32 ControllerId, const FInputDeviceProperty* Property)
+void UDualSenseLibrary::SetTriggers(int32 ControllerId, const FInputDeviceProperty* Property)
 {
 	if (Property->Name == FName("InputDeviceTriggerResistance"))
 	{
@@ -395,16 +478,55 @@ void UDualSenseLibrary::SetTriggers(const int32 ControllerId, const FInputDevice
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(const int32 ControllerId, const uint8 StartPosition,
-                                                          const uint8 BeginForce,
-                                                          const uint8 MiddleForce, const uint8 EndForce,
-                                                          const EControllerHand& Hand, const bool KeepEffect)
+void UDualSenseLibrary::SetAcceleration(int32 ControllerId, bool bIsAccelerometer)
+{
+	if (!EnableAccelerometer.Contains(ControllerId))
+	{
+		return;
+	}
+	
+	EnableAccelerometer.Add(ControllerId, bIsAccelerometer);
+}
+
+void UDualSenseLibrary::SetGyroscope(int32 ControllerId, bool bIsGyroscope)
+{
+	if (!EnableGyroscope.Contains(ControllerId))
+	{
+		return;
+	}
+	
+	EnableGyroscope.Add(ControllerId, bIsGyroscope);
+}
+
+void UDualSenseLibrary::SetTouch1(int32 ControllerId, bool bIsGyroscope)
+{
+	if (!EnableTouch1.Contains(ControllerId))
+	{
+		return;
+	}
+	
+	EnableTouch1.Add(ControllerId, bIsGyroscope);
+}
+
+void UDualSenseLibrary::SetTouch2(int32 ControllerId, bool bIsGyroscope)
+{
+	if (!EnableTouch2.Contains(ControllerId))
+	{
+		return;
+	}
+	
+	EnableTouch2.Add(ControllerId, bIsGyroscope);
+}
+
+void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,
+                                                          int32 MiddleForce, int32 EndForce,
+                                                          const EControllerHand& Hand, bool KeepEffect)
 {
 	if (!OutputState.Contains(ControllerId))
 	{
 		return;
 	}
-	
+
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
@@ -430,7 +552,7 @@ void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(const int32 Controller
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::NoResitance(const int32 ControllerId, const EControllerHand& Hand)
+void UDualSenseLibrary::NoResitance(int32 ControllerId, const EControllerHand& Hand)
 {
 	if (!OutputState.Contains(ControllerId))
 	{
@@ -450,7 +572,7 @@ void UDualSenseLibrary::NoResitance(const int32 ControllerId, const EControllerH
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::ContinuousResitance(const int32 ControllerId, const uint8 StartPosition, const uint8 Force,
+void UDualSenseLibrary::ContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force,
                                             const EControllerHand& Hand)
 {
 	if (!OutputState.Contains(ControllerId))
@@ -464,7 +586,7 @@ void UDualSenseLibrary::ContinuousResitance(const int32 ControllerId, const uint
 		OutputState[ControllerId].leftTriggerEffect.Continuous.startPosition = ConvertTo255(StartPosition, 9);
 		OutputState[ControllerId].leftTriggerEffect.Continuous.force = ConvertTo255(Force, 8);
 	}
-	
+
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
@@ -475,7 +597,7 @@ void UDualSenseLibrary::ContinuousResitance(const int32 ControllerId, const uint
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::SectionResitance(const int32 ControllerId, const uint8 StartPosition, const uint8 EndPosition,
+void UDualSenseLibrary::SectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition,
                                          const EControllerHand& Hand)
 {
 	if (!OutputState.Contains(ControllerId))
@@ -483,7 +605,7 @@ void UDualSenseLibrary::SectionResitance(const int32 ControllerId, const uint8 S
 		UE_LOG(LogTemp, Error, TEXT("SectionResitance: StartPosition %d, EndPosition %d"), StartPosition, EndPosition);
 		return;
 	}
-	
+
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
@@ -498,12 +620,11 @@ void UDualSenseLibrary::SectionResitance(const int32 ControllerId, const uint8 S
 		OutputState[ControllerId].rightTriggerEffect.Section.endPosition = ConvertTo255(EndPosition, 9);
 	}
 
-	
 
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::StopEffect(const int32 ControllerId, const EControllerHand& Hand)
+void UDualSenseLibrary::StopEffect(int32 ControllerId, const EControllerHand& Hand)
 {
 	if (!OutputState.Contains(ControllerId))
 	{
@@ -544,6 +665,87 @@ void UDualSenseLibrary::StopAll(int32 ControllerId)
 
 	ZeroMemory(&OutputState[ControllerId], sizeof(DS5W::DS5OutputState));
 	SendOut(ControllerId);
+}
+
+void UDualSenseLibrary::SetLedPlayerEffects(int32 ControllerId, int32 NumberLeds, int32 BrightnessValue)
+{
+	if (!OutputState.Contains(ControllerId))
+	{
+		return;
+	}
+
+	OutputState[ControllerId].playerLeds.bitmask = 0x00;
+	SendOut(ControllerId);
+
+	NumberLeds = FMath::Clamp(NumberLeds, 0, 3);
+	if (NumberLeds == 1)
+	{
+		OutputState[ControllerId].playerLeds.bitmask = DS5W_OSTATE_PLAYER_LED_LEFT | DS5W_OSTATE_PLAYER_LED_RIGHT;
+	}
+
+	if (NumberLeds == 2)
+	{
+		OutputState[ControllerId].playerLeds.bitmask = DS5W_OSTATE_PLAYER_LED_LEFT | DS5W_OSTATE_PLAYER_LED_RIGHT;
+		OutputState[ControllerId].playerLeds.bitmask |= DS5W_OSTATE_PLAYER_LED_MIDDLE_RIGHT |
+			DS5W_OSTATE_PLAYER_LED_MIDDLE_LEFT;
+	}
+
+	if (NumberLeds == 3)
+	{
+		OutputState[ControllerId].playerLeds.bitmask = DS5W_OSTATE_PLAYER_LED_LEFT | DS5W_OSTATE_PLAYER_LED_RIGHT;
+		OutputState[ControllerId].playerLeds.bitmask |= DS5W_OSTATE_PLAYER_LED_MIDDLE_RIGHT |
+			DS5W_OSTATE_PLAYER_LED_MIDDLE_LEFT;
+		OutputState[ControllerId].playerLeds.bitmask |= DS5W_OSTATE_PLAYER_LED_MIDDLE;
+	}
+
+	DS5W::LedBrightness Brightness;
+	switch (BrightnessValue)
+	{
+	case 1:
+		Brightness = DS5W::LedBrightness::MEDIUM;
+		break;
+	case 2:
+		Brightness = DS5W::LedBrightness::HIGH;
+		break;
+	case 3:
+	default:
+		Brightness = DS5W::LedBrightness::LOW;
+		break;
+	}
+	OutputState[ControllerId].playerLeds.brightness = Brightness;
+
+	SendOut(ControllerId);
+}
+
+void UDualSenseLibrary::SetLedMicEffects(int32 ControllerId, int32 LedMic)
+{
+	if (!OutputState.Contains(ControllerId))
+	{
+		return;
+	}
+
+	OutputState[ControllerId].microphoneLed = DS5W::MicLed::OFF;
+	if (LedMic == 1)
+	{
+		OutputState[ControllerId].microphoneLed = DS5W::MicLed::ON;
+	}
+
+	if (LedMic == 2)
+	{
+		OutputState[ControllerId].microphoneLed = DS5W::MicLed::PULSE;
+	}
+
+	SendOut(ControllerId);
+}
+
+float UDualSenseLibrary::GetLevelBattery(int32 ControllerId)
+{
+	if (!BatteryLevel.Contains(ControllerId))
+	{
+		return 0.0f;
+	}
+
+	return BatteryLevel[ControllerId];
 }
 
 unsigned char UDualSenseLibrary::ConvertTo255(unsigned char value, unsigned char maxInput)

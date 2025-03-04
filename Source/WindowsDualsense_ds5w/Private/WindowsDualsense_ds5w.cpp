@@ -16,8 +16,8 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	FString EnginePluginPath = FPaths::Combine(FPaths::EnginePluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
 	if (EnginePluginPath.IsEmpty())
 	{
-		EnginePluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
-		DS5WdllHandle = FPlatformProcess::GetDllHandle(*EnginePluginPath);
+		FString LocalPluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
+		DS5WdllHandle = FPlatformProcess::GetDllHandle(*LocalPluginPath);
 	}
 	else
 	{
@@ -27,6 +27,7 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	RegisterCustomKeys();
 	DualSenseLibraryInstance = NewObject<UDualSenseLibrary>();
 	DualSenseLibraryInstance->InitializeLibrary();
+
 }
 
 void FWindowsDualsense_ds5wModule::ShutdownModule()
@@ -51,38 +52,49 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 
 	for (int32 i = 0; i < DualSenseLibraryInstance->ControllersCount; i++)
 	{
-		FPlatformUserId UserId;
-		FInputDeviceId InputDeviceId;
-		if (i > 0)
-		{
-			UserId = DeviceInstances->AllocateNewUserId();
-			InputDeviceId = DeviceInstances->AllocateNewInputDeviceId();
-		}
-		else
-		{
-			UserId = FPlatformUserId::CreateFromInternalId(i);
-			InputDeviceId = FInputDeviceId::CreateFromInternalId(i);
-		}
-
-
-		EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Disconnected;
-		if (DualSenseLibraryInstance->IsConnected(i))
-		{
-			ConnectionState = EInputDeviceConnectionState::Connected;
-		}
-
-		FPlatformInputDeviceState State;
-		State.OwningPlatformUser = UserId;
-		State.ConnectionState = ConnectionState;
-		DeviceInstances->SetController(InputDeviceId, State);
-
-		if (DeviceInstances->RemapUserAndDeviceToControllerId(UserId, i, InputDeviceId))
-		{
-			UE_LOG(LogTemp, Log, TEXT("Success mapper Device registred: %d and User %d"), i, UserId.GetInternalId());
-		}
+		RegisterDevice(i);
 	}
 
+	// DualSenseLibraryInstance->OnDeviceRegistered().AddLambda([&](int32 ControllerId)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("New Device registred: %d"), ControllerId);
+	// 	RegisterDevice(ControllerId);
+	// });
+
 	return DeviceInstances;
+}
+
+void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
+{
+	FPlatformUserId UserId;
+	FInputDeviceId InputDeviceId;
+	if (ControllerId > 0)
+	{
+		UserId = DeviceInstances->AllocateNewUserId();
+		InputDeviceId = DeviceInstances->AllocateNewInputDeviceId();
+	}
+	else
+	{
+		UserId = FPlatformUserId::CreateFromInternalId(ControllerId);
+		InputDeviceId = FInputDeviceId::CreateFromInternalId(ControllerId);
+	}
+
+
+	EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Disconnected;
+	if (DualSenseLibraryInstance->IsConnected(ControllerId))
+	{
+		ConnectionState = EInputDeviceConnectionState::Connected;
+	}
+
+	FPlatformInputDeviceState State;
+	State.OwningPlatformUser = UserId;
+	State.ConnectionState = ConnectionState;
+	DeviceInstances->SetController(InputDeviceId, State);
+
+	if (DeviceInstances->RemapUserAndDeviceToControllerId(UserId, ControllerId, InputDeviceId))
+	{
+		UE_LOG(LogTemp, Log, TEXT("Success mapper Device registred: %d and User %d"), ControllerId, UserId.GetInternalId());
+	}
 }
 
 void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
@@ -94,6 +106,37 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 	const FKey PlayStationButton("PS_Button");
 	const FKey PS_PushLeftStick("PS_PushLeftStick");
 	const FKey PS_PushRightStick("PS_PushRightStick");
+
+	// touch
+	const FKey Dualsense_Touch1_X("Dualsense_Touch1_X");
+	const FKey Dualsense_Touch1_Y("Dualsense_Touch1_Y");
+	const FKey Dualsense_Touch2_X("Dualsense_Touch2_X");
+	const FKey Dualsense_Touch2_Y("Dualsense_Touch2_Y");
+
+
+	EKeys::AddKey(FKeyDetails(
+		Dualsense_Touch1_X,
+		FText::FromString("PS Dualsense Touch1 X"),
+		FKeyDetails::GamepadKey
+	));
+
+	EKeys::AddKey(FKeyDetails(
+		Dualsense_Touch1_Y,
+		FText::FromString("PS Dualsense Touch1 Y"),
+		FKeyDetails::GamepadKey
+	));
+
+	EKeys::AddKey(FKeyDetails(
+		Dualsense_Touch2_X,
+		FText::FromString("PS Dualsense Touch2 X"),
+		FKeyDetails::GamepadKey
+	));
+
+	EKeys::AddKey(FKeyDetails(
+		Dualsense_Touch2_Y,
+		FText::FromString("PS Dualsense Touch2 Y"),
+		FKeyDetails::GamepadKey
+	));
 
 	EKeys::AddKey(FKeyDetails(
 		PS_PushLeftStick,

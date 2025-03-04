@@ -3,6 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DualSenseLibrary.h"
 #include "IHapticDevice.h"
 #include "Runtime/InputDevice/Public/IInputDevice.h"
 
@@ -21,7 +22,7 @@ public:
 	virtual void SetMessageHandler(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override {};
 
 	virtual bool SupportsForceFeedback(int32 ControllerId) override;
-	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values) override;
+	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues &values) override;
 	virtual void SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property) override;
 	virtual void SetChannelValue(int32 ControllerId, FForceFeedbackChannelType ChannelType, float Value) override {};
 
@@ -55,6 +56,8 @@ public:
 	{
 		return true;
 	}
+
+	virtual void ReconnectState(FInputDeviceId& Device);
 
 	virtual void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues& Values) override;
 	virtual void GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const override;

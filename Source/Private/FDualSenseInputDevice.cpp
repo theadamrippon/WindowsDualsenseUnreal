@@ -21,7 +21,22 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 	{
 		if (MappedInputDevices.Contains(Device))
 		{
-			if (MappedInputDevices[Device].ConnectionState == EInputDeviceConnectionState::Connected)
+			if (!UDualSenseLibrary::IsConnected(Device.GetId()))
+			{
+				MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Disconnected;
+				ReconnectState(Device);
+			}
+
+			if (
+				UDualSenseLibrary::IsConnected(Device.GetId()) &&
+				MappedInputDevices[Device].ConnectionState == EInputDeviceConnectionState::Disconnected)
+			{
+				MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Connected;
+			}
+			
+			if (
+				MappedInputDevices[Device].ConnectionState == EInputDeviceConnectionState::Connected
+				)
 			{
 				const FPlatformUserId UserId = GetUserForInputDevice(Device);
 				UDualSenseLibrary::UpdateInput(MessageHandler, UserId, Device);
@@ -59,6 +74,11 @@ void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 	UDualSenseLibrary::UpdateColorOutput(ControllerId, FColor::Black);
 }
 
+void FDualSenseInputDevice::ReconnectState(FInputDeviceId& Device)
+{
+	MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Connected;
+}
+
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)
 {
 	UDualSenseLibrary::SetHapticFeedbackValues(ControllerId, Hand, &Values);
@@ -80,7 +100,7 @@ bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 	return true;
 }
 
-void FDualSenseInputDevice::SetChannelValues(const int32 ControllerId, const FForceFeedbackValues& Values)
+void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& values)
 {
-	UDualSenseLibrary::SetVibration(ControllerId, Values);
+	UDualSenseLibrary::SetVibration(ControllerId, values);
 }

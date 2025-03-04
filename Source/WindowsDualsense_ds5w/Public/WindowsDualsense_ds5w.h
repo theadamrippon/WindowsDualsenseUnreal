@@ -16,11 +16,13 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
-
+	void RegisterDevice(int32 ControllerId);
+	
 private:
 	void* DS5WdllHandle = nullptr;
 	TSharedPtr<FDualSenseInputDevice> DeviceInstances;
 	UDualSenseLibrary* DualSenseLibraryInstance = nullptr;
+	
 
 	static void RegisterCustomKeys();
 };

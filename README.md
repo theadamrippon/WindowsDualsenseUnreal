@@ -75,6 +75,10 @@ void APlayerController::BeginPlay()
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
 
+### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
+
 ### Haptic trigger feedback
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
@@ -89,7 +93,7 @@ Extract the file to
 
 Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
 
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/PluginsEngine.png)
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Install.gif)
 
 
 After restarting the engine, the following message will appear in the bottom right corner:

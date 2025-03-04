@@ -75,6 +75,8 @@ void APlayerController::BeginPlay()
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
 
+### Haptic trigger feedback
+
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
 # Installation
@@ -103,7 +105,9 @@ After restarting the engine, the following message will appear in the bottom rig
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GyroscopeBTN.gif)
 
 You don’t need to map the keys. By default, the plugin already maps the standard Gamepad layout.
-You can test it using Enhancement Input.
+
+> **NOTE:** Enable Gyroscope, Accelerometer, and Touch only after mapping the actions to avoid interfering with button press recognition, as Gyroscope, Accelerometer, and Touch constantly emit values.
+
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)
 

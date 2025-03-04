@@ -4,7 +4,9 @@
 
 ### No necessary configuration to run the control.
 
-## Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone etc..
+## Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
+
+### Usage methods available via C++.
 
 ```
 #include "DualSenseProxy.h"
@@ -14,13 +16,28 @@ void APlayerController::BeginPlay()
     Super::BeginPlay();
 	
     int32 ControllerId = 0; 
-
-    // Usage methods available via C++ or Blueprints. 
-    // "It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default."
+    
+    // It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default.
     SetDisableHaptics(false);
 
     // Reset buffer all values 
     UDualSenseProxy::ResetEffects(ControllerId);
+    
+    // Gyroscope and Accelerometer are set to false by default. Calibration needs to be implemented
+    UDualSenseProxy::EnableAccelerometerValues(0, false);
+    UDualSenseProxy::EnableGyroscopeValues(0, false);
+
+    // Touch pad values default false, values max 1.0f
+    UDualSenseProxy::EnableTouch1(0, false);
+    UDualSenseProxy::EnableTouch2(0, false);
+
+    // Level battery Full load max 1.0f 
+    float levelBattery = UDualSenseProxy::LevelBatteryDevice(0);
+
+    // Leds configs
+    UDualSenseProxy::LedMicEffects(0, ELedMicEnum::MicOn);
+    UDualSenseProxy::LedPlayerEffects(0, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
+    UDualSenseProxy::LedColorEffects(0, FColor(255, 255, 255));
 
     // Stop triggers effects
     UDualSenseProxy::StopAllTriggersEffects(0);
@@ -52,6 +69,14 @@ void APlayerController::BeginPlay()
 
 ```
 
+### Usage via Blueprints
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Metodos.gif)
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
+
 # Installation
 Download the compiled plugin **Windows x64**
 [Download plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w.zip)
@@ -68,6 +93,14 @@ Now enable the plugin in the Unreal Editor, connect your DualSense device, and r
 After restarting the engine, the following message will appear in the bottom right corner:
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/IsConnection.png)
+
+### Native Gamepad Mapping in Unreal
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Buttons.gif)
+
+### The keys for the Gyroscope and Accelerometer are as follows:
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GyroscopeBTN.gif)
 
 You don’t need to map the keys. By default, the plugin already maps the standard Gamepad layout.
 You can test it using Enhancement Input.

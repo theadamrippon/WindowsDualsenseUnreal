@@ -57,7 +57,8 @@ public:
 		return true;
 	}
 
-	virtual void ReconnectState(FInputDeviceId& Device);
+	virtual void Reconnect(FInputDeviceId& Device);
+	virtual void Disconnect(FInputDeviceId& Device);
 
 	virtual void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues& Values) override;
 	virtual void GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const override;

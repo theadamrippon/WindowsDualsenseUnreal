@@ -33,9 +33,12 @@ bool UDualSenseLibrary::Reconnect(int32 ControllerId)
 	{
 		if (ControllersCount == 0)
 		{
-			return InitializeLibrary();
+			if (InitializeLibrary())
+			{
+				return IsConnected(ControllerId);
+			}
 		}
-		
+
 		return false;
 	}
 
@@ -43,7 +46,7 @@ bool UDualSenseLibrary::Reconnect(int32 ControllerId)
 	{
 		return true;
 	}
-	
+
 	return false;
 }
 
@@ -103,10 +106,10 @@ bool UDualSenseLibrary::Connection()
 			DeviceContexts.Add(i, Context);
 
 			BatteryLevel.Add(i, 0.0f);
-			
+
 			LeftTriggerFeedback.Add(i, 0);
 			RightTriggerFeedback.Add(i, 0);
-			
+
 			EnableAccelerometer.Add(i, false);
 			EnableGyroscope.Add(i, false);
 			EnableTouch1.Add(i, false);
@@ -248,7 +251,7 @@ bool UDualSenseLibrary::UpdateInput(
 		const auto ButtonsAndDpad = InputState[InputDeviceId.GetId()].buttonsAndDpad;
 		const auto ButtonsA = InputState[InputDeviceId.GetId()].buttonsA;
 		const auto ButtonsB = InputState[InputDeviceId.GetId()].buttonsB;
-		
+
 		if (BatteryLevel.Contains(InputDeviceId.GetId()))
 		{
 			const float Level = static_cast<float>(InputState[InputDeviceId.GetId()].battery.level) / 255.0f;
@@ -336,7 +339,7 @@ bool UDualSenseLibrary::UpdateInput(
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightTrigger.GetFName(), UserId, InputDeviceId,
 		                                          TriggerR);
 
-		
+
 		if (EnableTouch1.Contains(InputDeviceId.GetId()) && EnableTouch2.Contains(InputDeviceId.GetId()))
 		{
 			// Accelerometer, Gyroscope and Touchs
@@ -349,7 +352,7 @@ bool UDualSenseLibrary::UpdateInput(
 				float Touch1X = (2.0f * TouchPoint1.x / MaxX) - 1.0f;
 				float Touch1Y = (2.0f * TouchPoint1.y / MaxY) - 1.0f;
 				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);	
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);
 			}
 
 			if (EnableTouch2[InputDeviceId.GetId()])
@@ -358,10 +361,10 @@ bool UDualSenseLibrary::UpdateInput(
 				float Touch2X = (2.0f * TouchPoint2.x / MaxX) - 1.0f;
 				float Touch2Y = (2.0f * TouchPoint2.y / MaxY) - 1.0f;
 				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch2X);
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);	
+				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);
 			}
 		}
-		
+
 
 		if (
 			EnableAccelerometer.Contains(InputDeviceId.GetId()) &&
@@ -373,28 +376,36 @@ bool UDualSenseLibrary::UpdateInput(
 
 			if (EnableAccelerometer[InputDeviceId.GetId()])
 			{
-				UE_LOG(LogTemp, Warning, TEXT("Accelerometer: %hd, %hd, %hd"), Accelerometer.x, Accelerometer.y, Accelerometer.z);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.x);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.y);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.z);	
+				UE_LOG(LogTemp, Warning, TEXT("Accelerometer: %hd, %hd, %hd"), Accelerometer.x, Accelerometer.y,
+				       Accelerometer.z);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId,
+				                                          Accelerometer.x);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId,
+				                                          Accelerometer.y);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId,
+				                                          Accelerometer.z);
 			}
-			
+
 			if (EnableGyroscope[InputDeviceId.GetId()])
 			{
 				UE_LOG(LogTemp, Warning, TEXT("Gyroscope: %hd, %hd, %hd"), Gyroscope.x, Gyroscope.y, Gyroscope.z);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.x);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.y);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.z);	
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId,
+				                                          Gyroscope.x);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId,
+				                                          Gyroscope.y);
+				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId,
+				                                          Gyroscope.z);
 			}
 
 			if (EnableGyroscope[InputDeviceId.GetId()] && EnableAccelerometer[InputDeviceId.GetId()])
 			{
-				FVector Tilt = FVector(Accelerometer.x, Accelerometer.y, Accelerometer.z) + FVector(Gyroscope.x, Gyroscope.y, Gyroscope.z);
+				FVector Tilt = FVector(Accelerometer.x, Accelerometer.y, Accelerometer.z) + FVector(
+					Gyroscope.x, Gyroscope.y, Gyroscope.z);
 				UE_LOG(LogTemp, Warning, TEXT("Tilt: %s"), *Tilt.ToString());
-				
+
 				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.X);
 				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Y);
-				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Z);		
+				InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Z);
 			}
 		}
 
@@ -484,7 +495,7 @@ void UDualSenseLibrary::SetAcceleration(int32 ControllerId, bool bIsAcceleromete
 	{
 		return;
 	}
-	
+
 	EnableAccelerometer.Add(ControllerId, bIsAccelerometer);
 }
 
@@ -494,7 +505,7 @@ void UDualSenseLibrary::SetGyroscope(int32 ControllerId, bool bIsGyroscope)
 	{
 		return;
 	}
-	
+
 	EnableGyroscope.Add(ControllerId, bIsGyroscope);
 }
 
@@ -504,7 +515,7 @@ void UDualSenseLibrary::SetTouch1(int32 ControllerId, bool bIsGyroscope)
 	{
 		return;
 	}
-	
+
 	EnableTouch1.Add(ControllerId, bIsGyroscope);
 }
 
@@ -514,7 +525,7 @@ void UDualSenseLibrary::SetTouch2(int32 ControllerId, bool bIsGyroscope)
 	{
 		return;
 	}
-	
+
 	EnableTouch2.Add(ControllerId, bIsGyroscope);
 }
 

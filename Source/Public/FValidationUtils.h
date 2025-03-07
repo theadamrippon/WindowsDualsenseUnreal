@@ -15,12 +15,12 @@ public:
 
 	static bool ValidateMaxForce(int32 Force)
 	{
-		return Force <= 8 && Force >= 0;
+		return Force <= 9 && Force >= 0;
 	}
 
 	static bool ValidateMaxPosition(int32 Position)
 	{
-		return Position <= 9 && Position >= 0;
+		return Position <= 8 && Position >= 0;
 	}
 
 	static bool ValidateMaxFrequency(float Frequency)

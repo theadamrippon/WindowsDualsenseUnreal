@@ -1,6 +1,6 @@
 # Windows Dualsense for Unreal Engine version 5.3, 5.4 and 5.5
 
-### Plugin to integrate full suport Dualsense PS5 device into Unreal Engine 5 for Windows platforms.
+### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions 5.3, 5.4, and 5.5 for Windows platforms. No configuration needed**
 
 ### No necessary configuration to run the control.
 
@@ -24,23 +24,23 @@ void APlayerController::BeginPlay()
     UDualSenseProxy::ResetEffects(ControllerId);
     
     // Gyroscope and Accelerometer are set to false by default. Calibration needs to be implemented
-    UDualSenseProxy::EnableAccelerometerValues(0, false);
-    UDualSenseProxy::EnableGyroscopeValues(0, false);
+    UDualSenseProxy::EnableAccelerometerValues(ControllerId, false);
+    UDualSenseProxy::EnableGyroscopeValues(ControllerId, false);
 
     // Touch pad values default false, values max 1.0f
-    UDualSenseProxy::EnableTouch1(0, false);
-    UDualSenseProxy::EnableTouch2(0, false);
+    UDualSenseProxy::EnableTouch1(ControllerId, false);
+    UDualSenseProxy::EnableTouch2(ControllerId, false);
 
     // Level battery Full load max 1.0f 
-    float levelBattery = UDualSenseProxy::LevelBatteryDevice(0);
+    float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
 
     // Leds configs
-    UDualSenseProxy::LedMicEffects(0, ELedMicEnum::MicOn);
-    UDualSenseProxy::LedPlayerEffects(0, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
-    UDualSenseProxy::LedColorEffects(0, FColor(255, 255, 255));
+    UDualSenseProxy::LedMicEffects(ControllerId, ELedMicEnum::MicOn);
+    UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
+    UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
 
     // Stop triggers effects
-    UDualSenseProxy::StopAllTriggersEffects(0);
+    UDualSenseProxy::StopAllTriggersEffects(ControllerId);
     UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Left);
     UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Right);
 

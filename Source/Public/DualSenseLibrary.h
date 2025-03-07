@@ -6,6 +6,7 @@
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
+#include "FCustomForceFeedbackValues.h"
 #include "DualSenseLibrary.generated.h"
 
 /**
@@ -56,6 +57,7 @@ public:
 	// Colors, vibration and triggers config
 	static void UpdateColorOutput(int32 ControllerId, FColor Color);
 	static void SetVibration(int32 ControllerId, const FForceFeedbackValues& Vibration);
+	static void SetVibration(int32 ControllerId, const FCustomForceFeedbackValues& Vibration);
 	static void SetTriggers(int32 ControllerId, const FInputDeviceProperty* Property);
 
 	static void SetAcceleration(int32 ControllerId, bool bIsAccelerometer);
@@ -91,6 +93,13 @@ private:
 		const FName ButtonName,
 		const bool IsButtonPressed
 	);
+
+	static unsigned char CalculateLeftRumble(const FForceFeedbackValues& Values);
+	static unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
+	
+	static unsigned char CalculateLeftRumble(const FCustomForceFeedbackValues& Values);
+	static unsigned char CalculateRightRumble(const FCustomForceFeedbackValues& Values);
+
 
 	// Output
 	static void SendOut(int32 ControllerId);

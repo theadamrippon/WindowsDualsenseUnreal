@@ -3,8 +3,10 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "FCustomForceFeedbackValues.h"
 #include "UObject/Object.h"
 #include "InputCoreTypes.h"
+#include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "DualSenseProxy.generated.h"
 
 UENUM(BlueprintType)
@@ -32,6 +34,7 @@ enum class ELedBrightnessEnum : uint8
 	High UMETA(DisplayName = "Brightness High")
 };
 
+
 /**
  * 
  */
@@ -57,6 +60,9 @@ public:
 	// return feedback trigger
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
 	static int32 GetTriggerRightForceFeedback(int32 ControllerId);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Vibrations")
+	static void SetVibrationsEffects(int32 ControllerId, FCustomForceFeedbackValues FeedbackValues, float Duration);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Trigger Haptic Effects")
 	static void SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,

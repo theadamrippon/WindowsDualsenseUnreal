@@ -28,7 +28,7 @@ float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)
 	{
 		return 0;
 	}
-	
+
 	return UDualSenseLibrary::GetLevelBattery(ControllerId);
 }
 
@@ -52,6 +52,17 @@ int32 UDualSenseProxy::GetTriggerRightForceFeedback(int32 ControllerId)
 
 	EControllerHand HandToUse = EControllerHand::Right;
 	return UDualSenseLibrary::GetTrirggersFeedback(ControllerId, HandToUse);
+}
+
+void UDualSenseProxy::SetVibrationsEffects(int32 ControllerId, FCustomForceFeedbackValues FeedbackValues,
+                                           float Duration)
+{
+	if (!UDualSenseLibrary::IsConnected(ControllerId))
+	{
+		return;
+	}
+
+	UDualSenseLibrary::SetVibration(ControllerId, FeedbackValues);
 }
 
 void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,
@@ -214,6 +225,7 @@ void UDualSenseProxy::EnableTouch1(int32 ControllerId, bool bEnableTouch1)
 {
 	UDualSenseLibrary::SetTouch1(ControllerId, bEnableTouch1);
 }
+
 void UDualSenseProxy::EnableTouch2(int32 ControllerId, bool bEnableTouch1)
 {
 	UDualSenseLibrary::SetTouch2(ControllerId, bEnableTouch1);

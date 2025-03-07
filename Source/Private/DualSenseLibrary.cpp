@@ -433,9 +433,45 @@ void UDualSenseLibrary::SetVibration(int32 ControllerId, const FForceFeedbackVal
 		return;
 	}
 
-	OutputState[ControllerId].leftRumble = max(ConvertTo255(Vibration.LeftLarge), ConvertTo255(Vibration.RightLarge));
-	OutputState[ControllerId].rightRumble = max(ConvertTo255(Vibration.LeftSmall), ConvertTo255(Vibration.RightSmall));
+	OutputState[ControllerId].leftRumble = CalculateLeftRumble(Vibration);
+	OutputState[ControllerId].rightRumble = CalculateRightRumble(Vibration);
 	SendOut(ControllerId);
+}
+
+void UDualSenseLibrary::SetVibration(int32 ControllerId, const FCustomForceFeedbackValues& Vibration)
+{
+	if (!OutputState.Contains(ControllerId))
+	{
+		return;
+	}
+
+	OutputState[ControllerId].leftRumble = CalculateLeftRumble(Vibration);
+	OutputState[ControllerId].rightRumble = CalculateRightRumble(Vibration);
+	SendOut(ControllerId);
+}
+
+unsigned char UDualSenseLibrary::CalculateLeftRumble(const FForceFeedbackValues& Values)
+{
+	float CombinedLeft = Values.LeftLarge * 0.8f + Values.LeftSmall * 0.2f;
+	return static_cast<unsigned char>(FMath::Clamp(CombinedLeft * 255.0f, 0.0f, 255.0f));
+}
+
+unsigned char UDualSenseLibrary::CalculateRightRumble(const FForceFeedbackValues& Values)
+{
+	float CombinedRight = Values.RightLarge * 0.8f + Values.RightSmall * 0.2f;
+	return static_cast<unsigned char>(FMath::Clamp(CombinedRight * 255.0f, 0.0f, 255.0f));
+}
+
+unsigned char UDualSenseLibrary::CalculateLeftRumble(const FCustomForceFeedbackValues& Values)
+{
+	float CombinedLeft = Values.LeftLarge * 0.8f + Values.LeftSmall * 0.2f;
+	return static_cast<unsigned char>(FMath::Clamp(CombinedLeft * 255.0f, 0.0f, 255.0f));
+}
+
+unsigned char UDualSenseLibrary::CalculateRightRumble(const FCustomForceFeedbackValues& Values)
+{
+	float CombinedRight = Values.RightLarge * 0.8f + Values.RightSmall * 0.2f;
+	return static_cast<unsigned char>(FMath::Clamp(CombinedRight * 255.0f, 0.0f, 255.0f));
 }
 
 void UDualSenseLibrary::SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues* Values)
@@ -467,10 +503,10 @@ void UDualSenseLibrary::SetTriggers(int32 ControllerId, const FInputDeviceProper
 		)
 		{
 			OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-			OutputState[ControllerId].leftTriggerEffect._u1_raw[0] = ConvertTo255(Resistance->StartPosition, 9);
-			OutputState[ControllerId].leftTriggerEffect._u1_raw[1] = ConvertTo255(Resistance->EndPosition, 9);
-			OutputState[ControllerId].leftTriggerEffect._u1_raw[2] = ConvertTo255(Resistance->StartStrengh, 8);
-			OutputState[ControllerId].leftTriggerEffect._u1_raw[3] = ConvertTo255(Resistance->EndStrengh, 8);
+			OutputState[ControllerId].leftTriggerEffect._u1_raw[0] = ConvertTo255(Resistance->StartPosition, 8);
+			OutputState[ControllerId].leftTriggerEffect._u1_raw[1] = ConvertTo255(Resistance->EndPosition, 8);
+			OutputState[ControllerId].leftTriggerEffect._u1_raw[2] = ConvertTo255(Resistance->StartStrengh, 9);
+			OutputState[ControllerId].leftTriggerEffect._u1_raw[3] = ConvertTo255(Resistance->EndStrengh, 9);
 		}
 
 		if (
@@ -479,10 +515,10 @@ void UDualSenseLibrary::SetTriggers(int32 ControllerId, const FInputDeviceProper
 		)
 		{
 			OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-			OutputState[ControllerId].rightTriggerEffect._u1_raw[0] = ConvertTo255(Resistance->StartPosition, 9);
-			OutputState[ControllerId].rightTriggerEffect._u1_raw[1] = ConvertTo255(Resistance->EndPosition, 9);
-			OutputState[ControllerId].rightTriggerEffect._u1_raw[2] = ConvertTo255(Resistance->StartStrengh, 8);
-			OutputState[ControllerId].rightTriggerEffect._u1_raw[3] = ConvertTo255(Resistance->EndStrengh, 8);
+			OutputState[ControllerId].rightTriggerEffect._u1_raw[0] = ConvertTo255(Resistance->StartPosition, 8);
+			OutputState[ControllerId].rightTriggerEffect._u1_raw[1] = ConvertTo255(Resistance->EndPosition, 8);
+			OutputState[ControllerId].rightTriggerEffect._u1_raw[2] = ConvertTo255(Resistance->StartStrengh, 9);
+			OutputState[ControllerId].rightTriggerEffect._u1_raw[3] = ConvertTo255(Resistance->EndStrengh, 9);
 		}
 	}
 
@@ -541,22 +577,22 @@ void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(int32 ControllerId, in
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
-		OutputState[ControllerId].leftTriggerEffect.EffectEx.startPosition = ConvertTo255(StartPosition, 9);
+		OutputState[ControllerId].leftTriggerEffect.EffectEx.startPosition = ConvertTo255(StartPosition, 8);
 		OutputState[ControllerId].leftTriggerEffect.EffectEx.keepEffect = KeepEffect;
-		OutputState[ControllerId].leftTriggerEffect.EffectEx.beginForce = ConvertTo255(BeginForce, 8);
-		OutputState[ControllerId].leftTriggerEffect.EffectEx.middleForce = ConvertTo255(MiddleForce, 8);
-		OutputState[ControllerId].leftTriggerEffect.EffectEx.endForce = ConvertTo255(EndForce, 8);
+		OutputState[ControllerId].leftTriggerEffect.EffectEx.beginForce = ConvertTo255(BeginForce, 9);
+		OutputState[ControllerId].leftTriggerEffect.EffectEx.middleForce = ConvertTo255(MiddleForce, 9);
+		OutputState[ControllerId].leftTriggerEffect.EffectEx.endForce = ConvertTo255(EndForce, 9);
 		OutputState[ControllerId].leftTriggerEffect.EffectEx.frequency = 0;
 	}
 
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
-		OutputState[ControllerId].rightTriggerEffect.EffectEx.startPosition = ConvertTo255(StartPosition, 9);
+		OutputState[ControllerId].rightTriggerEffect.EffectEx.startPosition = ConvertTo255(StartPosition, 8);
 		OutputState[ControllerId].rightTriggerEffect.EffectEx.keepEffect = KeepEffect;
-		OutputState[ControllerId].rightTriggerEffect.EffectEx.beginForce = ConvertTo255(BeginForce, 8);
-		OutputState[ControllerId].rightTriggerEffect.EffectEx.middleForce = ConvertTo255(MiddleForce, 8);
-		OutputState[ControllerId].rightTriggerEffect.EffectEx.endForce = ConvertTo255(EndForce, 8);
+		OutputState[ControllerId].rightTriggerEffect.EffectEx.beginForce = ConvertTo255(BeginForce, 9);
+		OutputState[ControllerId].rightTriggerEffect.EffectEx.middleForce = ConvertTo255(MiddleForce, 9);
+		OutputState[ControllerId].rightTriggerEffect.EffectEx.endForce = ConvertTo255(EndForce, 9);
 		OutputState[ControllerId].rightTriggerEffect.EffectEx.frequency = 0;
 	}
 
@@ -594,15 +630,15 @@ void UDualSenseLibrary::ContinuousResitance(int32 ControllerId, int32 StartPosit
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
-		OutputState[ControllerId].leftTriggerEffect.Continuous.startPosition = ConvertTo255(StartPosition, 9);
-		OutputState[ControllerId].leftTriggerEffect.Continuous.force = ConvertTo255(Force, 8);
+		OutputState[ControllerId].leftTriggerEffect.Continuous.startPosition = ConvertTo255(StartPosition, 8);
+		OutputState[ControllerId].leftTriggerEffect.Continuous.force = ConvertTo255(Force, 9);
 	}
 
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::ContinuousResitance;
-		OutputState[ControllerId].rightTriggerEffect.Continuous.startPosition = ConvertTo255(StartPosition, 9);
-		OutputState[ControllerId].rightTriggerEffect.Continuous.force = ConvertTo255(Force, 8);
+		OutputState[ControllerId].rightTriggerEffect.Continuous.startPosition = ConvertTo255(StartPosition, 8);
+		OutputState[ControllerId].rightTriggerEffect.Continuous.force = ConvertTo255(Force, 9);
 	}
 
 	SendOut(ControllerId);
@@ -620,15 +656,15 @@ void UDualSenseLibrary::SectionResitance(int32 ControllerId, int32 StartPosition
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].leftTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-		OutputState[ControllerId].leftTriggerEffect.Section.startPosition = ConvertTo255(StartPosition, 9);
-		OutputState[ControllerId].leftTriggerEffect.Section.endPosition = ConvertTo255(EndPosition, 9);
+		OutputState[ControllerId].leftTriggerEffect.Section.startPosition = ConvertTo255(StartPosition, 8);
+		OutputState[ControllerId].leftTriggerEffect.Section.endPosition = ConvertTo255(EndPosition, 8);
 	}
 
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		OutputState[ControllerId].rightTriggerEffect.effectType = DS5W::_TriggerEffectType::SectionResitance;
-		OutputState[ControllerId].rightTriggerEffect.Section.startPosition = ConvertTo255(StartPosition, 9);
-		OutputState[ControllerId].rightTriggerEffect.Section.endPosition = ConvertTo255(EndPosition, 9);
+		OutputState[ControllerId].rightTriggerEffect.Section.startPosition = ConvertTo255(StartPosition, 8);
+		OutputState[ControllerId].rightTriggerEffect.Section.endPosition = ConvertTo255(EndPosition, 8);
 	}
 
 

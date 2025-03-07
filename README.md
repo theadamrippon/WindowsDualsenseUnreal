@@ -1,12 +1,12 @@
-# Windows Dualsense for Unreal Engine 5.x
+# Windows Dualsense for Unreal Engine version 5.3, 5.4 and 5.5
 
-### Plugin to integrate Dualsense PS5 devices (controllers) into Unreal Engine 5.x for Windows platforms.
+### Plugin to integrate full suport Dualsense PS5 device into Unreal Engine 5 for Windows platforms.
 
 ### No necessary configuration to run the control.
 
 ## Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
-### Usage methods available via C++.
+### Usage methods available via C++ or Blueprint.
 
 ```
 #include "DualSenseProxy.h"
@@ -85,7 +85,13 @@ void APlayerController::BeginPlay()
 
 # Installation
 Download the compiled plugin **Windows x64**
-[Download plugin WindowsDualsense_ds5w.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w.zip)
+
+[UE 5.3 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.3/WindowsDualsense_ds5w1.0.0.zip)
+
+[UE 5.4 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.4/WindowsDualsense_ds5w1.0.0.zip)
+
+[UE 5.5 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.5/WindowsDualsense_ds5w1.0.0.zip)
+
 
 Extract the file to
 
@@ -114,6 +120,12 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)
+
+
+> **NOTE:** It may be necessary to enable haptic feedback in the project settings, under **Edit > Project Settings > Input**.
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GamepadEnable.gif)
+
 
 ### The plugin is compatible with Unreal's native Blueprints Force Feedback, for example:
 

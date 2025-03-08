@@ -31,7 +31,7 @@ void APlayerController::BeginPlay()
     UDualSenseProxy::EnableTouch1(ControllerId, false);
     UDualSenseProxy::EnableTouch2(ControllerId, false);
 
-    // Level battery Full load max 1.0f 
+    // Level battery Full load max 100.0f
     float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
 
     // Leds configs
@@ -39,6 +39,9 @@ void APlayerController::BeginPlay()
     UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
     UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
 
+    // Vibrations example 
+	PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
+	
     // Stop triggers effects
     UDualSenseProxy::StopAllTriggersEffects(ControllerId);
     UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Left);
@@ -48,19 +51,19 @@ void APlayerController::BeginPlay()
     UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
     UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
 
-    // Start position max value 9 | Force max value 8
+    // Start position max value 8 | Force max value 9
     UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Left); 
     UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
 
-    // Start and end positions max value 9
-    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 9, EControllerHand::Left); 
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 9, EControllerHand::Right);
+    // Start and end positions max value 8
+    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 8, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Right);
 
     // Example Haptics Effects...
 
-    // Start position max value 9 | Forces max value 8 
-    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 9, 0, 0, 5, EControllerHand::Left, true);
-    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 9, 0, 0, 6, EControllerHand::Right, true);
+    // Start position max value 8 | Forces max value 9 
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 6, EControllerHand::Left, true);
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 7, EControllerHand::Right, true);
 
     // SetHapticsByValue is a method of PlayerController.
     SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);

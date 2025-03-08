@@ -6,12 +6,14 @@
 #include "InputCoreTypes.h"
 
 #define MAX_DEVICES 8
+#define MAX_HISTORY_BATTERY 15
 
 DS5W::_DeviceEnumInfo* UDualSenseLibrary::Infos;
 TMap<int32, DS5W::_DS5InputState> UDualSenseLibrary::InputState;
 TMap<int32, DS5W::DS5OutputState> UDualSenseLibrary::OutputState;
 TMap<int32, DS5W::DeviceContext> UDualSenseLibrary::DeviceContexts;
 
+TMap<int32, std::deque<uint8_t>> UDualSenseLibrary::BatteryHistories;
 TMap<int32, bool> UDualSenseLibrary::EnableAccelerometer;
 TMap<int32, bool> UDualSenseLibrary::EnableGyroscope;
 TMap<int32, bool> UDualSenseLibrary::EnableTouch1;
@@ -104,8 +106,6 @@ bool UDualSenseLibrary::Connection()
 			OutputState.Add(i, DS5W::DS5OutputState());
 			InputState.Add(i, InState);
 			DeviceContexts.Add(i, Context);
-
-			BatteryLevel.Add(i, 0.0f);
 
 			LeftTriggerFeedback.Add(i, 0);
 			RightTriggerFeedback.Add(i, 0);
@@ -252,11 +252,8 @@ bool UDualSenseLibrary::UpdateInput(
 		const auto ButtonsA = InputState[InputDeviceId.GetId()].buttonsA;
 		const auto ButtonsB = InputState[InputDeviceId.GetId()].buttonsB;
 
-		if (BatteryLevel.Contains(InputDeviceId.GetId()))
-		{
-			const float Level = static_cast<float>(InputState[InputDeviceId.GetId()].battery.level) / 255.0f;
-			BatteryLevel.Add(InputDeviceId.GetId(), FMath::Clamp(Level, 0.0f, 1.0f));
-		}
+		uint8_t BatteryValue = ((DeviceContexts[InputDeviceId.GetId()]._internal.hidBuffer[0x34] & 0x0F) * 100) / 15;
+		SmoothBatteryLevel(InputDeviceId.GetId(), BatteryValue);
 
 		if (
 			LeftTriggerFeedback.Contains(InputDeviceId.GetId()) &&
@@ -438,17 +435,6 @@ void UDualSenseLibrary::SetVibration(int32 ControllerId, const FForceFeedbackVal
 	SendOut(ControllerId);
 }
 
-void UDualSenseLibrary::SetVibration(int32 ControllerId, const FCustomForceFeedbackValues& Vibration)
-{
-	if (!OutputState.Contains(ControllerId))
-	{
-		return;
-	}
-
-	OutputState[ControllerId].leftRumble = CalculateLeftRumble(Vibration);
-	OutputState[ControllerId].rightRumble = CalculateRightRumble(Vibration);
-	SendOut(ControllerId);
-}
 
 unsigned char UDualSenseLibrary::CalculateLeftRumble(const FForceFeedbackValues& Values)
 {
@@ -457,18 +443,6 @@ unsigned char UDualSenseLibrary::CalculateLeftRumble(const FForceFeedbackValues&
 }
 
 unsigned char UDualSenseLibrary::CalculateRightRumble(const FForceFeedbackValues& Values)
-{
-	float CombinedRight = Values.RightLarge * 0.8f + Values.RightSmall * 0.2f;
-	return static_cast<unsigned char>(FMath::Clamp(CombinedRight * 255.0f, 0.0f, 255.0f));
-}
-
-unsigned char UDualSenseLibrary::CalculateLeftRumble(const FCustomForceFeedbackValues& Values)
-{
-	float CombinedLeft = Values.LeftLarge * 0.8f + Values.LeftSmall * 0.2f;
-	return static_cast<unsigned char>(FMath::Clamp(CombinedLeft * 255.0f, 0.0f, 255.0f));
-}
-
-unsigned char UDualSenseLibrary::CalculateRightRumble(const FCustomForceFeedbackValues& Values)
 {
 	float CombinedRight = Values.RightLarge * 0.8f + Values.RightSmall * 0.2f;
 	return static_cast<unsigned char>(FMath::Clamp(CombinedRight * 255.0f, 0.0f, 255.0f));
@@ -785,11 +759,42 @@ void UDualSenseLibrary::SetLedMicEffects(int32 ControllerId, int32 LedMic)
 	SendOut(ControllerId);
 }
 
+
+void UDualSenseLibrary::SmoothBatteryLevel(int32 ControllerId, uint8_t NewValue)
+{
+	if (!BatteryHistories.Contains(ControllerId))
+	{
+		BatteryHistories.Add(ControllerId, std::deque<uint8_t>(0));
+	}
+	
+	auto& History = BatteryHistories[ControllerId];
+	History.push_back(NewValue);
+
+	if (History.size() > MAX_HISTORY_BATTERY)
+	{
+		History.pop_front();
+	}
+
+	int32 Sum = 0;
+	for (int32 Value : History)
+	{
+		Sum += Value;
+	}
+
+	if (!BatteryLevel.Contains(ControllerId))
+	{
+		BatteryLevel.Add(ControllerId, 0);
+	}
+
+	float BatterValue = Sum / History.size();
+	BatteryLevel[ControllerId] =  BatterValue;
+}
+
 float UDualSenseLibrary::GetLevelBattery(int32 ControllerId)
 {
 	if (!BatteryLevel.Contains(ControllerId))
 	{
-		return 0.0f;
+		BatteryLevel.Add(ControllerId, 0.0f);
 	}
 
 	return BatteryLevel[ControllerId];

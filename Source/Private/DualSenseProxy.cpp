@@ -7,6 +7,7 @@
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 
+
 bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 {
 	return UDualSenseLibrary::IsConnected(ControllerId);
@@ -52,17 +53,6 @@ int32 UDualSenseProxy::GetTriggerRightForceFeedback(int32 ControllerId)
 
 	EControllerHand HandToUse = EControllerHand::Right;
 	return UDualSenseLibrary::GetTrirggersFeedback(ControllerId, HandToUse);
-}
-
-void UDualSenseProxy::SetVibrationsEffects(int32 ControllerId, FCustomForceFeedbackValues FeedbackValues,
-                                           float Duration)
-{
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::SetVibration(ControllerId, FeedbackValues);
 }
 
 void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,

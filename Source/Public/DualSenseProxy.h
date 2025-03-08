@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FCustomForceFeedbackValues.h"
 #include "UObject/Object.h"
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
@@ -61,9 +60,6 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
 	static int32 GetTriggerRightForceFeedback(int32 ControllerId);
 
-	UFUNCTION(BlueprintCallable, Category = "DualSense Vibrations")
-	static void SetVibrationsEffects(int32 ControllerId, FCustomForceFeedbackValues FeedbackValues, float Duration);
-
 	UFUNCTION(BlueprintCallable, Category = "DualSense Trigger Haptic Effects")
 	static void SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,
 	                                           int32 MiddleForce, int32 EndForce, EControllerHand Hand,
@@ -108,5 +104,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch Pad")
 	static void EnableTouch2(int32 ControllerId, bool bEnableGyroscope);
+
 	
 };

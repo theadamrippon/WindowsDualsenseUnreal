@@ -316,16 +316,17 @@ bool UDualSenseLibrary::UpdateInput(
 		// Analog left
 		const float LeftX = InputState[InputDeviceId.GetId()].leftStick.x / 128.f;
 		const float LeftY = InputState[InputDeviceId.GetId()].leftStick.y / 128.f;
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftStick_Left.GetFName(), UserId, InputDeviceId,
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId,
 		                                          LeftX);
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftStick_Up.GetFName(), UserId, InputDeviceId, LeftY);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId, InputDeviceId, LeftY);
+		
 
 		// Analog right
 		const float RightX = InputState[InputDeviceId.GetId()].rightStick.x / 128.0f;
 		const float RightY = InputState[InputDeviceId.GetId()].rightStick.y / 128.0f;
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightStick_Left.GetFName(), UserId, InputDeviceId,
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogX, UserId, InputDeviceId,
 		                                          RightX);
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightStick_Up.GetFName(), UserId, InputDeviceId,
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId,
 		                                          RightY);
 
 		// Triggers

@@ -21,10 +21,10 @@ public class WindowsDualsense_ds5w : ModuleRules
 
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice"});
         
-        PrivateDependencyModuleNames.AddRange(new string[]
-        {
-	        "Slate",
-	        "SlateCore",
-        });
+        // PrivateDependencyModuleNames.AddRange(new string[]
+        // {
+	       //  "Slate",
+	       //  "SlateCore",
+        // });
 	}
 }

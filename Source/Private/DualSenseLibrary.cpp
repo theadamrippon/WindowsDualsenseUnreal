@@ -17,7 +17,6 @@ TMap<int32, DS5W::_DS5InputState> UDualSenseLibrary::InputState;
 TMap<int32, DS5W::DS5OutputState> UDualSenseLibrary::OutputState;
 TMap<int32, DS5W::DeviceContext> UDualSenseLibrary::DeviceContexts;
 
-TMap<int32, std::deque<uint8_t>> UDualSenseLibrary::BatteryHistories;
 TMap<int32, bool> UDualSenseLibrary::EnableAccelerometer;
 TMap<int32, bool> UDualSenseLibrary::EnableGyroscope;
 TMap<int32, bool> UDualSenseLibrary::EnableTouch1;
@@ -255,9 +254,6 @@ bool UDualSenseLibrary::UpdateInput(
 		const auto ButtonsAndDpad = InputState[InputDeviceId.GetId()].buttonsAndDpad;
 		const auto ButtonsA = InputState[InputDeviceId.GetId()].buttonsA;
 		const auto ButtonsB = InputState[InputDeviceId.GetId()].buttonsB;
-
-		uint8_t BatteryValue = ((DeviceContexts[InputDeviceId.GetId()]._internal.hidBuffer[0x34] & 0x0F) * 100) / 15;
-		SmoothBatteryLevel(InputDeviceId.GetId(), BatteryValue);
 
 		if (
 			LeftTriggerFeedback.Contains(InputDeviceId.GetId()) &&
@@ -763,42 +759,27 @@ void UDualSenseLibrary::SetLedMicEffects(int32 ControllerId, int32 LedMic)
 	SendOut(ControllerId);
 }
 
-
-void UDualSenseLibrary::SmoothBatteryLevel(int32 ControllerId, uint8_t NewValue)
-{
-	if (!BatteryHistories.Contains(ControllerId))
-	{
-		BatteryHistories.Add(ControllerId, std::deque<uint8_t>(0));
-	}
-	
-	auto& History = BatteryHistories[ControllerId];
-	History.push_back(NewValue);
-
-	if (History.size() > MAX_HISTORY_BATTERY)
-	{
-		History.pop_front();
-	}
-
-	int32 Sum = 0;
-	for (int32 Value : History)
-	{
-		Sum += Value;
-	}
-
-	if (!BatteryLevel.Contains(ControllerId))
-	{
-		BatteryLevel.Add(ControllerId, 0);
-	}
-
-	float BatterValue = Sum / History.size();
-	BatteryLevel[ControllerId] =  BatterValue;
-}
-
 float UDualSenseLibrary::GetLevelBattery(int32 ControllerId)
 {
+	if (!DeviceContexts.Contains(ControllerId) || !InputState.Contains(ControllerId))
+	{
+		return 0.0f;
+	}
+	
 	if (!BatteryLevel.Contains(ControllerId))
 	{
 		BatteryLevel.Add(ControllerId, 0.0f);
+	}
+
+	if (
+		DS5W_SUCCESS
+		(
+			DS5W::getDeviceInputState(&DeviceContexts[ControllerId], &InputState[ControllerId])
+		)
+	)
+	{
+		uint8_t BatteryValue = ((DeviceContexts[ControllerId]._internal.hidBuffer[0x34] & 0x0F) * 100) / 15;
+		BatteryLevel[ControllerId] = BatteryValue;
 	}
 
 	return BatteryLevel[ControllerId];
@@ -808,7 +789,6 @@ unsigned char UDualSenseLibrary::ConvertTo255(unsigned char value, unsigned char
 {
 	return static_cast<unsigned char>((value * 255) / maxInput);
 }
-
 
 int UDualSenseLibrary::ConvertTo255(const float Value)
 {

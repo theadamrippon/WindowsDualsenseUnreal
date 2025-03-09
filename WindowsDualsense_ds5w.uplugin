@@ -34,5 +34,8 @@
 				"Win64"
 			]
 		}
+	],
+	"AdditionalFiles": [
+		"ThirdParty/DualSenseWindows_V0.1/*"
 	]
 }

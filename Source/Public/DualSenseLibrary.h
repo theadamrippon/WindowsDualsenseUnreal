@@ -1,4 +1,8 @@
-﻿#pragma once
+﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+// Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
+// Planned Release Year: 2025
+
+#pragma once
 
 #include "ds5w.h"
 #include "CoreMinimal.h"

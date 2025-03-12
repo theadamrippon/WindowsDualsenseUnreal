@@ -10,7 +10,6 @@
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
-#include <deque>
 #include "DualSenseLibrary.generated.h"
 
 /**

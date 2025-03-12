@@ -1,3 +1,8 @@
+// This file is part of an external library: DualSenseWindows API.
+// Implementation licensed under the MIT License by Ludwig Füchsl.
+// Used in accordance with the original license terms: https://github.com/Ohjurot/DualSense-Windows.
+// Copyright (c) 2020 Ludwig Füchsl
+
 /*
 	DualSenseWindows API
 	https://github.com/Ohjurot/DualSense-Windows
@@ -25,6 +30,7 @@
 	SOFTWARE.
 
 */
+
 #pragma once
 
 #if defined(DS5W_BUILD_DLL)

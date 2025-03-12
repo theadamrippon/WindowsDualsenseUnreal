@@ -104,11 +104,6 @@ Now enable the plugin in the Unreal Editor, connect your DualSense device, and r
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Install.gif)
 
-
-After restarting the engine, the following message will appear in the bottom right corner:
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/IsConnection.png)
-
 ### Native Gamepad Mapping in Unreal
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Buttons.gif)

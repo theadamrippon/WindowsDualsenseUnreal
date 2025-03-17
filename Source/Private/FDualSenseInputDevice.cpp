@@ -1,10 +1,11 @@
-﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
 
 #include "FDualSenseInputDevice.h"
 #include "DualSenseLibrary.h"
+#include "FDualSenseLibraryManager.h"
 #include "Windows/WindowsApplication.h"
 
 
@@ -17,32 +18,14 @@ FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicatio
 void FDualSenseInputDevice::Tick(float DeltaTime)
 {
 	TArray<FInputDeviceId> DeviceIds;
-	Get().GetAllInputDevices(DeviceIds);
-	
+	Get().GetAllConnectedInputDevices(DeviceIds);
+
 	for (FInputDeviceId& Device : DeviceIds)
 	{
-		if (MappedInputDevices.Contains(Device))
+		if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(Device.GetId()); DsLibrary && IsValid(DsLibrary))
 		{
-			if (!UDualSenseLibrary::IsConnected(Device.GetId()))
-			{
-				Disconnect(Device);
-			}
-
-			if (
-				UDualSenseLibrary::IsConnected(Device.GetId()) &&
-				MappedInputDevices[Device].ConnectionState != EInputDeviceConnectionState::Connected
-			)
-			{
-				Reconnect(Device);
-			}
-			
-			if (
-				MappedInputDevices[Device].ConnectionState == EInputDeviceConnectionState::Connected
-			)
-			{
-				const FPlatformUserId UserId = GetUserForInputDevice(Device);
-				UDualSenseLibrary::UpdateInput(MessageHandler, UserId, Device);
-			}
+			const FPlatformUserId UserId = GetUserForInputDevice(Device);
+			DsLibrary->UpdateInput(MessageHandler, UserId, Device);
 		}
 	}
 }
@@ -62,18 +45,36 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 	
 	if (Property->Name != "InputDeviceLightColor")
 	{
-		UDualSenseLibrary::SetTriggers(ControllerId, Property);
+		UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+		if (DsLibrary == nullptr)
+		{
+			return;
+		}
+		
+		DsLibrary->SetTriggers(Property);
 	}
 }
 
 void FDualSenseInputDevice::SetLightColor(const int32 ControllerId, const FColor Color)
 {
-	UDualSenseLibrary::UpdateColorOutput(ControllerId, Color);
+	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (DsLibrary == nullptr)
+	{
+		return;
+	}
+	
+	DsLibrary->UpdateColorOutput(Color);
 }
 
 void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 {
-	UDualSenseLibrary::UpdateColorOutput(ControllerId, FColor::Black);
+	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (DsLibrary == nullptr)
+	{
+		return;
+	}
+	
+	DsLibrary->UpdateColorOutput(FColor::Blue);
 }
 
 void FDualSenseInputDevice::Reconnect(FInputDeviceId& Device)
@@ -88,7 +89,13 @@ void FDualSenseInputDevice::Disconnect(FInputDeviceId& Device)
 
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)
 {
-	UDualSenseLibrary::SetHapticFeedbackValues(ControllerId, Hand, &Values);
+	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (DsLibrary == nullptr)
+	{
+		return;
+	}
+	
+	DsLibrary->SetHapticFeedbackValues(Hand, &Values);
 }
 
 void FDualSenseInputDevice::GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const
@@ -109,5 +116,11 @@ bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 
 void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& values)
 {
-	UDualSenseLibrary::SetVibration(ControllerId, values);
+	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (DsLibrary == nullptr)
+	{
+		return;
+	}
+	
+	DsLibrary->SetVibration(values);
 }

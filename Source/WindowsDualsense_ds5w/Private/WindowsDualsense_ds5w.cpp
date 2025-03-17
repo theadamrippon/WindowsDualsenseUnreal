@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
@@ -15,30 +15,31 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	IModularFeatures::Get().RegisterModularFeature(IInputDeviceModule::GetModularFeatureName(), this);
 
 	FString EnginePluginPath = FPaths::Combine(FPaths::EnginePluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
-	if (EnginePluginPath.IsEmpty())
+	FString LocalPluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
+
+	if (FPaths::FileExists(EnginePluginPath))
 	{
-		FString LocalPluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
+		DS5WdllHandle = FPlatformProcess::GetDllHandle(*EnginePluginPath);
+		UE_LOG(LogTemp, Log, TEXT("Loaded from Engine Plugin Path: %s"), *EnginePluginPath);
+	}
+	else if (FPaths::FileExists(LocalPluginPath))
+	{
 		DS5WdllHandle = FPlatformProcess::GetDllHandle(*LocalPluginPath);
+		UE_LOG(LogTemp, Log, TEXT("Loaded from Project Plugin Path: %s"), *LocalPluginPath);
 	}
 	else
 	{
-		DS5WdllHandle = FPlatformProcess::GetDllHandle(*EnginePluginPath);
+		UE_LOG(LogTemp, Error, TEXT("Failed to locate DLL in both paths. Check plugin installation."));
+		return;
 	}
-
+	
 	RegisterCustomKeys();
-	DualSenseLibraryInstance = NewObject<UDualSenseLibrary>();
-	DualSenseLibraryInstance->InitializeLibrary();
-
+	DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	DualSenseLibraryManager->CreateLibraryInstances();
 }
 
 void FWindowsDualsense_ds5wModule::ShutdownModule()
 {
-	if (DualSenseLibraryInstance)
-	{
-		DualSenseLibraryInstance->ShutdownLibrary();
-		DualSenseLibraryInstance = nullptr;
-	}
-
 	if (DS5WdllHandle)
 	{
 		FPlatformProcess::FreeDllHandle(DS5WdllHandle);
@@ -50,8 +51,7 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler)
 {
 	DeviceInstances = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler));
-
-	for (int32 i = 0; i < DualSenseLibraryInstance->ControllersCount; i++)
+	for (int32 i = 0; i < DualSenseLibraryManager->GetAllocatedDevices(); i++)
 	{
 		RegisterDevice(i);
 	}
@@ -75,10 +75,14 @@ void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
 	}
 
 
-	EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Disconnected;
-	if (DualSenseLibraryInstance->IsConnected(ControllerId))
+	EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Connected;
+	if (UDualSenseLibrary* LibraryInstance = DualSenseLibraryManager->GetLibraryInstance(ControllerId))
 	{
-		ConnectionState = EInputDeviceConnectionState::Connected;
+		if (!LibraryInstance->IsConnected())
+		{
+			UE_LOG(LogTemp, Log, TEXT("DualSense Disconnected: %d and User %d"), ControllerId, UserId.GetInternalId());
+			ConnectionState = EInputDeviceConnectionState::Disconnected;
+		}
 	}
 
 	FPlatformInputDeviceState State;

@@ -13,8 +13,8 @@
 	"CanContainContent": false,
 	"IsBetaVersion": true,
 	"Installed": true,
-	"EngineVersions": ["5.3", "5.4", "5.5"],
-	"EnabledByDefault": true,
+	"EngineVersions": ["5.5","5.4", "5.3"],
+	"EnabledByDefault": false,
 	"Modules": [
 		{
 			"Name": "WindowsDualsense_ds5w",

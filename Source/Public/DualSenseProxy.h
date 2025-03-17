@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
@@ -102,10 +102,10 @@ public:
 	static void EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch Pad")
-	static void EnableTouch1(int32 ControllerId, bool bEnableGyroscope);
+	static void EnableTouch1(int32 ControllerId, bool bEnableTouch);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch Pad")
-	static void EnableTouch2(int32 ControllerId, bool bEnableGyroscope);
+	static void EnableTouch2(int32 ControllerId, bool bEnableTouch);
 
 	
 };

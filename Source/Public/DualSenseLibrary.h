@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
@@ -20,75 +20,56 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject
 {
 	GENERATED_BODY()
 public:
+	virtual ~UDualSenseLibrary() override
+	{
+		ShutdownLibrary();
+	}
+	
 	DECLARE_EVENT_OneParam(UDualSenseLibrary, FOnDeviceRegistered, int32 ControllerId);
 	static FOnDeviceRegistered& OnDeviceRegistered() { return DeviceRegisteredEvent; }
 
-	static bool InitializeLibrary();
-	static void ShutdownLibrary();
+	bool InitializeLibrary(DS5W::DeviceContext& Context);
+	void ShutdownLibrary();
 
-	// States and Connection Devices
-	static int32 ControllersCount;
-	static bool Reconnect(int32 ControllerId);
-	static bool IsConnected(int32 ControllerId);
-	static void SetConnectionIsValid(int32 ControllerId, bool IsValid);
+	bool Reconnect();
+	bool IsConnected();
 
 	// Input
-	static bool UpdateInput(
+	bool UpdateInput(
 		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
 		const FPlatformUserId UserId,
 		const FInputDeviceId InputDeviceId
 	);
 
 	// Haptic Feedback and Effects
-	static void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues* Values);
-	static int32 GetTrirggersFeedback(int32 ControllerId, EControllerHand& HandTrigger);
-	static void ConfigTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
+	void SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values);
+	int32 GetTrirggersFeedback(const EControllerHand& HandTrigger);
+	void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
 
 	// Effects
-	static void NoResitance(int32 ControllerId, const EControllerHand& Hand);
-	static void ContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force, const EControllerHand& Hand);
-	static void SectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, const EControllerHand& Hand);
-	static void StopEffect(int32 ControllerId, const EControllerHand& Hand);
-	static void StopAllEffects(int32 ControllerId);
-	static void StopAll(int32 ControllerId);
-	static void SetLedPlayerEffects(int32 ControllerId, int32 NumberLeds, int32 BrightnessValue);
-	static void SetLedMicEffects(int32 ControllerId, int32 LedMic);
+	void NoResitance(const EControllerHand& Hand);
+	void ContinuousResitance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
+	void SectionResitance(int32 StartPosition, int32 EndPosition, const EControllerHand& Hand);
+	void StopEffect(const EControllerHand& Hand);
+	void StopAllEffects();
+	void StopAll();
+	void SetLedPlayerEffects(int32 NumberLeds, int32 BrightnessValue);
+	void SetLedMicEffects(int32 LedMic);
 
 	// Status
-	static float GetLevelBattery(int32 ControllerId);
+	float GetLevelBattery();
 
 	// Colors, vibration and triggers config
-	static void UpdateColorOutput(int32 ControllerId, FColor Color);
-	static void SetVibration(int32 ControllerId, const FForceFeedbackValues& Vibration);
-	static void SetTriggers(int32 ControllerId, const FInputDeviceProperty* Property);
+	void UpdateColorOutput(FColor Color);
+	void SetVibration(const FForceFeedbackValues& Vibration);
+	void SetTriggers(const FInputDeviceProperty* Property);
 
-	static void SetAcceleration(int32 ControllerId, bool bIsAccelerometer);
-	static void SetGyroscope(int32 ControllerId, bool bIsGyroscope);
-	static void SetTouch1(int32 ControllerId, bool bIsGyroscope);
-	static void SetTouch2(int32 ControllerId, bool bIsGyroscope);
+	void SetAcceleration(bool bIsAccelerometer);
+	void SetGyroscope(bool bIsGyroscope);
+	void SetTouch1(bool bIsGyroscope);
+	void SetTouch2(bool bIsGyroscope);
 
-private:
-	static DS5W::_DeviceEnumInfo* Infos;
-	static TMap<int32, DS5W::_DS5InputState> InputState;
-	static TMap<int32, DS5W::DS5OutputState> OutputState;
-	static TMap<int32, DS5W::DeviceContext> DeviceContexts;
-
-	static TMap<int32, bool> IsInitialized;
-	static TMap<int32, float> BatteryLevel;
-	static TMap<int32, int32> LeftTriggerFeedback;
-	static TMap<int32, int32> RightTriggerFeedback;
-	
-	static TMap<FInputDeviceId, TMap<FName, bool>> ButtonStates;
-
-	static TMap<int32, bool> EnableAccelerometer;
-	static TMap<int32, bool> EnableGyroscope;
-	static TMap<int32, bool> EnableTouch1;
-	static TMap<int32, bool> EnableTouch2;
-
-	static FOnDeviceRegistered DeviceRegisteredEvent;
-
-	static bool Connection();
-	static void CheckButtonInput(
+	void CheckButtonInput(
 		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
 		const FPlatformUserId UserId,
 		const FInputDeviceId InputDeviceId,
@@ -96,11 +77,27 @@ private:
 		const bool IsButtonPressed
 	);
 
-	static unsigned char CalculateLeftRumble(const FForceFeedbackValues& Values);
-	static unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
+	TMap<FName, bool> ButtonStates;
+	
+private:
+	DS5W::_DS5InputState InputState;
+	DS5W::DS5OutputState OutputState;
+	DS5W::DeviceContext DeviceContexts;
+	
+	bool EnableAccelerometer;
+	bool EnableGyroscope;
+	bool EnableTouch1;
+	bool EnableTouch2;
 
-	// Output
-	static void SendOut(int32 ControllerId);
-	static int ConvertTo255(float Value);
-	static unsigned char ConvertTo255(unsigned char value, unsigned char maxInput);
+	static FOnDeviceRegistered DeviceRegisteredEvent;
+
+	bool Connection();
+	
+	unsigned char CalculateLeftRumble(const FForceFeedbackValues& Values);
+	unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
+	
+	void SendOut();
+	
+	int ConvertTo255(float Value);
+	unsigned char ConvertTo255(unsigned char value, unsigned char maxInput);
 };

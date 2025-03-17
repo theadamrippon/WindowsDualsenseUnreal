@@ -1,10 +1,11 @@
-﻿// Copyright (c) 2025 Rafael Valotor/Publisher. All rights reserved.
+﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
 
 #include "DualSenseProxy.h"
 #include "DualSenseLibrary.h"
+#include "FDualSenseLibraryManager.h"
 #include "FValidationUtils.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
@@ -12,60 +13,72 @@
 
 bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 {
-	return UDualSenseLibrary::IsConnected(ControllerId);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return false;
+	}
+	
+	return DualSenseInstance->IsConnected();
 }
 
 bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 {
-	if (UDualSenseLibrary::IsConnected(ControllerId))
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+
+	if (!DualSenseInstance)
+	{
+		return false;
+	}
+	
+	if (DualSenseInstance->IsConnected())
 	{
 		return true;
 	}
 
-	return UDualSenseLibrary::Reconnect(ControllerId);
+	return DualSenseInstance->Reconnect();
 }
 
 float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	
+	if (!DualSenseInstance)
 	{
-		return 0;
+		return 0.0f;
 	}
-
-	return UDualSenseLibrary::GetLevelBattery(ControllerId);
+	
+	return DualSenseInstance->GetLevelBattery();
 }
 
 int32 UDualSenseProxy::GetTriggerLeftForceFeedback(int32 ControllerId)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
 	{
 		return 0;
 	}
-
+	
 	EControllerHand HandToUse = EControllerHand::Left;
-	return UDualSenseLibrary::GetTrirggersFeedback(ControllerId, HandToUse);
+	return DualSenseInstance->GetTrirggersFeedback(HandToUse);
 }
 
 int32 UDualSenseProxy::GetTriggerRightForceFeedback(int32 ControllerId)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
 	{
 		return 0;
 	}
-
+	
 	EControllerHand HandToUse = EControllerHand::Right;
-	return UDualSenseLibrary::GetTrirggersFeedback(ControllerId, HandToUse);
+	return DualSenseInstance->GetTrirggersFeedback(HandToUse);
 }
 
 void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,
                                                      int32 MiddleForce, int32 EndForce, EControllerHand Hand,
                                                      bool KeepEffect)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
 	if (
 		!FValidationUtils::ValidateMaxForce(BeginForce) &&
 		!FValidationUtils::ValidateMaxForce(MiddleForce) &&
@@ -76,29 +89,19 @@ void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 S
 		return;
 	}
 
-
-	UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(ControllerId, StartPosition, BeginForce, MiddleForce, EndForce,
-	                                                     Hand, KeepEffect);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->ConfigTriggerHapticFeedbackEffect(StartPosition, BeginForce, MiddleForce, EndForce, Hand, KeepEffect);
 }
 
 void UDualSenseProxy::EffectNoResitance(int32 ControllerId, EControllerHand HandResistence)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::NoResitance(ControllerId, HandResistence);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->NoResitance(HandResistence);
 }
 
 void UDualSenseProxy::EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force,
                                                 EControllerHand HandContinous)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
 	if (
 		!FValidationUtils::ValidateMaxForce(Force) &&
 		!FValidationUtils::ValidateMaxPosition(StartPosition)
@@ -107,17 +110,13 @@ void UDualSenseProxy::EffectContinuousResitance(int32 ControllerId, int32 StartP
 		return;
 	}
 
-	UDualSenseLibrary::ContinuousResitance(ControllerId, StartPosition, Force, HandContinous);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->ContinuousResitance(StartPosition, Force, HandContinous);
 }
 
 void UDualSenseProxy::EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition,
                                              EControllerHand Hand)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
 	if (
 		!FValidationUtils::ValidateMaxPosition(StartPosition) &&
 		!FValidationUtils::ValidateMaxPosition(EndPosition)
@@ -126,59 +125,40 @@ void UDualSenseProxy::EffectSectionResitance(int32 ControllerId, int32 StartPosi
 		return;
 	}
 
-	UDualSenseLibrary::SectionResitance(ControllerId, StartPosition, EndPosition, Hand);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SectionResitance(StartPosition, EndPosition, Hand);
 }
 
 void UDualSenseProxy::StopTriggerEffect(const int32 ControllerId, EControllerHand HandStop)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::StopEffect(ControllerId, HandStop);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->StopEffect(HandStop);
 }
 
 void UDualSenseProxy::StopAllTriggersEffects(const int32 ControllerId)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::StopAllEffects(ControllerId);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->StopAllEffects();
 }
 
 void UDualSenseProxy::ResetEffects(const int32 ControllerId)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::StopAll(ControllerId);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->StopAll();
 }
 
 
 void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
 	int32 BrightnessValue = static_cast<int32>(Brightness);
 	int32 LedValue = static_cast<int32>(Value);
-	UDualSenseLibrary::SetLedPlayerEffects(ControllerId, LedValue, BrightnessValue);
+
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetLedPlayerEffects(LedValue, BrightnessValue);
 }
 
 void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
 	int32 LedNumber = 0;
 	if (Value == ELedMicEnum::MicOn)
 	{
@@ -190,35 +170,36 @@ void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
 		LedNumber = 2;
 	}
 
-	UDualSenseLibrary::SetLedMicEffects(ControllerId, LedNumber);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetLedMicEffects(LedNumber);
 }
 
 void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
 {
-	if (!UDualSenseLibrary::IsConnected(ControllerId))
-	{
-		return;
-	}
-
-	UDualSenseLibrary::UpdateColorOutput(ControllerId, Color);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->UpdateColorOutput(Color);
 }
 
 void UDualSenseProxy::EnableAccelerometerValues(int32 ControllerId, bool bEnableAccelerometer)
 {
-	UDualSenseLibrary::SetAcceleration(ControllerId, bEnableAccelerometer);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetAcceleration(bEnableAccelerometer);
 }
 
 void UDualSenseProxy::EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope)
 {
-	UDualSenseLibrary::SetGyroscope(ControllerId, bEnableGyroscope);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetGyroscope(bEnableGyroscope);
 }
 
-void UDualSenseProxy::EnableTouch1(int32 ControllerId, bool bEnableTouch1)
+void UDualSenseProxy::EnableTouch1(int32 ControllerId, bool bEnableTouch)
 {
-	UDualSenseLibrary::SetTouch1(ControllerId, bEnableTouch1);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetTouch1(bEnableTouch);
 }
 
-void UDualSenseProxy::EnableTouch2(int32 ControllerId, bool bEnableTouch1)
+void UDualSenseProxy::EnableTouch2(int32 ControllerId, bool bEnableTouch)
 {
-	UDualSenseLibrary::SetTouch2(ControllerId, bEnableTouch1);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	DualSenseInstance->SetTouch2(bEnableTouch);
 }

@@ -20,16 +20,16 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	if (FPaths::FileExists(EnginePluginPath))
 	{
 		DS5WdllHandle = FPlatformProcess::GetDllHandle(*EnginePluginPath);
-		UE_LOG(LogTemp, Log, TEXT("Loaded from Engine Plugin Path: %s"), *EnginePluginPath);
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Loaded from Engine Plugin Path: %s"), *EnginePluginPath);
 	}
 	else if (FPaths::FileExists(LocalPluginPath))
 	{
 		DS5WdllHandle = FPlatformProcess::GetDllHandle(*LocalPluginPath);
-		UE_LOG(LogTemp, Log, TEXT("Loaded from Project Plugin Path: %s"), *LocalPluginPath);
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Loaded from Project Plugin Path: %s"), *LocalPluginPath);
 	}
 	else
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to locate DLL in both paths. Check plugin installation."));
+		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to locate DLL in both paths. Check plugin installation."));
 		return;
 	}
 	
@@ -38,7 +38,7 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
 		return;
 	}
 	
@@ -62,7 +62,7 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
 		return DeviceInstances;
 	}
 	
@@ -94,7 +94,7 @@ void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
 	UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
 		return;
 	}
 	
@@ -102,7 +102,7 @@ void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
 	{
 		if (!LibraryInstance->IsConnected())
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense Disconnected: %d and User %d"), ControllerId, UserId.GetInternalId());
+			UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected %d and User %d"), ControllerId, UserId.GetInternalId());
 			ConnectionState = EInputDeviceConnectionState::Disconnected;
 		}
 	}
@@ -114,7 +114,7 @@ void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
 
 	if (DeviceInstances->RemapUserAndDeviceToControllerId(UserId, ControllerId, InputDeviceId))
 	{
-		UE_LOG(LogTemp, Log, TEXT("Success mapper Device registred: %d and User %d"), ControllerId, UserId.GetInternalId());
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Success mapper register Device %d and User %d"), ControllerId, UserId.GetInternalId());
 	}
 }
 

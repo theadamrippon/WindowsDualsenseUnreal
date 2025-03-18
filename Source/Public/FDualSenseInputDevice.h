@@ -64,8 +64,6 @@ public:
 	virtual void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues& Values) override;
 	virtual void GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const override;
 	virtual float GetHapticAmplitudeScale() const override { return 1.0f; }
-
-	const TSharedRef<FGenericApplicationMessageHandler>& GetMessageHandler() const;
 	
 private:
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;

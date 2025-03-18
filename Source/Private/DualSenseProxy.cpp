@@ -25,7 +25,6 @@ bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-
 	if (!DualSenseInstance)
 	{
 		return false;
@@ -90,12 +89,22 @@ void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 S
 	}
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->ConfigTriggerHapticFeedbackEffect(StartPosition, BeginForce, MiddleForce, EndForce, Hand, KeepEffect);
 }
 
 void UDualSenseProxy::EffectNoResitance(int32 ControllerId, EControllerHand HandResistence)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->NoResitance(HandResistence);
 }
 
@@ -111,6 +120,11 @@ void UDualSenseProxy::EffectContinuousResitance(int32 ControllerId, int32 StartP
 	}
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->ContinuousResitance(StartPosition, Force, HandContinous);
 }
 
@@ -126,24 +140,44 @@ void UDualSenseProxy::EffectSectionResitance(int32 ControllerId, int32 StartPosi
 	}
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SectionResitance(StartPosition, EndPosition, Hand);
 }
 
 void UDualSenseProxy::StopTriggerEffect(const int32 ControllerId, EControllerHand HandStop)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->StopEffect(HandStop);
 }
 
 void UDualSenseProxy::StopAllTriggersEffects(const int32 ControllerId)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->StopAllEffects();
 }
 
 void UDualSenseProxy::ResetEffects(const int32 ControllerId)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->StopAll();
 }
 
@@ -154,6 +188,11 @@ void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value,
 	int32 LedValue = static_cast<int32>(Value);
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetLedPlayerEffects(LedValue, BrightnessValue);
 }
 
@@ -171,35 +210,65 @@ void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
 	}
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetLedMicEffects(LedNumber);
 }
 
 void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->UpdateColorOutput(Color);
 }
 
 void UDualSenseProxy::EnableAccelerometerValues(int32 ControllerId, bool bEnableAccelerometer)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetAcceleration(bEnableAccelerometer);
 }
 
 void UDualSenseProxy::EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetGyroscope(bEnableGyroscope);
 }
 
 void UDualSenseProxy::EnableTouch1(int32 ControllerId, bool bEnableTouch)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetTouch1(bEnableTouch);
 }
 
 void UDualSenseProxy::EnableTouch2(int32 ControllerId, bool bEnableTouch)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
 	DualSenseInstance->SetTouch2(bEnableTouch);
 }

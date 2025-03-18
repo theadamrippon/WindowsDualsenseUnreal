@@ -22,11 +22,14 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 
 	for (FInputDeviceId& Device : DeviceIds)
 	{
-		if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(Device.GetId()); DsLibrary && IsValid(DsLibrary))
+		UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(Device.GetId());
+		if (!DsLibrary && !IsValid(DsLibrary))
 		{
-			const FPlatformUserId UserId = GetUserForInputDevice(Device);
-			DsLibrary->UpdateInput(MessageHandler, UserId, Device);
+			continue;
 		}
+
+		const FPlatformUserId UserId = GetUserForInputDevice(Device);
+		DsLibrary->UpdateInput(MessageHandler, UserId, Device);
 	}
 }
 
@@ -46,7 +49,7 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 	if (Property->Name != "InputDeviceLightColor")
 	{
 		UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-		if (DsLibrary == nullptr)
+		if (!DsLibrary)
 		{
 			return;
 		}
@@ -58,22 +61,20 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 void FDualSenseInputDevice::SetLightColor(const int32 ControllerId, const FColor Color)
 {
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (DsLibrary == nullptr)
+	if (!DsLibrary)
 	{
 		return;
 	}
-	
 	DsLibrary->UpdateColorOutput(Color);
 }
 
 void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 {
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (DsLibrary == nullptr)
+	if (!DsLibrary)
 	{
 		return;
 	}
-	
 	DsLibrary->UpdateColorOutput(FColor::Blue);
 }
 
@@ -90,11 +91,10 @@ void FDualSenseInputDevice::Disconnect(FInputDeviceId& Device)
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)
 {
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (DsLibrary == nullptr)
+	if (!DsLibrary)
 	{
 		return;
 	}
-	
 	DsLibrary->SetHapticFeedbackValues(Hand, &Values);
 }
 
@@ -102,11 +102,6 @@ void FDualSenseInputDevice::GetHapticFrequencyRange(float& MinFrequency, float& 
 {
 	MinFrequency = 0.0f;
 	MaxFrequency = 1.0f;
-}
-
-const TSharedRef<FGenericApplicationMessageHandler>& FDualSenseInputDevice::GetMessageHandler() const
-{
-	return MessageHandler;
 }
 
 bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
@@ -117,10 +112,9 @@ bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& values)
 {
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (DsLibrary == nullptr)
+	if (!DsLibrary)
 	{
 		return;
 	}
-	
 	DsLibrary->SetVibration(values);
 }

@@ -20,13 +20,14 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject
 {
 	GENERATED_BODY()
 public:
-	virtual ~UDualSenseLibrary() override
-	{
-		ShutdownLibrary();
-	}
-	
 	DECLARE_EVENT_OneParam(UDualSenseLibrary, FOnDeviceRegistered, int32 ControllerId);
 	static FOnDeviceRegistered& OnDeviceRegistered() { return DeviceRegisteredEvent; }
+
+	~UDualSenseLibrary()
+	{
+		UE_LOG(LogTemp, Log, TEXT("Dualsense UDualSenseLibrary Destruct"));
+		ShutdownLibrary();
+	}
 
 	bool InitializeLibrary(DS5W::DeviceContext& Context);
 	void ShutdownLibrary();

@@ -23,7 +23,5 @@ public:
 private:
 	void* DS5WdllHandle = nullptr;
 	TSharedPtr<FDualSenseInputDevice> DeviceInstances;
-	UFDualSenseLibraryManager* DualSenseLibraryManager = nullptr;
-
 	static void RegisterCustomKeys();
 };

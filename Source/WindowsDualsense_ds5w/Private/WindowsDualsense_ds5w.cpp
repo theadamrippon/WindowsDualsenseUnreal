@@ -34,7 +34,14 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	}
 	
 	RegisterCustomKeys();
-	DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	
+	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	if (!DualSenseLibraryManager)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		return;
+	}
+	
 	DualSenseLibraryManager->CreateLibraryInstances();
 }
 
@@ -51,6 +58,14 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler)
 {
 	DeviceInstances = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler));
+	
+	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	if (!DualSenseLibraryManager)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		return DeviceInstances;
+	}
+	
 	for (int32 i = 0; i < DualSenseLibraryManager->GetAllocatedDevices(); i++)
 	{
 		RegisterDevice(i);
@@ -74,8 +89,15 @@ void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
 		InputDeviceId = FInputDeviceId::CreateFromInternalId(ControllerId);
 	}
 
-
 	EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Connected;
+
+	UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	if (!DualSenseLibraryManager)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to create DualSense Library Manager"));
+		return;
+	}
+	
 	if (UDualSenseLibrary* LibraryInstance = DualSenseLibraryManager->GetLibraryInstance(ControllerId))
 	{
 		if (!LibraryInstance->IsConnected())

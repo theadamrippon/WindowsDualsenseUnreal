@@ -27,17 +27,15 @@ bool UDualSenseLibrary::Reconnect()
 
 bool UDualSenseLibrary::InitializeLibrary(DS5W::DeviceContext& Context)
 {
-	EnableAccelerometer = false;
-	EnableGyroscope = false;
 	EnableTouch1 = false;
 	EnableTouch2 = false;
-	OutputState = DS5W::DS5OutputState();
-	InputState = DS5W::_DS5InputState();
-	
-	UE_LOG(LogTemp, Log, TEXT("DualSense connected with success."));
+	EnableGyroscope = false;
+	EnableAccelerometer = false;
 	
 	DeviceContexts = Context;
-	return Connection();
+	InputState = DS5W::_DS5InputState();
+	OutputState = DS5W::DS5OutputState();
+	return true;
 }
 
 bool UDualSenseLibrary::Connection()
@@ -50,13 +48,14 @@ void UDualSenseLibrary::ShutdownLibrary()
 	DS5W::freeDeviceContext(&DeviceContexts);
 	ButtonStates.Reset();
 	
-	UE_LOG(LogTemp, Log, TEXT("DualSense disconnected with success."));
+	UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected with success... ShutdownLibrary"));
 }
 
 bool UDualSenseLibrary::IsConnected()
 {
 	if (DS5W_SUCCESS(DS5W::getDeviceInputState(&DeviceContexts, &InputState)))
 	{
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Connected with success. %s"), DeviceContexts._internal.connected ? TEXT("YES") : TEXT("NO"));
 		return DeviceContexts._internal.connected;
 	}
 	
@@ -253,12 +252,27 @@ void UDualSenseLibrary::UpdateColorOutput(const FColor Color)
 	SendOut();
 }
 
+bool IsResetVibration = false;
 void UDualSenseLibrary::SetVibration(const FForceFeedbackValues& Vibration)
 {
+	const float LeftRumble = CalculateLeftRumble(Vibration);
+	const float RightRumble = CalculateRightRumble(Vibration);
+
+	if (IsResetVibration && (RightRumble <= 0 || LeftRumble <= 0))
+	{
+		IsResetVibration = false;
+		OutputState.leftRumble = 0;
+		OutputState.rightRumble = 0;
+		SendOut();
+	}
 	
-	OutputState.leftRumble = CalculateLeftRumble(Vibration);
-	OutputState.rightRumble = CalculateRightRumble(Vibration);
-	SendOut();
+	if (RightRumble > 0 || LeftRumble > 0)
+	{
+		IsResetVibration = true;
+		OutputState.leftRumble = LeftRumble;
+		OutputState.rightRumble = RightRumble;
+		SendOut();
+	}
 }
 
 unsigned char UDualSenseLibrary::CalculateLeftRumble(const FForceFeedbackValues& Values)
@@ -275,8 +289,6 @@ unsigned char UDualSenseLibrary::CalculateRightRumble(const FForceFeedbackValues
 
 void UDualSenseLibrary::SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values)
 {
-	
-	
 	// Config (L2)
 	if (Hand == static_cast<int32>(EControllerHand::Left) || Hand == static_cast<int32>(EControllerHand::AnyHand))
 	{
@@ -352,7 +364,6 @@ void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(
 	const EControllerHand& Hand, bool KeepEffect
 )
 {
-	
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState.leftTriggerEffect.effectType = DS5W::_TriggerEffectType::EffectEx;
@@ -380,7 +391,6 @@ void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(
 
 void UDualSenseLibrary::NoResitance(const EControllerHand& Hand)
 {
-	
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		OutputState.leftTriggerEffect.effectType = DS5W::_TriggerEffectType::NoResitance;
@@ -461,17 +471,13 @@ void UDualSenseLibrary::StopAllEffects()
 
 void UDualSenseLibrary::StopAll()
 {
-	
 	ZeroMemory(&OutputState, sizeof(DS5W::DS5OutputState));
 	SendOut();
 }
 
 void UDualSenseLibrary::SetLedPlayerEffects(int32 NumberLeds, int32 BrightnessValue)
 {
-	
 	OutputState.playerLeds.bitmask = 0x00;
-	SendOut();
-
 	NumberLeds = FMath::Clamp(NumberLeds, 0, 3);
 	if (NumberLeds == 1)
 	{

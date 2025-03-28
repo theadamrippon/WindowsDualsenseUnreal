@@ -20,9 +20,6 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject
 {
 	GENERATED_BODY()
 public:
-	DECLARE_EVENT_OneParam(UDualSenseLibrary, FOnDeviceRegistered, int32 ControllerId);
-	static FOnDeviceRegistered& OnDeviceRegistered() { return DeviceRegisteredEvent; }
-
 	virtual ~UDualSenseLibrary() override
 	{
 		UE_LOG(LogTemp, Log, TEXT("Dualsense UDualSenseLibrary Destruct"));
@@ -35,16 +32,13 @@ public:
 	bool IsConnected();
 
 	// Input
-	bool UpdateInput(
-		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-		const FPlatformUserId UserId,
-		const FInputDeviceId InputDeviceId
-	);
-
+	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
+	virtual void CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId, const FName ButtonName, const bool IsButtonPressed);
+	
 	// Haptic Feedback and Effects
-	void SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values);
-	int32 GetTrirggersFeedback(const EControllerHand& HandTrigger);
-	void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
+	virtual void SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values);
+	virtual int32 GetTrirggersFeedback(const EControllerHand& HandTrigger);
+	virtual void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
 
 	// Effects
 	void NoResitance(const EControllerHand& Hand);
@@ -69,18 +63,9 @@ public:
 	void SetTouch1(bool bIsGyroscope);
 	void SetTouch2(bool bIsGyroscope);
 
-	void CheckButtonInput(
-		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-		const FPlatformUserId UserId,
-		const FInputDeviceId InputDeviceId,
-		const FName ButtonName,
-		const bool IsButtonPressed
-	);
-
-	TMap<FName, bool> ButtonStates;
-	
+	TMap<const FName, bool> ButtonStates;
 private:
-	DS5W::_DS5InputState InputState;
+	DS5W::DS5InputState InputState;
 	DS5W::DS5OutputState OutputState;
 	DS5W::DeviceContext DeviceContexts;
 	
@@ -89,14 +74,11 @@ private:
 	bool EnableTouch1;
 	bool EnableTouch2;
 
-	static FOnDeviceRegistered DeviceRegisteredEvent;
-
 	bool Connection();
+	void SendOut();
 	
 	unsigned char CalculateLeftRumble(const FForceFeedbackValues& Values);
 	unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
-	
-	void SendOut();
 	
 	int ConvertTo255(float Value);
 	unsigned char ConvertTo255(unsigned char value, unsigned char maxInput);

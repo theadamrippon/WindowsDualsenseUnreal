@@ -8,7 +8,6 @@
 #include "FDualSenseLibraryManager.h"
 #include "FValidationUtils.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
-#include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 
 
 bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)

@@ -6,7 +6,6 @@
 
 #include "CoreMinimal.h"
 #include "FDualSenseInputDevice.h"
-#include "FDualSenseLibraryManager.h"
 #include "IInputDeviceModule.h"
 #include "InputCoreTypes.h"
 
@@ -18,10 +17,9 @@ public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
 	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
-	void RegisterDevice(int32 ControllerId);
 	
 private:
 	void* DS5WdllHandle = nullptr;
-	TSharedPtr<FDualSenseInputDevice> DeviceInstances;
+	TSharedPtr<FDualSenseInputDevice> DeviceInstance;
 	static void RegisterCustomKeys();
 };

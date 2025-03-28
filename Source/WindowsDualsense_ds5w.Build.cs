@@ -2,7 +2,6 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-using System;
 using UnrealBuildTool;
 using System.IO;
 
@@ -18,8 +17,8 @@ public class WindowsDualsense_ds5w : ModuleRules
 
         var dllFullPath = Path.Combine(thirdPartyPath, "ds5w_x64.dll");
         RuntimeDependencies.Add("$(BinaryOutputDir)/ds5w_x64.dll", dllFullPath);
-
-        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice"});
-        PrivateDependencyModuleNames.AddRange(new string[] { });
+        
+        PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice" });
+        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 	}
 }

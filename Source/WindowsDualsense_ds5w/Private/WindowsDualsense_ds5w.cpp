@@ -6,14 +6,14 @@
 #include "InputCoreTypes.h"
 #include "Misc/Paths.h"
 #include "FDualSenseInputDevice.h"
+#include "FDualSenseLibraryManager.h"
 
 #define LOCTEXT_NAMESPACE "FWindowsDualsense_ds5wModule"
-#define MAX_CONTROLLERS_SUPPORTED 8
+#define MAX_CONTROLLERS_SUPPORTED 16
 
 void FWindowsDualsense_ds5wModule::StartupModule()
 {
 	IModularFeatures::Get().RegisterModularFeature(IInputDeviceModule::GetModularFeatureName(), this);
-
 	FString EnginePluginPath = FPaths::Combine(FPaths::EnginePluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
 	FString LocalPluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
 
@@ -34,15 +34,6 @@ void FWindowsDualsense_ds5wModule::StartupModule()
 	}
 	
 	RegisterCustomKeys();
-	
-	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
-	if (!DualSenseLibraryManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
-		return;
-	}
-	
-	DualSenseLibraryManager->CreateLibraryInstances();
 }
 
 void FWindowsDualsense_ds5wModule::ShutdownModule()
@@ -57,65 +48,27 @@ void FWindowsDualsense_ds5wModule::ShutdownModule()
 TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler)
 {
-	DeviceInstances = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler));
-	
+	DeviceInstance = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler));
 	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
 		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
-		return DeviceInstances;
+		return DeviceInstance;
 	}
-	
+
+	DualSenseLibraryManager->CreateLibraryInstances();
 	for (int32 i = 0; i < DualSenseLibraryManager->GetAllocatedDevices(); i++)
 	{
-		RegisterDevice(i);
+		DeviceInstance->SetController(FInputDeviceId::CreateFromInternalId(i));
 	}
 
-	return DeviceInstances;
-}
-
-void FWindowsDualsense_ds5wModule::RegisterDevice(int32 ControllerId)
-{
-	FPlatformUserId UserId;
-	FInputDeviceId InputDeviceId;
-	if (ControllerId > 0)
+	for (int32 i = 0; i < MAX_CONTROLLERS_SUPPORTED; i++)
 	{
-		UserId = DeviceInstances->AllocateNewUserId();
-		InputDeviceId = DeviceInstances->AllocateNewInputDeviceId();
-	}
-	else
-	{
-		UserId = FPlatformUserId::CreateFromInternalId(ControllerId);
-		InputDeviceId = FInputDeviceId::CreateFromInternalId(ControllerId);
-	}
-
-	EInputDeviceConnectionState ConnectionState = EInputDeviceConnectionState::Connected;
-
-	UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
-	if (!DualSenseLibraryManager)
-	{
-		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
-		return;
+		
+		FWindowsPlatformMisc::GetPlatformUserForUserIndex(i);
 	}
 	
-	if (UDualSenseLibrary* LibraryInstance = DualSenseLibraryManager->GetLibraryInstance(ControllerId))
-	{
-		if (!LibraryInstance->IsConnected())
-		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected %d and User %d"), ControllerId, UserId.GetInternalId());
-			ConnectionState = EInputDeviceConnectionState::Disconnected;
-		}
-	}
-
-	FPlatformInputDeviceState State;
-	State.OwningPlatformUser = UserId;
-	State.ConnectionState = ConnectionState;
-	DeviceInstances->SetController(InputDeviceId, State);
-
-	if (DeviceInstances->RemapUserAndDeviceToControllerId(UserId, ControllerId, InputDeviceId))
-	{
-		UE_LOG(LogTemp, Log, TEXT("DualSense: Success mapper register Device %d and User %d"), ControllerId, UserId.GetInternalId());
-	}
+	return DeviceInstance;
 }
 
 void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
@@ -133,7 +86,6 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 	const FKey Dualsense_Touch1_Y("Dualsense_Touch1_Y");
 	const FKey Dualsense_Touch2_X("Dualsense_Touch2_X");
 	const FKey Dualsense_Touch2_Y("Dualsense_Touch2_Y");
-
 
 	EKeys::AddKey(FKeyDetails(
 		Dualsense_Touch1_X,

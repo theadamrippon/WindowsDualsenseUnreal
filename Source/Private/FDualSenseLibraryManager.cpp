@@ -6,4 +6,4 @@
 #include "FDualSenseLibraryManager.h"
 
 UFDualSenseLibraryManager* UFDualSenseLibraryManager::Instance;
-TMap<int, TObjectPtr<UDualSenseLibrary>> UFDualSenseLibraryManager::LibraryInstances;
+TMap<int32, UDualSenseLibrary*> UFDualSenseLibraryManager::LibraryInstances;

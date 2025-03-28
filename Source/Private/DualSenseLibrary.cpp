@@ -8,8 +8,6 @@
 #include <algorithm>
 #include "InputCoreTypes.h"
 
-UDualSenseLibrary::FOnDeviceRegistered UDualSenseLibrary::DeviceRegisteredEvent;
-
 bool UDualSenseLibrary::Reconnect()
 {
 	if (IsConnected())
@@ -33,7 +31,7 @@ bool UDualSenseLibrary::InitializeLibrary(DS5W::DeviceContext& Context)
 	EnableAccelerometer = false;
 	
 	DeviceContexts = Context;
-	InputState = DS5W::_DS5InputState();
+	InputState = DS5W::DS5InputState();
 	OutputState = DS5W::DS5OutputState();
 	return true;
 }
@@ -47,7 +45,6 @@ void UDualSenseLibrary::ShutdownLibrary()
 {
 	DS5W::freeDeviceContext(&DeviceContexts);
 	ButtonStates.Reset();
-	
 	UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected with success... ShutdownLibrary"));
 }
 
@@ -82,21 +79,14 @@ int32 UDualSenseLibrary::GetTrirggersFeedback(const EControllerHand& HandTrigger
 }
 
 
-void UDualSenseLibrary::CheckButtonInput(
-		const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-		const FPlatformUserId UserId,
-		const FInputDeviceId InputDeviceId,
-		const FName ButtonName,
-		const bool IsButtonPressed
-)
+void UDualSenseLibrary::CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId, const FName ButtonName, const bool IsButtonPressed)
 {
 	const bool PreviousState = ButtonStates.Contains(ButtonName) ? ButtonStates[ButtonName] : false;
-
 	if (IsButtonPressed && !PreviousState)
 	{
 		InMessageHandler.Get().OnControllerButtonPressed(ButtonName, UserId, InputDeviceId, false);
 	}
-	
+
 	if (!IsButtonPressed && PreviousState)
 	{
 		InMessageHandler.Get().OnControllerButtonReleased(ButtonName, UserId, InputDeviceId, false);
@@ -105,13 +95,11 @@ void UDualSenseLibrary::CheckButtonInput(
 	ButtonStates.Add(ButtonName, IsButtonPressed);
 }
 
-bool UDualSenseLibrary::UpdateInput(
-	const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-	const FPlatformUserId UserId,
-	const FInputDeviceId InputDeviceId
-)
+bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId)
 {
-	if (DS5W_SUCCESS(DS5W::getDeviceInputState(&DeviceContexts, &InputState)))
+	if (
+		DS5W_SUCCESS(DS5W::getDeviceInputState(&DeviceContexts, &InputState))
+	)
 	{
 		const auto ButtonsAndDpad = InputState.buttonsAndDpad;
 		const auto ButtonsA = InputState.buttonsA;
@@ -123,6 +111,7 @@ bool UDualSenseLibrary::UpdateInput(
 		const bool bSquare = ButtonsAndDpad & DS5W_ISTATE_BTX_SQUARE;
 		const bool bTriangle = ButtonsAndDpad & DS5W_ISTATE_BTX_TRIANGLE;
 
+		// Face Buttoms
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::FaceButtonTop, bTriangle);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::FaceButtonBottom, bCross);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::FaceButtonRight, bCircle);
@@ -133,24 +122,24 @@ bool UDualSenseLibrary::UpdateInput(
 		const bool bDPadDown = ButtonsAndDpad & DS5W_ISTATE_DPAD_DOWN;
 		const bool bDPadLeft = ButtonsAndDpad & DS5W_ISTATE_DPAD_LEFT;
 		const bool bDPadRight = ButtonsAndDpad & DS5W_ISTATE_DPAD_RIGHT;
-		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadUp, bDPadUp);
+		CheckButtonInput(InMessageHandler, UserId.CreateFromInternalId(UserId), InputDeviceId, FGamepadKeyNames::DPadUp, bDPadUp);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadDown, bDPadDown);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadLeft, bDPadLeft);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadRight, bDPadRight);
-
+		
 		// Shoulders
 		const bool bLeftBumper = ButtonsA & DS5W_ISTATE_BTN_A_LEFT_BUMPER;
 		const bool bRightBumper = ButtonsA & DS5W_ISTATE_BTN_A_RIGHT_BUMPER;
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::LeftShoulder, bLeftBumper);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::RightShoulder, bRightBumper);
-
+		
 		// Push Stick
 		const bool PushLeftStick = ButtonsA & DS5W_ISTATE_BTN_A_LEFT_STICK;
 		const bool PushRightStick = ButtonsA & DS5W_ISTATE_BTN_A_RIGHT_STICK;
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PushLeftStick"), PushLeftStick);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PushRightStick"), PushRightStick);
-
-
+		
+		
 		// Specials Actions
 		const bool Mic = ButtonsB & DS5W_ISTATE_BTN_B_MIC_BUTTON;
 		const bool TouchPad = ButtonsB & DS5W_ISTATE_BTN_B_PAD_BUTTON;
@@ -158,38 +147,36 @@ bool UDualSenseLibrary::UpdateInput(
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Mic"), Mic);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_TouchButtom"), TouchPad);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Button"), Playstation);
-
+		
 		const bool Start = ButtonsA & DS5W_ISTATE_BTN_A_MENU;
 		const bool Select = ButtonsA & DS5W_ISTATE_BTN_A_SELECT;
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Menu"), Start);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Share"), Select);
-
-
+		
 		// Analog left
 		const float LeftX = InputState.leftStick.x / 128.f;
 		const float LeftY = InputState.leftStick.y / 128.f;
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId, LeftX);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId, InputDeviceId, LeftY);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId.CreateFromInternalId(UserId), InputDeviceId.CreateFromInternalId(InputDeviceId.GetId()), LeftX);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId.CreateFromInternalId(UserId), InputDeviceId.CreateFromInternalId(InputDeviceId.GetId()), LeftY);
 		
-
 		// Analog right
 		const float RightX = InputState.rightStick.x / 128.0f;
 		const float RightY = InputState.rightStick.y / 128.0f;
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogX, UserId, InputDeviceId, RightX);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId, RightY);
-
+		
 		// Triggers
 		const float TriggerL = InputState.leftTrigger / 256.0f;
 		const float TriggerR = InputState.rightTrigger / 256.0f;
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftTrigger.GetFName(), UserId, InputDeviceId, TriggerL);
 		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightTrigger.GetFName(), UserId, InputDeviceId, TriggerR);
-
-
+		
+		
 		if (EnableTouch1 || EnableTouch2)
 		{
 			const unsigned int MaxX = 2000;
 			const unsigned int MaxY = 2048;
-
+		
 			if (EnableTouch1)
 			{
 				DS5W::Touch TouchPoint1 = InputState.touchPoint1;
@@ -198,7 +185,7 @@ bool UDualSenseLibrary::UpdateInput(
 				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
 				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);
 			}
-
+		
 			if (EnableTouch2)
 			{
 				DS5W::Touch TouchPoint2 = InputState.touchPoint2;
@@ -208,27 +195,27 @@ bool UDualSenseLibrary::UpdateInput(
 				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);
 			}
 		}
-
-
+		
+		
 		if (EnableAccelerometer || EnableGyroscope)
 		{
 			DS5W::Vector3 Accelerometer = InputState.accelerometer;
 			DS5W::Vector3 Gyroscope = InputState.gyroscope;
-
+		
 			if (EnableAccelerometer)
 			{
 				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.x);
 				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.y);
 				InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.z);
 			}
-
+		
 			if (EnableGyroscope)
 			{
 				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.x);
 				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.y);
 				InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.z);
 			}
-
+		
 			if (EnableGyroscope && EnableAccelerometer)
 			{
 				FVector Tilt = FVector(Accelerometer.x + Gyroscope.x, Accelerometer.y + Gyroscope.y, Accelerometer.z + Gyroscope.z);
@@ -240,7 +227,6 @@ bool UDualSenseLibrary::UpdateInput(
 
 		return true;
 	}
-	
 	return false;
 }
 

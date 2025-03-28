@@ -7,29 +7,58 @@
 #include "DualSenseLibrary.h"
 #include "FDualSenseLibraryManager.h"
 #include "Windows/WindowsApplication.h"
+#include "Windows/WindowsPlatformApplicationMisc.h"
 
-
-FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler):
-	FGenericPlatformInputDeviceMapper(true, false),
-	MessageHandler(InMessageHandler)
+FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler): MessageHandler(InMessageHandler)
 {
+	DeviceMapper = FWindowsPlatformApplicationMisc::CreatePlatformInputDeviceManager();
+}
+
+FDualSenseInputDevice::~FDualSenseInputDevice()
+{
+	UE_LOG(LogTemp, Log, TEXT("Destroying DualSense Input Device"));
 }
 
 void FDualSenseInputDevice::Tick(float DeltaTime)
 {
-	TArray<FInputDeviceId> DeviceIds;
-	Get().GetAllConnectedInputDevices(DeviceIds);
-
-	for (FInputDeviceId& Device : DeviceIds)
+	TArray<FInputDeviceId> OutInputDevices;
+	DeviceMapper->Get().GetAllConnectedInputDevices(OutInputDevices);
+	for (const FInputDeviceId& DeviceId : OutInputDevices)
 	{
-		UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(Device.GetId());
-		if (!DsLibrary && !IsValid(DsLibrary))
+		if (!PlatformUserIdToDeviceContainer.Contains(DeviceId.GetId()))
+		{
+			if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary))
+			{
+				PlatformUserIdToDeviceContainer.Add(DeviceId.GetId(), DsLibrary);
+			}
+		}
+	}
+
+	SendControllerEvents();
+}
+
+void FDualSenseInputDevice::SendControllerEvents()
+{
+	for (const auto& Pair : PlatformUserIdToDeviceContainer)
+	{
+		UDualSenseLibrary* DsLibrary = Pair.Value;
+		if (!DsLibrary)
+		{
+			continue;
+		}
+		
+		const FInputDeviceId& Device = FInputDeviceId::CreateFromInternalId(Pair.Key);
+		const FPlatformUserId& UserId = IPlatformInputDeviceMapper::Get().GetUserForInputDevice(Device);
+
+		if (const int32 ControllerId = FPlatformMisc::GetUserIndexForPlatformUser(UserId); ControllerId == -1)
 		{
 			continue;
 		}
 
-		const FPlatformUserId UserId = GetUserForInputDevice(Device);
-		DsLibrary->UpdateInput(MessageHandler, UserId, Device);
+		if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) == EInputDeviceConnectionState::Connected)
+		{
+			DsLibrary->UpdateInput(MessageHandler, UserId, Device);
+		}
 	}
 }
 
@@ -80,12 +109,10 @@ void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 
 void FDualSenseInputDevice::Reconnect(FInputDeviceId& Device)
 {
-	MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Connected;
 }
 
 void FDualSenseInputDevice::Disconnect(FInputDeviceId& Device)
 {
-	MappedInputDevices[Device].ConnectionState = EInputDeviceConnectionState::Disconnected;
 }
 
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)

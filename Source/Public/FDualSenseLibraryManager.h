@@ -21,7 +21,6 @@ public:
 	virtual ~UFDualSenseLibraryManager() override
 	{
 		UE_LOG(LogTemp, Log, TEXT("DualSense: Destruct UFDualSenseLibraryManager"));
-		RemoveAllLibraryInstance();
 	}
 	
 	static UFDualSenseLibraryManager* Get()
@@ -30,7 +29,6 @@ public:
 		{
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Creating new instance UFDualSenseLibraryManager"));
 			Instance = NewObject<UFDualSenseLibraryManager>();
-			Instance->AddToRoot();
 		}
 		return Instance;
 	}
@@ -43,7 +41,8 @@ public:
 			LibraryInstances.Add(ControllerId, CreateLibraryInstance(ControllerId));
 		}
 
-		return LibraryInstances[ControllerId].Get();
+		UE_LOG(LogTemp, Log, TEXT("DualSense: GetLibraryInstance UDualSenseLibrary ControllerId, %d"), ControllerId);
+		return LibraryInstances[ControllerId];
 	}
 
 	void RemoveLibraryInstance(int32 ControllerId)
@@ -69,10 +68,10 @@ public:
 
 	static void CreateLibraryInstances()
 	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::_DeviceEnumInfo[4];
+		DS5W::DeviceEnumInfo* Infos = new DS5W::_DeviceEnumInfo[16];
 		unsigned int Count = 0;
 
-		if (DS5W_OK != DS5W::enumDevices(Infos, 4, &Count))
+		if (DS5W_OK != DS5W::enumDevices(Infos, 16, &Count))
 		{
 			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;
@@ -103,7 +102,7 @@ public:
 						DualSense->ShutdownLibrary();
 						continue;
 					}
-
+					
 					LibraryInstances.Add(i,DualSense);
 				}
 			}
@@ -120,14 +119,14 @@ public:
 	
 private:
 	static UFDualSenseLibraryManager* Instance;
-	static TMap<int, TObjectPtr<UDualSenseLibrary>> LibraryInstances;
+	static TMap<int32, UDualSenseLibrary*> LibraryInstances;
 	
-	static TObjectPtr<UDualSenseLibrary> CreateLibraryInstance(int32 ControllerID)
+	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
 	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[4];
+		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[16];
 		unsigned int Count = 0;
 		
-		if (DS5W_OK != DS5W::enumDevices(Infos, 4, &Count))
+		if (DS5W_OK != DS5W::enumDevices(Infos, 16, &Count))
 		{
 			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;
@@ -163,7 +162,6 @@ private:
 			return nullptr;
 		}
 
-		DualSense->AddToRoot();
 		DualSense->InitializeLibrary(Context);
 
 		if (!DualSense->IsConnected())

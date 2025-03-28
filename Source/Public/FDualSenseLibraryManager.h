@@ -33,19 +33,17 @@ public:
 		return Instance;
 	}
 
-	UDualSenseLibrary* GetLibraryInstance(int32 ControllerId)
+	static UDualSenseLibrary* GetLibraryInstance(int32 ControllerId)
 	{
 		if (!LibraryInstances.Contains(ControllerId))
 		{
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Creating new instance for controller %d"), ControllerId);
 			LibraryInstances.Add(ControllerId, CreateLibraryInstance(ControllerId));
 		}
-
-		UE_LOG(LogTemp, Log, TEXT("DualSense: GetLibraryInstance UDualSenseLibrary ControllerId, %d"), ControllerId);
 		return LibraryInstances[ControllerId];
 	}
 
-	void RemoveLibraryInstance(int32 ControllerId)
+	static void RemoveLibraryInstance(int32 ControllerId)
 	{
 		if (LibraryInstances.Contains(ControllerId))
 		{

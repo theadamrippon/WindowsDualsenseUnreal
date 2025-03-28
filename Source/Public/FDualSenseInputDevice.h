@@ -20,7 +20,7 @@ public:
 	virtual ~FDualSenseInputDevice() override;
 	
 	virtual void Tick(float DeltaTime) override;
-	virtual void SendControllerEvents() override;
+	virtual void SendControllerEvents() override {};
 	virtual void SetMessageHandler(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override {}
 	virtual bool SupportsForceFeedback(int32 ControllerId) override;
 	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues &values) override;
@@ -45,6 +45,11 @@ public:
 	
 	void SetController(const FInputDeviceId Device) const
 	{
+		if (Device.GetId() == 0)
+		{
+			return;
+		}
+
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}

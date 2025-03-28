@@ -52,7 +52,6 @@ bool UDualSenseLibrary::IsConnected()
 {
 	if (DS5W_SUCCESS(DS5W::getDeviceInputState(&DeviceContexts, &InputState)))
 	{
-		UE_LOG(LogTemp, Log, TEXT("DualSense: Connected with success. %s"), DeviceContexts._internal.connected ? TEXT("YES") : TEXT("NO"));
 		return DeviceContexts._internal.connected;
 	}
 	

@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DualSenseLibrary.h"
 #include "IHapticDevice.h"
 #include "IInputDevice.h"
 
@@ -66,7 +65,4 @@ protected:
 private:
 	IPlatformInputDeviceMapper* DeviceMapper;
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;
-	
-	TMap<int32, UDualSenseLibrary*> PlatformUserIdToDeviceContainer;
-	TMap<FPlatformUserId, TArray<FInputDeviceId>> PlatformUserIdToDevices;
 };

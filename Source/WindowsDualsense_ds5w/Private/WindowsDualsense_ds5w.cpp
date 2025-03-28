@@ -61,12 +61,6 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	{
 		DeviceInstance->SetController(FInputDeviceId::CreateFromInternalId(i));
 	}
-
-	for (int32 i = 0; i < MAX_CONTROLLERS_SUPPORTED; i++)
-	{
-		
-		FWindowsPlatformMisc::GetPlatformUserForUserIndex(i);
-	}
 	
 	return DeviceInstance;
 }

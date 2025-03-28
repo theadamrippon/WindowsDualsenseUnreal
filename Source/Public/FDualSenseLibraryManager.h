@@ -9,6 +9,7 @@
 #include "UObject/Object.h"
 #include "FDualSenseLibraryManager.generated.h"
 
+#define MAX_DEVICES 16
 /**
  * 
  */
@@ -66,10 +67,10 @@ public:
 
 	static void CreateLibraryInstances()
 	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::_DeviceEnumInfo[16];
+		DS5W::DeviceEnumInfo* Infos = new DS5W::_DeviceEnumInfo[MAX_DEVICES];
 		unsigned int Count = 0;
 
-		if (DS5W_OK != DS5W::enumDevices(Infos, 16, &Count))
+		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
 		{
 			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;
@@ -121,10 +122,10 @@ private:
 	
 	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
 	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[16];
+		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[MAX_DEVICES];
 		unsigned int Count = 0;
 		
-		if (DS5W_OK != DS5W::enumDevices(Infos, 16, &Count))
+		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
 		{
 			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;

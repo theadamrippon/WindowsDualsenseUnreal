@@ -27,20 +27,17 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 	DeviceMapper->Get().GetAllConnectedInputDevices(OutInputDevices);
 	for (const FInputDeviceId& DeviceId : OutInputDevices)
 	{
-		if (!PlatformUserIdToDeviceContainer.Contains(DeviceId.GetId()))
+		if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary))
 		{
-			if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary))
-			{
-				const FInputDeviceId& Device = FInputDeviceId::CreateFromInternalId(DeviceId.GetId());
-				const FPlatformUserId& UserId = IPlatformInputDeviceMapper::Get().GetUserForInputDevice(Device);
+			const FInputDeviceId& Device = FInputDeviceId::CreateFromInternalId(DeviceId.GetId());
+			const FPlatformUserId& UserId = IPlatformInputDeviceMapper::Get().GetUserForInputDevice(Device);
 
-				if (const int32 ControllerId = FPlatformMisc::GetUserIndexForPlatformUser(UserId); ControllerId == -1)
-				{
-					continue;
-				}
-					
-				DsLibrary->UpdateInput(MessageHandler, UserId, Device);
+			if (const int32 ControllerId = FPlatformMisc::GetUserIndexForPlatformUser(UserId); ControllerId == -1)
+			{
+				continue;
 			}
+					
+			DsLibrary->UpdateInput(MessageHandler, UserId, Device);
 		}
 	}
 }

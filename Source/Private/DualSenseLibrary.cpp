@@ -122,7 +122,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		const bool bDPadDown = ButtonsAndDpad & DS5W_ISTATE_DPAD_DOWN;
 		const bool bDPadLeft = ButtonsAndDpad & DS5W_ISTATE_DPAD_LEFT;
 		const bool bDPadRight = ButtonsAndDpad & DS5W_ISTATE_DPAD_RIGHT;
-		CheckButtonInput(InMessageHandler, UserId.CreateFromInternalId(UserId), InputDeviceId, FGamepadKeyNames::DPadUp, bDPadUp);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadUp, bDPadUp);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadDown, bDPadDown);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadLeft, bDPadLeft);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::DPadRight, bDPadRight);
@@ -156,8 +156,8 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		// Analog left
 		const float LeftX = InputState.leftStick.x / 128.f;
 		const float LeftY = InputState.leftStick.y / 128.f;
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId.CreateFromInternalId(UserId), InputDeviceId.CreateFromInternalId(InputDeviceId.GetId()), LeftX);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId.CreateFromInternalId(UserId), InputDeviceId.CreateFromInternalId(InputDeviceId.GetId()), LeftY);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId, LeftX);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId, InputDeviceId, LeftY);
 		
 		// Analog right
 		const float RightX = InputState.rightStick.x / 128.0f;

@@ -53,14 +53,11 @@ public:
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}
 
-	static void OnUserLoginChangedEvent(bool bLoggedIn, const int32 UserId, int32 UserIndex)
-	{
-		UE_LOG(LogTemp, Log, TEXT("DualSense: OnUserLoginChangedEvent: %d"), UserId);
-	}
+	void OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId, int32 UserIndex);
 	
 protected:
-	void Reconnect(FInputDeviceId& Device);
-	void Disconnect(FInputDeviceId& Device);
+	void Reconnect(const FInputDeviceId& Device) const;
+	void Disconnect(const FInputDeviceId& Device) const;
 	
 private:
 	IPlatformInputDeviceMapper* DeviceMapper;

@@ -2,11 +2,110 @@
 
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions 5.3, 5.4, and 5.5 for Windows platforms. No configuration needed**
 
-### No necessary configuration to run the control.
+### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
 
 ## Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
-### Usage methods available via C++ or Blueprint.
+## [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
+
+## Multiple players with multiple controllers
+
+```
+// MyGameModeBase.h
+
+#pragma once
+
+#include "CoreMinimal.h"
+#include "GameFramework/GameModeBase.h"
+#include "MyGameModeBase.generated.h"
+
+/**
+ * 
+ */
+UCLASS()
+class PLUGINTESTE_API AMyGameModeBase : public AGameModeBase
+{
+	GENERATED_BODY()
+public:
+	AMyGameModeBase();
+	virtual void BeginPlay() override;
+
+protected:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameMode")
+	TSubclassOf<APawn> Player1PawnClass;
+
+	virtual void PostLogin(APlayerController* NewPlayer) override;
+	virtual void HandleConnectedControllers(APlayerController* PlayerController);
+};
+```
+```
+// MyGameModeBase.cpp
+
+
+#include "MyGameModeBase.h"
+
+AMyGameModeBase::AMyGameModeBase()
+{
+	static ConstructorHelpers::FClassFinder<APawn> Player(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.BP_ThirdPersonCharacter_C"));
+	if (Player.Class != nullptr)
+	{
+		DefaultPawnClass = Player.Class;
+	}
+	PlayerControllerClass = APlayerController::StaticClass();
+}
+
+void AMyGameModeBase::BeginPlay()
+{
+	Super::BeginPlay();
+}
+
+void AMyGameModeBase::PostLogin(APlayerController* NewPlayer)
+{
+	Super::PostLogin(NewPlayer);
+	
+	UE_LOG(LogTemp, Warning, TEXT("Player local %d login..."), NewPlayer->GetLocalPlayer()->GetControllerId())
+
+	const int32 PlayerId = NewPlayer->GetLocalPlayer()->GetControllerId();
+	if (constexpr int32 MaxPlayer = 2; NewPlayer->IsLocalController() &&  (PlayerId + 1) < MaxPlayer)
+	{
+		HandleConnectedControllers(NewPlayer);
+	}
+
+	if (NewPlayer->IsLocalController() && NewPlayer->GetLocalPlayer()->GetControllerId() > 0)
+	{
+		FTimerHandle TimerHandle;
+		GetWorld()->GetTimerManager().SetTimer(
+			TimerHandle,
+			FTimerDelegate::CreateLambda([=]()
+			{
+				FCoreDelegates::OnUserLoginChangedEvent.Broadcast(true, NewPlayer->GetLocalPlayer()->GetControllerId(), NewPlayer->GetLocalPlayer()->GetControllerId());
+			}),
+			0.2f,
+			false
+		);
+	}
+}
+
+void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerController)
+{
+	UE_LOG(LogTemp, Warning, TEXT("Registering new player..."));
+	
+	if (!GetWorld() || !GetGameInstance() || !PlayerController)
+	{
+		UE_LOG(LogTemp, Error, TEXT("GameInstance or World are not available."));
+		return;
+	}
+
+	FString Error;
+	UGameInstance* GameInstance = GetGameInstance();
+	if (const ULocalPlayer* NewLocalPlayer = GameInstance->CreateLocalPlayer(PlayerController->GetLocalPlayer()->GetControllerId() + 1, Error, true))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("New player created for ControllerId: %d"), NewLocalPlayer->GetControllerId());
+	}
+}
+```
+
+### Example of using DualSense effects via C++
 
 ```
 #include "DualSenseProxy.h"
@@ -89,11 +188,11 @@ void APlayerController::BeginPlay()
 # Installation
 Download the compiled plugin **Windows x64**
 
-[UE 5.3 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.3/WindowsDualsense_ds5w1.0.0.zip)
+[UE 5.3 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.3.zip)
 
-[UE 5.4 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.4/WindowsDualsense_ds5w1.0.0.zip)
+[UE 5.4 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.4.zip)
 
-[UE 5.5 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.5/WindowsDualsense_ds5w1.0.0.zip)
+[UE 5.5 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.5.zip)
 
 
 Extract the file to

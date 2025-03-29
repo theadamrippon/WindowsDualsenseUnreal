@@ -8,14 +8,18 @@
 #include "FDualSenseLibraryManager.h"
 #include "Windows/WindowsApplication.h"
 #include "Windows/WindowsPlatformApplicationMisc.h"
+#include "Misc/CoreDelegates.h"
+
 
 FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler): MessageHandler(InMessageHandler)
 {
 	DeviceMapper = FWindowsPlatformApplicationMisc::CreatePlatformInputDeviceManager();
+	FCoreDelegates::OnUserLoginChangedEvent.AddRaw(this, &FDualSenseInputDevice::OnUserLoginChangedEvent);	
 }
 
 FDualSenseInputDevice::~FDualSenseInputDevice()
 {
+	FCoreDelegates::OnUserLoginChangedEvent.RemoveAll(this);
 	UE_LOG(LogTemp, Log, TEXT("Destroying DualSense Input Device"));
 }
 
@@ -37,7 +41,10 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 				continue;
 			}
 					
-			DsLibrary->UpdateInput(MessageHandler, UserId, Device);
+			if (!DsLibrary->UpdateInput(MessageHandler, UserId, Device))
+			{
+				Disconnect(Device);
+			}
 		}
 	}
 }
@@ -87,12 +94,35 @@ void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 	DsLibrary->UpdateColorOutput(FColor::Blue);
 }
 
-void FDualSenseInputDevice::Reconnect(FInputDeviceId& Device)
+void FDualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId, int32 UserIndex)
 {
+	if (!bLoggedIn)
+	{
+		Disconnect(FInputDeviceId::CreateFromInternalId(UserId));
+		return;
+	}
+
+	UE_LOG(LogTemp, Log, TEXT("DualSense: IsLoggin=%d, UserId=%d, UserIndex=%d"), bLoggedIn, UserId, UserIndex);
+
+	const FInputDeviceId& Device = FInputDeviceId::CreateFromInternalId(UserId);
+	const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(UserIndex);
+	if (const FPlatformUserId& UserPair = DeviceMapper->Get().GetUserForInputDevice(Device); UserPair != User)
+	{
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
+		return;
+	}
+	
+	Reconnect(Device);
 }
 
-void FDualSenseInputDevice::Disconnect(FInputDeviceId& Device)
+void FDualSenseInputDevice::Reconnect(const FInputDeviceId& Device) const
 {
+	DeviceMapper->Get().Internal_SetInputDeviceConnectionState(Device, EInputDeviceConnectionState::Connected);
+}
+
+void FDualSenseInputDevice::Disconnect(const FInputDeviceId& Device) const
+{
+	DeviceMapper->Get().Internal_SetInputDeviceConnectionState(Device, EInputDeviceConnectionState::Disconnected);
 }
 
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)

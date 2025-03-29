@@ -19,6 +19,6 @@ public class WindowsDualsense_ds5w : ModuleRules
         RuntimeDependencies.Add("$(BinaryOutputDir)/ds5w_x64.dll", dllFullPath);
         
         PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice" });
-        PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+        // PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 	}
 }

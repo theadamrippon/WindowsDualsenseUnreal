@@ -34,12 +34,49 @@ public:
 		return Instance;
 	}
 
+	static bool GetIsBlockCreateInstance()
+	{
+		return Instance->bIsBlockCreateInstance;
+	}
+
+	void static SetIsBlockCreateInstance(const bool IsBlock)
+	{
+		Instance->bIsBlockCreateInstance = IsBlock;
+	}
+	
 	static UDualSenseLibrary* GetLibraryInstance(int32 ControllerId)
 	{
 		if (!LibraryInstances.Contains(ControllerId))
 		{
+			if (GetIsBlockCreateInstance())
+			{
+				return nullptr;
+			}
+			
+			SetIsBlockCreateInstance(true);
+			if (ControllerId == -1)
+			{
+				ControllerId = 0;
+				if (LibraryInstances.Num() >= 1)
+				{
+					ControllerId = LibraryInstances.Num() - 1;	
+				}
+			}
+
+			if (LibraryInstances.Num() == 0)
+			{
+				ControllerId = 0;
+			}
+
+			UDualSenseLibrary* DsNew = CreateLibraryInstance(ControllerId);
+			if (!DsNew)
+			{
+				SetIsBlockCreateInstance(false);
+				return nullptr;
+			}
+			
+			LibraryInstances.Add(ControllerId, DsNew);
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Creating new instance for controller %d"), ControllerId);
-			LibraryInstances.Add(ControllerId, CreateLibraryInstance(ControllerId));
 		}
 		return LibraryInstances[ControllerId];
 	}
@@ -115,7 +152,7 @@ public:
 		return LibraryInstances.Num();
 	}
 
-	
+	bool bIsBlockCreateInstance = false;
 private:
 	static UFDualSenseLibraryManager* Instance;
 	static TMap<int32, UDualSenseLibrary*> LibraryInstances;
@@ -123,8 +160,8 @@ private:
 	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
 	{
 		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[MAX_DEVICES];
-		unsigned int Count = 0;
 		
+		unsigned int Count = 0;
 		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
 		{
 			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
@@ -139,7 +176,7 @@ private:
 			return nullptr;
 		}
 
-		if (ControllerID < 0 || static_cast<unsigned int>(ControllerID) >= Count)
+		if (static_cast<unsigned int>(ControllerID) >= Count)
 		{
 			UE_LOG(LogTemp, Log, TEXT("DualSense: No new device detected"));
 			delete[] Infos;
@@ -161,6 +198,7 @@ private:
 			return nullptr;
 		}
 
+		DualSense->AddToRoot();
 		DualSense->InitializeLibrary(Context);
 
 		if (!DualSense->IsConnected())
@@ -171,6 +209,7 @@ private:
 		}
 
 		UE_LOG(LogTemp, Log, TEXT("DualSense: New device connected..."));
+		SetIsBlockCreateInstance(false);
 		return DualSense;
 	}
 };

@@ -120,7 +120,7 @@ void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerContro
 }
 ```
 
-### Example of using DualSense effects via C++
+# Example of using DualSense effects via C++
 
 ```
 #include "DualSenseProxy.h"

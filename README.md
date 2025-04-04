@@ -7,10 +7,24 @@
 ## Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
 
-### [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
+## [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
+
+# Usage via Blueprints
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Metodos.gif)
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
+
+# Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
+
+# Haptic trigger feedback
+
+![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
 
-### Multiple players with multiple controllers
+# Multiple players with multiple controllers
 
 ```
 // MyGameModeBase.h
@@ -141,7 +155,7 @@ void APlayerController::BeginPlay()
     UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
 
     // Vibrations example 
-	PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
+    PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
 	
     // Stop triggers effects
     UDualSenseProxy::StopAllTriggersEffects(ControllerId);
@@ -172,20 +186,6 @@ void APlayerController::BeginPlay()
 }
 
 ```
-
-### Usage via Blueprints
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Metodos.gif)
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
-
-### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
-
-### Haptic trigger feedback
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
 # Installation
 Download the compiled plugin **Windows x64**
@@ -226,16 +226,7 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GamepadEnable.gif)
 
 
-### The plugin is compatible with Unreal's native Blueprints Force Feedback, for example:
-
-Config
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Feedback.png)
-
-Result
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/DS_Led.jpg)
-
+### The plugin is compatible with Unreal's native Blueprints Force Feedback
 
 ## Contributions
 

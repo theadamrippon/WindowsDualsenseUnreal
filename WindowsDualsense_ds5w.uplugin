@@ -13,6 +13,7 @@
 	"IsBetaVersion": true,
 	"Installed": true,
 	"EnabledByDefault": true,
+	"SupportedTargetPlatforms": true,
 	"Modules": [
 		{
 			"Name": "WindowsDualsense_ds5w",

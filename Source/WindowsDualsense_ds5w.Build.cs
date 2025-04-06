@@ -12,7 +12,12 @@ public class WindowsDualsense_ds5w : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 		
-        var thirdPartyPath = Path.Combine(ModuleDirectory, "ThirdParty/DualSenseWindows_V0.1");
+		if (Target.Platform != UnrealTargetPlatform.Win64)
+		{
+			throw new BuildException("WindowsDualsense_ds5w not suported platform: " + Target.Platform.ToString());
+		}
+
+		var thirdPartyPath = Path.Combine(ModuleDirectory, "ThirdParty/DualSenseWindows_V0.1");
         PublicIncludePaths.Add(thirdPartyPath);
         PublicAdditionalLibraries.Add(Path.Combine(thirdPartyPath, "ds5w_x64.lib"));
 

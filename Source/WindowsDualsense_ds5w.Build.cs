@@ -5,6 +5,7 @@
 using UnrealBuildTool;
 using System.IO;
 
+[SupportedPlatforms("Win64")]
 public class WindowsDualsense_ds5w : ModuleRules
 {
 	public WindowsDualsense_ds5w(ReadOnlyTargetRules Target) : base(Target)

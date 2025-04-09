@@ -8,14 +8,14 @@
 	"CreatedBy" : "Rafael Valoto",
 	"CreatedByURL" : "https://github.com/rafaelvaloto",
 	"DocsURL": "https://github.com/rafaelvaloto/WindowsDualsenseUnreal",
+	"FabURL": "com.epicgames.launcher://ue/Fab/product/ba12e3bb-9527-4a12-b728-539f5d1cf12f",
 	"IsExperimentalVersion": false,
 	"CanContainContent": false,
 	"IsBetaVersion": true,
 	"Installed": true,
-	"EnabledByDefault": true,
-	"SupportedTargetPlatforms": [
-		"Win64"
-	],
+	"EngineVersion": "5.2.0",
+	"EnabledByDefault": false,
+	"RequiresBuildPlatform": true,
 	"Modules": [
 		{
 			"Name": "WindowsDualsense_ds5w",

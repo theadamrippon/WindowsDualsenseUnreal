@@ -1,4 +1,4 @@
-# Windows Dualsense for Unreal Engine version 5.3, 5.4 and 5.5
+# Windows Dualsense for Unreal Engine version 5.2 ~ 5.5
 
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions 5.3, 5.4, and 5.5 for Windows platforms. No configuration needed**
 
@@ -186,20 +186,6 @@ void APlayerController::BeginPlay()
 
 ```
 
-# Installation
-Download the compiled plugin **Windows x64**
-
-[UE 5.3 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.3.zip)
-
-[UE 5.4 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.4.zip)
-
-[UE 5.5 download plugin WindowsDualsense_ds5w1.0.0.zip](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/WindowsDualsense_ds5w_5.5.zip)
-
-
-Extract the file to
-
-```C:\Program Files\Epic Games\UE_[version]\Engine\Plugins```
-
 Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Install.gif)
@@ -226,6 +212,36 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 
 
 ### The plugin is compatible with Unreal's native Blueprints Force Feedback
+
+# Manual Installation
+
+Download plugin UE_Version
+
+[UE 5.4 download plugin WindowsDualsense_ds5w_5.2.zip](WindowsDualsense_ds5w_5.2.zip)
+
+[UE 5.4 download plugin WindowsDualsense_ds5w_5.3.zip](WindowsDualsense_ds5w_5.3.zip)
+
+[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](WindowsDualsense_ds5w_5.4.zip)
+
+[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](WindowsDualsense_ds5w_5.5.zip)
+
+# Installing the Plugin in the Project's Directory
+
+## Steps:
+
+1. **Move to the Plugins Folder**  
+   Move the cloned repository to your Unreal Engine project’s `Plugins` directory. If the folder does not exist, create it manually:
+    - Navigate to your Unreal project’s root directory.
+    - Create a folder named `Plugins`, if it doesn’t already exist.
+    - Move the cloned repository folder into this newly created `Plugins` folder.
+
+2. **Verify Plugin Installation in Unreal Engine**
+    - Open your Unreal Engine project.
+    - Go to the "Plugins" section under the `Edit` menu (`Edit > Plugins`).
+    - Look for the new plugin in the list and enable it if it is not enabled by default.
+    - Restart the Unreal Engine editor.
+
+Move the `WindowsDualsenseUnreal` folder into:
 
 ## Contributions
 

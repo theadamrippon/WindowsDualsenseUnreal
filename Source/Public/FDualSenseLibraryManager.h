@@ -109,14 +109,12 @@ public:
 
 		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
 		{
-			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;
 			return;
 		}
 
 		if (Count == 0)
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: Not devices detected %d"), Count);
 			delete[] Infos;
 			return;
 		}
@@ -164,21 +162,18 @@ private:
 		unsigned int Count = 0;
 		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
 		{
-			UE_LOG(LogTemp, Error, TEXT("DualSense: Error enumerate devices"));
 			delete[] Infos;
 			return nullptr;
 		}
 
 		if (Count == 0)
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: No new device detected"));
 			delete[] Infos;
 			return nullptr;
 		}
 
 		if (static_cast<unsigned int>(ControllerID) >= Count)
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: No new device detected"));
 			delete[] Infos;
 			return nullptr;
 		}

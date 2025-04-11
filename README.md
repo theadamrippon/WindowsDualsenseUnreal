@@ -217,9 +217,9 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 
 Download plugin UE_Version
 
-[UE 5.4 download plugin WindowsDualsense_ds5w_5.2.zip](WindowsDualsense_ds5w_5.2.zip)
+[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](WindowsDualsense_ds5w_5.2.zip)
 
-[UE 5.4 download plugin WindowsDualsense_ds5w_5.3.zip](WindowsDualsense_ds5w_5.3.zip)
+[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](WindowsDualsense_ds5w_5.3.zip)
 
 [UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](WindowsDualsense_ds5w_5.4.zip)
 

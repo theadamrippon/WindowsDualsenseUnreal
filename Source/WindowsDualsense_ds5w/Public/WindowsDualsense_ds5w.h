@@ -19,7 +19,7 @@ public:
 	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
 	
 private:
-	void* DS5WdllHandle = nullptr;
 	TSharedPtr<FDualSenseInputDevice> DeviceInstance;
 	static void RegisterCustomKeys();
+	void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
 };

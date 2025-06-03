@@ -6,11 +6,28 @@
 
 #include "ds5w.h"
 #include "CoreMinimal.h"
+#include "DualSenseHIDManager.h"
 #include "UObject/Object.h"
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 #include "DualSenseLibrary.generated.h"
+
+struct FTouchPoint1
+{
+	unsigned char X;
+	unsigned char Y;
+	unsigned char Down;
+	unsigned char Id;
+};
+
+struct FTouchPoint2
+{
+	unsigned char X;
+	unsigned char Y;
+	unsigned char Down;
+	unsigned char Id;
+};
 
 /**
  * 
@@ -25,7 +42,7 @@ public:
 		UE_LOG(LogTemp, Log, TEXT("Dualsense UDualSenseLibrary Destruct"));
 	}
 
-	bool InitializeLibrary(DS5W::DeviceContext& Context);
+	bool InitializeLibrary(const FHIDDeviceContext& Context);
 	void ShutdownLibrary();
 
 	bool Reconnect();
@@ -43,7 +60,10 @@ public:
 	// Effects
 	void NoResitance(const EControllerHand& Hand);
 	void ContinuousResitance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
-	void SectionResitance(int32 StartPosition, int32 EndPosition, const EControllerHand& Hand);
+	void SectionResitance(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
+	void SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
+	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, const EControllerHand& Hand);
+	void SetGallopingEffects(int32 StartPosition, int32 EndPosition, float TimeRatio, float Frequency, const EControllerHand& Hand);
 	void StopEffect(const EControllerHand& Hand);
 	void StopAllEffects();
 	void StopAll();
@@ -63,16 +83,19 @@ public:
 	void SetTouch1(bool bIsGyroscope);
 	void SetTouch2(bool bIsGyroscope);
 
+	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
+
 	TMap<const FName, bool> ButtonStates;
 private:
-	DS5W::DS5InputState InputState;
-	DS5W::DS5OutputState OutputState;
-	DS5W::DeviceContext DeviceContexts;
-	
-	bool EnableAccelerometer;
-	bool EnableGyroscope;
+	FHIDDeviceContext HIDDeviceContexts;
+	FOutputBuffer HidOutput;
+
 	bool EnableTouch1;
 	bool EnableTouch2;
+	bool EnableGyroscope;
+	bool EnableAccelerometer;
+
+	
 
 	bool Connection();
 	void SendOut();
@@ -81,5 +104,5 @@ private:
 	unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
 	
 	int ConvertTo255(float Value);
-	unsigned char ConvertTo255(unsigned char value, unsigned char maxInput);
+	unsigned char ConvertTo255(unsigned char Value, unsigned char MaxInput);
 };

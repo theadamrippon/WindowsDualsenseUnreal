@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "DualSenseHIDManager.h"
 #include "DualSenseLibrary.h"
 #include "UObject/Object.h"
 #include "FDualSenseLibraryManager.generated.h"
@@ -48,35 +49,7 @@ public:
 	{
 		if (!LibraryInstances.Contains(ControllerId))
 		{
-			if (GetIsBlockCreateInstance())
-			{
-				return nullptr;
-			}
-			
-			SetIsBlockCreateInstance(true);
-			if (ControllerId == -1)
-			{
-				ControllerId = 0;
-				if (LibraryInstances.Num() >= 1)
-				{
-					ControllerId = LibraryInstances.Num() - 1;	
-				}
-			}
-
-			if (LibraryInstances.Num() == 0)
-			{
-				ControllerId = 0;
-			}
-
-			UDualSenseLibrary* DsNew = CreateLibraryInstance(ControllerId);
-			if (!DsNew)
-			{
-				SetIsBlockCreateInstance(false);
-				return nullptr;
-			}
-			
-			LibraryInstances.Add(ControllerId, DsNew);
-			UE_LOG(LogTemp, Log, TEXT("DualSense: Creating new instance for controller %d"), ControllerId);
+			return nullptr;
 		}
 		return LibraryInstances[ControllerId];
 	}
@@ -104,45 +77,54 @@ public:
 
 	static void CreateLibraryInstances()
 	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::_DeviceEnumInfo[MAX_DEVICES];
-		unsigned int Count = 0;
+		LibraryInstances.Reset();
+		
+		UE_LOG(LogTemp, Log, TEXT("DualSense: CreateLibraryInstances"));
+		TArray<FHIDDeviceContext> DetectedDevices;
+		DetectedDevices.Reset();
 
-		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
+		// Enumera dispositivos usando o HIDManager
+		if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 		{
-			delete[] Infos;
-			return;
-		}
-
-		if (Count == 0)
-		{
-			delete[] Infos;
-			return;
-		}
-
-		for (unsigned int i = 0; i < Count; i++)
-		{
-			DS5W::DeviceContext Context;
-			if (DS5W_SUCCESS(DS5W::initDeviceContext(&Infos[i], &Context)))
+			FHIDDeviceContext Context;
+			Context.Internal.Connected = false;
+			if (UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>())
 			{
-				UE_LOG(LogTemp, Log, TEXT("DualSense: Devices init context %d"), i);
-				if (UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>())
+				DualSense->AddToRoot();
+				DualSense->InitializeLibrary(Context);
+				LibraryInstances.Add(0, DualSense);
+			}
+			UE_LOG(LogTemp, Warning, TEXT("DualSense: Nenhum dispositivo encontrado."));
+			return;
+		}
+
+		// Itera sobre os dispositivos detectados para inicializar as bibliotecas
+		for (int32 DeviceIndex = 0; DeviceIndex < DetectedDevices.Num(); DeviceIndex++)
+		{
+			FHIDDeviceContext& Context = DetectedDevices[DeviceIndex];
+			UE_LOG(LogTemp, Warning, TEXT("DualSense: Inicializando biblioteca para dispositivo status %d"), Context.Internal.Connected);
+			if (Context.Internal.Connected)
+			{
+				UE_LOG(LogTemp, Warning, TEXT("DualSense: IsConnected %d"), Context.Internal.Connected);
+				UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
+				if (DualSense)
 				{
 					DualSense->AddToRoot();
 					DualSense->InitializeLibrary(Context);
 
 					if (!DualSense->IsConnected())
 					{
-						UE_LOG(LogTemp, Log, TEXT("DualSense: Device not connected. Shutdown library... %d"), i);
+						UE_LOG(LogTemp, Warning, TEXT("DualSense: Dispositivo não conectado. Finalizando biblioteca... %d"), DeviceIndex);
 						DualSense->ShutdownLibrary();
 						continue;
 					}
-					
-					LibraryInstances.Add(i,DualSense);
+
+					// Adiciona a instância à lista de bibliotecas
+					LibraryInstances.Add(DeviceIndex, DualSense);
+					UE_LOG(LogTemp, Log, TEXT("DualSense: Biblioteca inicializada para dispositivo %d"), DeviceIndex);
 				}
 			}
 		}
-
-		delete[] Infos;
 	}
 
 	static int32 GetAllocatedDevices()
@@ -155,56 +137,56 @@ private:
 	static UFDualSenseLibraryManager* Instance;
 	static TMap<int32, UDualSenseLibrary*> LibraryInstances;
 	
-	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
-	{
-		DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[MAX_DEVICES];
-		
-		unsigned int Count = 0;
-		if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
-		{
-			delete[] Infos;
-			return nullptr;
-		}
-
-		if (Count == 0)
-		{
-			delete[] Infos;
-			return nullptr;
-		}
-
-		if (static_cast<unsigned int>(ControllerID) >= Count)
-		{
-			delete[] Infos;
-			return nullptr;
-		}
-
-		DS5W::DeviceContext Context;
-		if (!DS5W_SUCCESS(DS5W::initDeviceContext(&Infos[ControllerID], &Context)))
-		{
-			delete[] Infos;
-			return nullptr;
-		}
-
-		delete[] Infos;
-
-		UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
-		if (!DualSense)
-		{
-			return nullptr;
-		}
-
-		DualSense->AddToRoot();
-		DualSense->InitializeLibrary(Context);
-
-		if (!DualSense->IsConnected())
-		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: Device not connected. Shutdown library..."));
-			DualSense->ShutdownLibrary();
-			return nullptr;
-		}
-
-		UE_LOG(LogTemp, Log, TEXT("DualSense: New device connected..."));
-		SetIsBlockCreateInstance(false);
-		return DualSense;
-	}
+	// static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
+	// {
+	// 	DS5W::DeviceEnumInfo* Infos = new DS5W::DeviceEnumInfo[MAX_DEVICES];
+	// 	
+	// 	unsigned int Count = 0;
+	// 	if (DS5W_OK != DS5W::enumDevices(Infos, MAX_DEVICES, &Count))
+	// 	{
+	// 		delete[] Infos;
+	// 		return nullptr;
+	// 	}
+	//
+	// 	if (Count == 0)
+	// 	{
+	// 		delete[] Infos;
+	// 		return nullptr;
+	// 	}
+	//
+	// 	if (static_cast<unsigned int>(ControllerID) >= Count)
+	// 	{
+	// 		delete[] Infos;
+	// 		return nullptr;
+	// 	}
+	//
+	// 	DS5W::DeviceContext Context;
+	// 	if (!DS5W_SUCCESS(DS5W::initDeviceContext(&Infos[ControllerID], &Context)))
+	// 	{
+	// 		delete[] Infos;
+	// 		return nullptr;
+	// 	}
+	//
+	// 	delete[] Infos;
+	//
+	// 	UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
+	// 	if (!DualSense)
+	// 	{
+	// 		return nullptr;
+	// 	}
+	//
+	// 	DualSense->AddToRoot();
+	// 	// DualSense->InitializeLibrary(Context);
+	//
+	// 	if (!DualSense->IsConnected())
+	// 	{
+	// 		UE_LOG(LogTemp, Log, TEXT("DualSense: Device not connected. Shutdown library..."));
+	// 		DualSense->ShutdownLibrary();
+	// 		return nullptr;
+	// 	}
+	//
+	// 	UE_LOG(LogTemp, Log, TEXT("DualSense: New device connected..."));
+	// 	SetIsBlockCreateInstance(false);
+	// 	return DualSense;
+	// }
 };

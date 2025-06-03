@@ -22,9 +22,10 @@ UENUM(BlueprintType)
 enum class ELedPlayerEnum : uint8
 {
 	Off UMETA(DisplayName = "Led Player Off"),
-	One UMETA(DisplayName = "Led One"),
-	Two UMETA(DisplayName = "Led Two"),
-	Three UMETA(DisplayName = "Led Three")
+	One UMETA(DisplayName = "Player One"),
+	Two UMETA(DisplayName = "Player Two"),
+	Three UMETA(DisplayName = "Player Three"),
+	Four UMETA(DisplayName = "Player Four")
 };
 
 UENUM(BlueprintType)
@@ -71,11 +72,17 @@ public:
 	static void EffectNoResitance(int32 ControllerId, EControllerHand HandResistence);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force, EControllerHand Hand);
+	static void EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand ResistenceHand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition,
-	                                   EControllerHand Hand);
+	static void EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force,
+	                                   EControllerHand ContinuousHand);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
+	static void EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
+	static void EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void StopTriggerEffect(int32 ControllerId, EControllerHand HandStop);

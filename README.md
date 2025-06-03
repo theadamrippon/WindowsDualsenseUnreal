@@ -1,6 +1,6 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.5
 
-### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions 5.3, 5.4, and 5.5 for Windows platforms. No configuration needed**
+### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.5, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
 

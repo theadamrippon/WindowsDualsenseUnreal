@@ -21,5 +21,4 @@ public:
 private:
 	TSharedPtr<FDualSenseInputDevice> DeviceInstance;
 	static void RegisterCustomKeys();
-	void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
 };

@@ -2,12 +2,12 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
+
 #include "DualSenseHIDManager.h"
 #include "Windows/AllowWindowsPlatformTypes.h" 
-#include <hidsdi.h>  // Funções HID
-#include <setupapi.h> // Funções SetupAPI para dispositivos
 #include "Windows/HideWindowsPlatformTypes.h"
-
+#include <hidsdi.h>  
+#include <setupapi.h>
 
 DualSenseHIDManager::DualSenseHIDManager()
 {
@@ -200,28 +200,6 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context) {
     Context->Internal.Connected = false;
 }
 
-void DualSenseHIDManager::Weapon(unsigned char* Buffer, const FOutputBuffer& HidOut)
-{
-    if (HidOut.LeftTrigger.Mode == 0x25)
-    {
-        const uint16_t WeaponZonesLeft = static_cast<uint16_t>((1 << HidOut.LeftTrigger.StartPosition) | (1 << HidOut.LeftTrigger.EndPosition));
-        Buffer[0x01] = (WeaponZonesLeft >> 0) & 0xFF;
-        Buffer[0x02] = (WeaponZonesLeft >> 8) & 0xFF;
-        Buffer[0x03] = (HidOut.LeftTrigger.Strengths.Start - 1);
-    }
-
-
-    if (HidOut.RightTrigger.Mode == 0x25)
-    {
-        const uint16_t WeaponZonesRight = static_cast<uint16_t>((1 << HidOut.RightTrigger.StartPosition) | (1 << HidOut.RightTrigger.EndPosition));
-        Buffer[0x01] = (WeaponZonesRight >> 0) & 0xFF;
-        Buffer[0x02] = (WeaponZonesRight >> 8) & 0xFF;
-        Buffer[0x03] = (HidOut.RightTrigger.Strengths.Start - 1);
-    }
-
-    UE_LOG(LogTemp, Log, TEXT("Wapon effect 0x%X"), HidOut.LeftTrigger.Mode);
-    UE_LOG(LogTemp, Log, TEXT("Buffer effect 0x%X"), Buffer[0]);
-}
 
 void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut)
 {
@@ -229,12 +207,15 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
     Context->Internal.Buffer[1] = 0x02;
     unsigned char* Output = &Context->Internal.Buffer[2];
     Output[0x00] = 0xff;
-    Output[0x01] = 0xff-8;
+    Output[0x01] = 0xF7;
 
     Output[0x03] = HidOut.MotorsHid.Left;
     Output[0x02] = HidOut.MotorsHid.Right;
+    Output[0x08] = HidOut.MicLed.Mode;
 
-    if (HidOut.ResetLedEffects || HidOut.ResetEffects) // Reset temp effects
+    Output[0x26] = 0x03;
+
+    if (HidOut.ResetLedEffects) // Reset temp effects
     {
         Output[0x2B] = 0x00;
         Output[0x29] = 0x01;
@@ -245,9 +226,10 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
         Output[0x2E] = 0xFF;
     }
     
-    Output[0x2B] = HidOut.LedPlayerHid.Led;
     Output[0x29] = HidOut.LedPlayerHid.Player;
     Output[0x2A] = HidOut.LedPlayerHid.Brightness;
+    Output[0x2B] = HidOut.LedPlayerHid.Led;
+
 
     Output[0x2C] = HidOut.ColorHid.R;
     Output[0x2D] = HidOut.ColorHid.G;
@@ -280,7 +262,6 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
         TriggerL[0x9] = HidOut.LeftTrigger.Frequency;
     }
 
-    
     if (HidOut.LeftTrigger.Mode == 0x25) // Weapon
     {
         TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
@@ -308,7 +289,6 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
     // trigger R
     unsigned char* TriggerR = &Output[0x0A];
     TriggerR[0x0] = HidOut.RightTrigger.Mode;
-    
 
     if (HidOut.RightTrigger.Mode == 0x25) // Weapon
     {
@@ -367,31 +347,11 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
     if (HidOut.ResetEffectsLeftTrigger || HidOut.ResetEffects) // Reset temp effects trigger
     {
         TriggerL[0x00] = 0x05;
-        TriggerL[0x01] = 0x00;
-        TriggerL[0x02] = 0x00;
-        TriggerL[0x03] = 0x00;
-        TriggerL[0x04] = 0x00;
-        TriggerL[0x05] = 0x00;
-        TriggerL[0x06] = 0x00;
-        TriggerL[0x07] = 0x00;
-        TriggerL[0x08] = 0x00;
-        TriggerL[0x09] = 0x00;
-        TriggerL[0x10] = 0x00;
     }
 
     if (HidOut.ResetEffectsRightTrigger || HidOut.ResetEffects) // Reset temp effects trigger
     {
         TriggerR[0x00] = 0x05;
-        TriggerL[0x01] = 0x00;
-        TriggerL[0x02] = 0x00;
-        TriggerL[0x03] = 0x00;
-        TriggerL[0x04] = 0x00;
-        TriggerL[0x05] = 0x00;
-        TriggerL[0x06] = 0x00;
-        TriggerL[0x07] = 0x00;
-        TriggerL[0x08] = 0x00;
-        TriggerL[0x09] = 0x00;
-        TriggerL[0x10] = 0x00;
     }
     
 

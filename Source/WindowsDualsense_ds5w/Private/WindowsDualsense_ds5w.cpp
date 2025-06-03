@@ -30,42 +30,7 @@
 void FWindowsDualsense_ds5wModule::StartupModule()
 {
 	IModularFeatures::Get().RegisterModularFeature(IInputDeviceModule::GetModularFeatureName(), this);
-
-	// FString EnginePluginPath = FPaths::Combine(FPaths::EnginePluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
-	// FString LocalPluginPath = FPaths::Combine(FPaths::ProjectPluginsDir(), TEXT("WindowsDualsense_ds5w/Binaries/Win64/ds5w_x64.dll"));
-	//
-	// if (FPaths::FileExists(EnginePluginPath))
-	// {
-	// 	DS5WdllHandle = FPlatformProcess::GetDllHandle(*EnginePluginPath);
-	// 	UE_LOG(LogTemp, Log, TEXT("DualSense: Loaded from Engine Plugin Path: %s"), *EnginePluginPath);
-	// }
-	// else if (FPaths::FileExists(LocalPluginPath))
-	// {
-	// 	DS5WdllHandle = FPlatformProcess::GetDllHandle(*LocalPluginPath);
-	// 	UE_LOG(LogTemp, Log, TEXT("DualSense: Loaded from Project Plugin Path: %s"), *LocalPluginPath);
-	// }
-	// else
-	// {
-	// 	UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to locate DLL in both paths. Check plugin installation."));
-	// 	return;
-	// }
-
-	
 	RegisterCustomKeys();
-}
-
-void FWindowsDualsense_ds5wModule::PrintBufferAsHex(const unsigned char* Buffer, int BufferSize)
-{
-	FString HexString;
-
-	for (int i = 0; i < BufferSize; i++)
-	{
-		// Adiciona o valor hexadecimal de cada byte ao HexString
-		HexString += FString::Printf(TEXT("%02X "), Buffer[i]);
-	}
-
-	// Imprime no log usando UE_LOG
-	UE_LOG(LogTemp, Log, TEXT("Buffer as Hex String: %s"), *HexString);
 }
 
 void FWindowsDualsense_ds5wModule::ShutdownModule()

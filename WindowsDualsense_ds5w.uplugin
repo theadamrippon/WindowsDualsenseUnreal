@@ -25,17 +25,5 @@
 				"Win64"
 			]
 		}
-	],
-	"RuntimeDependencies": [
-		{
-			"Path": "Binaries/Win64/ds5w_x64.dll",
-			"Type": "Runtime",
-			"PlatformAllowList": [
-				"Win64"
-			]
-		}
-	],
-	"AdditionalFiles": [
-		"ThirdParty/DualSenseWindows_V0.1/*"
 	]
 }

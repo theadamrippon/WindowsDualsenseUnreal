@@ -36,10 +36,7 @@ bool UDualSenseLibrary::InitializeLibrary(const FHIDDeviceContext& Context)
 
 	HIDDeviceContexts = Context;
 	
-	
-	
-	SetLedPlayerEffects(1, 1);
-	UpdateColorOutput(FColor(0, 0, 255, 150));
+	StopAll();
 	return true;
 }
 
@@ -117,9 +114,10 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 
 		// // Specials Actions
-		const bool Playstation = HIDInput[0x09] & DS5W_ISTATE_BTN_B_PLAYSTATION_LOGO;
+		const bool Playstation = HIDInput[0x09] & BTN_PLAYSTATION_LOGO;
 		const bool TouchPad = HIDInput[0x09] & BTN_PAD_BUTTON;
-		const bool Mic = HIDInput[0x09] & DS5W_ISTATE_BTN_B_MIC_BUTTON;
+		const bool Mic = HIDInput[0x09] & BTN_MIC_BUTTON;
+
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Mic"), Mic);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_TouchButtom"), TouchPad);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Button"), Playstation);
@@ -177,19 +175,19 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 				break;
 				// Left Down
 			case 0x5:
-				ButtonsMask |= DS5W_ISTATE_DPAD_LEFT | DS5W_ISTATE_DPAD_DOWN;
+				ButtonsMask |= BTN_DPAD_LEFT | BTN_DPAD_DOWN;
 				break;
 				// Left Up
 			case 0x7:
-				ButtonsMask |= DS5W_ISTATE_DPAD_LEFT | DS5W_ISTATE_DPAD_UP;
+				ButtonsMask |= BTN_DPAD_LEFT | BTN_DPAD_UP;
 				break;
 				// Right Up
 			case 0x1:
-				ButtonsMask |= DS5W_ISTATE_DPAD_RIGHT | DS5W_ISTATE_DPAD_UP;
+				ButtonsMask |= BTN_DPAD_RIGHT | BTN_DPAD_UP;
 				break;
 				// Right Down
 			case 0x3:
-				ButtonsMask |= DS5W_ISTATE_DPAD_RIGHT | DS5W_ISTATE_DPAD_DOWN;
+				ButtonsMask |= BTN_DPAD_RIGHT | BTN_DPAD_DOWN;
 				break;
 			default: ;
 		}
@@ -216,46 +214,46 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 			
 
 			// Evaluate touch state 1
-			FTouchPoint1 Touch;
-			const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
-			Touch.Y = (Touchpad1Raw & 0xFFF00000) >> 20;
-			Touch.X = (Touchpad1Raw & 0x000FFF00) >> 8;
-			Touch.Down = (Touchpad1Raw & (1 << 7)) == 0;
-			Touch.Id = (Touchpad1Raw & 127);
-			
-			// Evaluate touch state 2
-			FTouchPoint2 Touch2;
-			const UINT32 Touchpad2Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
-			Touch2.Y = (Touchpad2Raw & 0xFFF00000) >> 20;
-			Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
-			Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;
-			Touch2.Id = (Touchpad2Raw & 127);
-			
-			// Evaluate headphone input
-			// ptrInputState->headPhoneConnected = hidInBuffer[0x35] & 0x01;
-			
-			// Trigger force feedback
-			// ptrInputState->leftTriggerFeedback = hidInBuffer[0x2A];
-			// ptrInputState->rightTriggerFeedback = hidInBuffer[0x29];
-
-			const unsigned int MaxX = 2000;
-			const unsigned int MaxY = 2048;
-			
-			if (EnableTouch1)
-			{
-				const float Touch1X = (2.0f * Touch.X / MaxX) - 1.0f;
-				const float Touch1Y = (2.0f * Touch.Y / MaxY) - 1.0f;
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);
-			}
-			
-			if (EnableTouch2)
-			{
-				const float Touch2X = (2.0f * Touch2.X / MaxX) - 1.0f;
-				const float Touch2Y = (2.0f * Touch2.Y / MaxY) - 1.0f;
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch2X);
-				InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);
-			}
+			// FTouchPoint1 Touch;
+			// const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			// Touch.Y = (Touchpad1Raw & 0xFFF00000) >> 20;
+			// Touch.X = (Touchpad1Raw & 0x000FFF00) >> 8;
+			// Touch.Down = (Touchpad1Raw & (1 << 7)) == 0;
+			// Touch.Id = (Touchpad1Raw & 127);
+			//
+			// // Evaluate touch state 2
+			// FTouchPoint2 Touch2;
+			// const UINT32 Touchpad2Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			// Touch2.Y = (Touchpad2Raw & 0xFFF00000) >> 20;
+			// Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
+			// Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;
+			// Touch2.Id = (Touchpad2Raw & 127);
+			//
+			// // Evaluate headphone input
+			// // ptrInputState->headPhoneConnected = hidInBuffer[0x35] & 0x01;
+			//
+			// // Trigger force feedback
+			// // ptrInputState->leftTriggerFeedback = hidInBuffer[0x2A];
+			// // ptrInputState->rightTriggerFeedback = hidInBuffer[0x29];
+			//
+			// const unsigned int MaxX = 2000;
+			// const unsigned int MaxY = 2048;
+			//
+			// if (EnableTouch1)
+			// {
+			// 	const float Touch1X = (2.0f * Touch.X / MaxX) - 1.0f;
+			// 	const float Touch1Y = (2.0f * Touch.Y / MaxY) - 1.0f;
+			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
+			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);
+			// }
+			//
+			// if (EnableTouch2)
+			// {
+			// 	const float Touch2X = (2.0f * Touch2.X / MaxX) - 1.0f;
+			// 	const float Touch2Y = (2.0f * Touch2.Y / MaxY) - 1.0f;
+			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch2X);
+			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);
+			// }
 		}
 
 		
@@ -614,15 +612,23 @@ void UDualSenseLibrary::StopEffect(const EControllerHand& Hand)
 
 void UDualSenseLibrary::StopAllEffects()
 {
-	HidOutput.ResetEffects = true;
+	HidOutput.ColorHid = {0, 0, 255, 255};
+	HidOutput.LedPlayerHid.Brightness = 0x00;
+	HidOutput.LedPlayerHid.Led = PLAYER_LED_MIDDLE;
+	HidOutput.LedPlayerHid.Player = 0x02;
+	HidOutput.LeftTrigger.Mode = 0x05;
+	HidOutput.RightTrigger.Mode = 0x05;
 	SendOut();
 }
 
 void UDualSenseLibrary::StopAll()
 {
-	HidOutput.MotorsHid = { 0x00, 0x00};
-	HidOutput.LedPlayerHid = { 0x00, 0x02, 0x01};
-	HidOutput.ColorHid = { 0x00, 0x00, 0xff, 0xff};
+	HidOutput.ColorHid = {0, 0, 255, 255};
+	HidOutput.LedPlayerHid.Brightness = 0x00;
+	HidOutput.LedPlayerHid.Led = PLAYER_LED_MIDDLE;
+	HidOutput.LedPlayerHid.Player = 0x02;
+	HidOutput.LeftTrigger.Mode = 0x05;
+	HidOutput.RightTrigger.Mode = 0x05;
 	SendOut();
 }
 
@@ -630,7 +636,9 @@ void UDualSenseLibrary::SetLedPlayerEffects(int32 NumberLeds, int32 BrightnessVa
 {
 	if (NumberLeds == 0)
 	{
-		HidOutput.LedPlayerHid.Player = 0x01;
+		HidOutput.LedPlayerHid.Player = 0x00;
+		HidOutput.LedPlayerHid.Led = 0x00;
+		HidOutput.LedPlayerHid.Brightness = 0x00;
 		return;
 	}
 	

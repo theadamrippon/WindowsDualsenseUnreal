@@ -3,10 +3,39 @@
 // Planned Release Year: 2025
 
 #pragma once
-
-#include <concrt.h>
 #include "CoreMinimal.h"
-#include "ds5w.h"
+
+
+// DPad
+#define BTN_DPAD_UP 0x8
+#define BTN_DPAD_DOWN 0x02
+#define BTN_DPAD_LEFT 0x01
+#define BTN_DPAD_RIGHT 0x04
+
+// Face buttons
+#define BTN_CROSS 0x20
+#define BTN_SQUARE 0x10
+#define BTN_CIRCLE 0x40
+#define BTN_TRIANGLE 0x80
+
+#define BTN_LEFT_SHOLDER 0x01
+#define BTN_RIGHT_SHOLDER 0x02
+#define BTN_LEFT_TRIGGER 0x04
+#define BTN_RIGHT_TRIGGER 0x08
+#define BTN_LEFT_STICK 0x40
+#define BTN_RIGHT_STICK 0x80
+#define BTN_START 0x20
+#define BTN_SELECT 0x10
+
+#define BTN_PLAYSTATION_LOGO 0x01
+#define BTN_PAD_BUTTON 0x02
+#define BTN_MIC_BUTTON 0x04
+
+#define PLAYER_LED_LEFT 0x01
+#define PLAYER_LED_MIDDLE_LEFT 0x02
+#define PLAYER_LED_MIDDLE 0x04
+#define PLAYER_LED_MIDDLE_RIGHT 0x08
+#define PLAYER_LED_RIGHT 0x10
 
 enum class EHIDDeviceConnection : uint8
 {
@@ -34,9 +63,9 @@ struct FOutputBuffer
 {
 	typedef struct FLedPlayer
 	{
-		unsigned char Brightness;
-		unsigned char Player;
-		unsigned char Led;
+		unsigned char Brightness = 0x00;
+		unsigned char Player = 0x02;
+		unsigned char Led = PLAYER_LED_MIDDLE;
 	} FLedPlayer;
 	FLedPlayer LedPlayerHid;
 
@@ -46,24 +75,23 @@ struct FOutputBuffer
 	} FMicLed;
 	FMicLed MicLed;
 
-	typedef struct
+	typedef struct FLedColor
 	{
-		unsigned char R;
-		unsigned char G;
-		unsigned char B;
-		unsigned char A;
+		unsigned char R = 0x00;
+		unsigned char G = 0x00;
+		unsigned char B = 0xff;
+		unsigned char A = 0xff;
 	} FLedColor;
-	
 	FLedColor ColorHid;
 
-	typedef struct
+	typedef struct FMotors
 	{
-		unsigned char Left;
-		unsigned char Right;
+		unsigned char Left = 0x00;
+		unsigned char Right = 0x00;
 	} FMotors;
 	FMotors MotorsHid;
 
-	typedef struct
+	typedef struct FLeftTriggerEffects
 	{
 		unsigned char Mode = 0x05;
 		unsigned char StartPosition = 0x00;
@@ -72,7 +100,7 @@ struct FOutputBuffer
 		unsigned char TimeRatio = 0x00;
 		unsigned char KeepEffect = 0x00;
 
-		typedef struct
+		typedef struct FStrengths
 		{
 			unsigned char Start = 0x00;
 			unsigned char Middle = 0x00;
@@ -83,7 +111,7 @@ struct FOutputBuffer
 	} FLeftTriggerEffects;
 	FLeftTriggerEffects LeftTrigger;
 
-	typedef struct
+	typedef struct FRightTriggerEffects
 	{
 		unsigned char Mode = 0x05;
 		unsigned char StartPosition = 0x00;
@@ -92,7 +120,7 @@ struct FOutputBuffer
 		unsigned char TimeRatio = 0x00;
 		unsigned char KeepEffect = 0x00;
 
-		typedef struct
+		typedef struct FStrengths
 		{
 			unsigned char Start = 0x00;
 			unsigned char Middle = 0x00;
@@ -108,35 +136,6 @@ struct FOutputBuffer
 	bool ResetEffectsLeftTrigger = false;
 	bool ResetEffectsRightTrigger = false;
 };
-
-// DPad
-#define BTN_DPAD_UP 0x8
-#define BTN_DPAD_DOWN 0x02
-#define BTN_DPAD_LEFT 0x01
-#define BTN_DPAD_RIGHT 0x04
-
-// Face buttons
-#define BTN_CROSS 0x20
-#define BTN_SQUARE 0x10
-#define BTN_CIRCLE 0x40
-#define BTN_TRIANGLE 0x80
-
-#define BTN_LEFT_SHOLDER 0x01
-#define BTN_RIGHT_SHOLDER 0x02
-#define BTN_MENU 0x20
-#define BTN_LEFT_STICK 0x40
-#define BTN_RIGHT_STICK 0x80
-#define BTN_PLAYSTATION_LOGO 0x01
-#define BTN_PAD_BUTTON 0x02
-#define BTN_MIC_BUTTON 0x04
-#define BTN_SELECT 0x10
-#define BTN_START 0x20
-
-#define PLAYER_LED_LEFT 0x01
-#define PLAYER_LED_MIDDLE_LEFT 0x02
-#define PLAYER_LED_MIDDLE 0x04
-#define PLAYER_LED_MIDDLE_RIGHT 0x08
-#define PLAYER_LED_RIGHT 0x10
 
 
 /**
@@ -156,9 +155,6 @@ public:
 	static void FreeContext(FHIDDeviceContext* Context);
 	static void OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut);
 	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState);
-
-	static void Weapon(unsigned char* Buffer, const FOutputBuffer& HidOut);
-	
 	
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);
 };

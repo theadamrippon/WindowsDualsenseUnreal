@@ -10,22 +10,13 @@ public class WindowsDualsense_ds5w : ModuleRules
 	public WindowsDualsense_ds5w(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
- 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice" });
+ 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice"});
 	    PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 		
 	    if (Target.Platform == UnrealTargetPlatform.Win64)
 	    {
-		    PublicSystemLibraries.Add("hid.lib");
-		    PublicDelayLoadDLLs.AddRange(new string[] { "hid.dll" });
-		 //    PublicDefinitions.Add("_WIN32_WINNT=0x0A00"); // Para Windows 10+
-			//
-	  //
-			var thirdPartyPath = Path.Combine(ModuleDirectory, "ThirdParty/DualSenseWindows_V0.1");
-        	PublicIncludePaths.Add(thirdPartyPath);
-        	PublicAdditionalLibraries.Add(Path.Combine(thirdPartyPath, "ds5w_x64.lib"));
-	  
-        	var dllFullPath = Path.Combine(thirdPartyPath, "ds5w_x64.dll");
-        	RuntimeDependencies.Add("$(BinaryOutputDir)/ds5w_x64.dll", dllFullPath);
+		    PublicAdditionalLibraries.Add("hid.lib");
+		    PublicDefinitions.Add("PLATFORM_SUPPORTS_HID=1");
 		}
 	}
 }

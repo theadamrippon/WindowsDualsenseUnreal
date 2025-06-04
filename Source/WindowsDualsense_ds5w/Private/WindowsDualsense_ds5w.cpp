@@ -5,25 +5,12 @@
 
 #include "WindowsDualsense_ds5w/Public/WindowsDualsense_ds5w.h"
 
-#include "DualSenseHIDManager.h"
 #include "InputCoreTypes.h"
 #include "Misc/Paths.h"
 #include "FDualSenseInputDevice.h"
 #include "FDualSenseLibraryManager.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
-
-#include <Windows.h>
-#include <Hidclass.h>
-#include <Unknwn.h>
-#include <hidpi.h>
 #include <stdio.h>
-#include <winioctl.h>  // Adicionado para corrigir o erro
-#include <Hidclass.h>
-#include <SetupAPI.h>
-#include <Cfgmgr32.h>
-#include <Unknwn.h>
-#include <combaseapi.h>
-#include <hidusage.h>
 #define LOCTEXT_NAMESPACE "FWindowsDualsense_ds5wModule"
 #define MAX_CONTROLLERS_SUPPORTED 16
 
@@ -72,6 +59,7 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 	const FKey Dualsense_Touch1_Y("Dualsense_Touch1_Y");
 	const FKey Dualsense_Touch2_X("Dualsense_Touch2_X");
 	const FKey Dualsense_Touch2_Y("Dualsense_Touch2_Y");
+	
 
 	EKeys::AddKey(FKeyDetails(
 		Dualsense_Touch1_X,

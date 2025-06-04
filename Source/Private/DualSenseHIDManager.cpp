@@ -3,11 +3,13 @@
 // Planned Release Year: 2025
 
 
+
 #include "DualSenseHIDManager.h"
-#include "Windows/AllowWindowsPlatformTypes.h" 
-#include "Windows/HideWindowsPlatformTypes.h"
-#include <hidsdi.h>  
+#include "Windows/AllowWindowsPlatformTypes.h"
+#include <windows.h>
+#include <hidsdi.h>
 #include <setupapi.h>
+#include "Windows/HideWindowsPlatformTypes.h"
 
 DualSenseHIDManager::DualSenseHIDManager()
 {
@@ -71,26 +73,11 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
                         {
                             UE_LOG(LogTemp, Warning, TEXT("HIDManager: Falha ao obter caminho do dispositivo para o DualSense."));
                             return false;
-                           
                         }
-                        PHIDP_PREPARSED_DATA Phid;
-                        if (HidD_GetPreparsedData(TempDeviceHandle, &Phid)) {
-                            HIDP_CAPS DeviceCaps;
-                            if (HidP_GetCaps(Phid, &DeviceCaps) == HIDP_STATUS_SUCCESS) {
-                                if (DeviceCaps.InputReportByteLength == 64) {
-                                    Context.Internal.Connected  = true;
-                                    Context.Internal.DeviceHandle = TempDeviceHandle;
-                                    Context.Internal.Connection = EHIDDeviceConnection::Usb;
-                                }
-                            
-                                else if(DeviceCaps.InputReportByteLength == 78) {
-                                    Context.Internal.Connected  = true;
-                                    Context.Internal.DeviceHandle = TempDeviceHandle;
-                                    Context.Internal.Connection = EHIDDeviceConnection::Bluetooth;
-                                }
-                            }
-                            HidD_FreePreparsedData(Phid);
-                        }
+                        
+                        Context.Internal.Connected = true;
+                        Context.Internal.DeviceHandle = TempDeviceHandle;
+                        Context.Internal.Connection = EHIDDeviceConnection::Usb;
                         Devices.Add(Context);
                     }
                 }
@@ -129,41 +116,32 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
     HidD_FlushQueue(DeviceContext->Internal.DeviceHandle);
 
     DWORD BytesRead = 0;
-    if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
+    if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, sizeof(DeviceContext->Internal.Buffer), &BytesRead, NULL))
     {
-        if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, sizeof(DeviceContext->Internal.Buffer), &BytesRead, NULL))
-        {
-            const DWORD Error = GetLastError();
-            UE_LOG(LogTemp, Error, TEXT("Erro de leitura do DualSense: tamanho do buffer interno %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
+        const DWORD Error = GetLastError();
+        UE_LOG(LogTemp, Error, TEXT("Erro de leitura do DualSense: tamanho do buffer interno %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
             
-            CloseHandle(DeviceContext->Internal.DeviceHandle);
-            DeviceContext->Internal.Connected = false;
-            DeviceContext->Internal.DeviceHandle = nullptr;
-            DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-            return false;
+        CloseHandle(DeviceContext->Internal.DeviceHandle);
+        DeviceContext->Internal.Connected = false;
+        DeviceContext->Internal.DeviceHandle = nullptr;
+        DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
+        return false;
+    }
+
+
+    if (DeviceContext->Internal.Buffer[0] == 0x31 && DeviceContext->Internal.Buffer[1] == 0x02)
+    {
+        if (DeviceContext->Internal.Connection != EHIDDeviceConnection::Bluetooth)
+        {
+            DeviceContext->Internal.Connection = EHIDDeviceConnection::Bluetooth;    
         }
+        
         memcpy(&InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
         return true;
     }
-    
-    if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Usb)
-    {
-        if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, sizeof(DeviceContext->Internal.Buffer), &BytesRead, nullptr))
-        {
-            const DWORD Error = GetLastError();
-            UE_LOG(LogTemp, Error, TEXT("Erro de leitura do DualSense: tamanho do buffer interno %llu, esperado %zu bytes. Erro: %d"), sizeof(DeviceContext->Internal.Buffer), sizeof(DeviceContext->Internal.Buffer), Error);
 
-            FreeContext(DeviceContext);
-            DeviceContext->Internal.Connected = false;
-            DeviceContext->Internal.DeviceHandle = nullptr;
-            DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-            return false;
-        }
-        memcpy(&InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
-        return true;
-    }
-
-    return false;
+    memcpy(&InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
+    return true;
 }
 
 

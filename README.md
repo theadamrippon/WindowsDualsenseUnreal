@@ -1,12 +1,16 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.5
 
-> **Update Note:**
-> **Important Update for WindowsDualsense_ds5w Plugin**
+> **Important Update Note (2025-06-04)** 
+> 
+> [Click go to the section](#Important-update-for-plugin)
 
->This update replaces the previous implementation, which relied on a third-party DLL located in the `ThirdParty` directory, with a direct integration using the native Windows HIDAPI.
+## Links for installation
+***
 
->If you have cloned the project and still use the older version with the third-party DLL, please update to this latest version to benefit from the native HIDAPI integration. This eliminates the dependency on external DLLs and provides a more streamlined setup.
-For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.
+### [Install on FAB official page](#Install-on-FAB-official-page-plugin)
+
+[Manual installation](#manual-installation)
+
 
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.5, for Windows platforms. No configuration needed**
 
@@ -17,21 +21,16 @@ For convenience, you can also download the latest version as a ZIP file from the
 ### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
 # Usage via Blueprints
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Metodos.gif)
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Usage.gif)
-
-# Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
+### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
 
-# Haptic trigger feedback
+### Haptic trigger feedback
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
 
-# Multiple players with multiple controllers
+## Multiple players with multiple controllers
 
 ```
 // MyGameModeBase.h
@@ -128,7 +127,7 @@ void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerContro
 }
 ```
 
-# Example of using DualSense effects via C++
+## Example of using DualSense effects via C++
 
 ```
 #include "DualSenseProxy.h"
@@ -193,6 +192,7 @@ void APlayerController::BeginPlay()
 }
 
 ```
+### The plugin is compatible with Unreal's native Blueprints Force Feedback
 
 Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
 
@@ -219,23 +219,41 @@ You don’t need to map the keys. By default, the plugin already maps the standa
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GamepadEnable.gif)
 
 
-### The plugin is compatible with Unreal's native Blueprints Force Feedback
+
+
+# Install on FAB official page plugin
+
+To install this plugin directly via FAB (Official Source), follow the steps below:
+
+1. **Access the plugin's official page on FAB**  
+   Go to the official plugin page [by clicking here](?).
+
+3. **Install the Plugin**
+   - On the plugin page, click the **Install** or **Add to Project** button (depending on the FAB interface).
+   - Choose your Unreal Engine project where the plugin will be used, or simply download it for manual setup.
+
+4. **Configure in Unreal Engine**
+   - Open your project in Unreal Engine.
+   - Go to the **Plugins** tab under `Edit > Plugins`.
+   - Search for `Windows DualSense Plugin` in the list and enable it if necessary.
+   - Restart the project to apply the changes.
+
 
 # Manual Installation
 
 Download plugin UE_Version
 
-[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](WindowsDualsense_ds5w_5.2.zip)
+[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](https://drive.google.com/file/d/11yPv6iF1YrvFXyVY-MNaIpskAfgt-8fe/view?usp=drive_link)
 
-[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](WindowsDualsense_ds5w_5.3.zip)
+[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](https://drive.google.com/file/d/1Y-buH-0HEW4QqEN6BfeHvV3gEgFDh5Mo/view?usp=drive_link)
 
-[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](WindowsDualsense_ds5w_5.4.zip)
+[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](https://drive.google.com/file/d/1ZcZoR2pMmAFIt_1xKLRzMCIIE52W-sdy/view?usp=drive_link)
 
-[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](WindowsDualsense_ds5w_5.5.zip)
+[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](https://drive.google.com/file/d/11x3rC3n-9jc8tLFCASX_VUQVNRKavr_a/view?usp=drive_link)
 
-# Installing the Plugin in the Project's Directory
+## Installing the Plugin in the Project's Directory
 
-## Steps:
+### Steps:
 
 1. **Move to the Plugins Folder**  
    Move the cloned repository to your Unreal Engine project’s `Plugins` directory. If the folder does not exist, create it manually:
@@ -249,8 +267,19 @@ Download plugin UE_Version
     - Look for the new plugin in the list and enable it if it is not enabled by default.
     - Restart the Unreal Engine editor.
 
-Move the `WindowsDualsenseUnreal` folder into:
-
 ## Contributions
 
 Thanks to the [DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.
+
+***
+
+# Important update for plugin*
+
+> **UPDATED NOTE (2025-06-04)**
+> 
+>This update replaces the previous implementation, which relied on a third-party DLL located in the `ThirdParty` directory, with a direct integration using the native Windows HIDAPI.
+>
+>If you have cloned the project and still use the older version with the third-party DLL, please update to this latest version to benefit from the native HIDAPI integration.
+>
+> This eliminates the dependency on external DLLs and provides a more streamlined setup.
+For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.

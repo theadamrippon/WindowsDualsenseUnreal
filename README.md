@@ -240,6 +240,8 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 # Manual Installation
 
+[See the example video](https://drive.google.com/file/d/1i4afhW-tG-FkWqjeI6sDr8aoo5KcnPZI/view?usp=sharing)
+
 Download plugin UE_Version
 
 [UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](https://drive.google.com/file/d/11yPv6iF1YrvFXyVY-MNaIpskAfgt-8fe/view?usp=drive_link)

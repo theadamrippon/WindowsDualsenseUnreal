@@ -1,5 +1,13 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.5
 
+> **Update Note:**
+> **Important Update for WindowsDualsense_ds5w Plugin**
+
+>This update replaces the previous implementation, which relied on a third-party DLL located in the `ThirdParty` directory, with a direct integration using the native Windows HIDAPI.
+
+>If you have cloned the project and still use the older version with the third-party DLL, please update to this latest version to benefit from the native HIDAPI integration. This eliminates the dependency on external DLLs and provides a more streamlined setup.
+For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.
+
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.5, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.

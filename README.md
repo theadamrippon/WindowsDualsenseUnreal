@@ -5,7 +5,6 @@
 > [Click go to the section](#Important-update-for-plugin)
 
 ## Links for installation
-***
 
 ### [Install on FAB official page](#Install-on-FAB-official-page-plugin)
 

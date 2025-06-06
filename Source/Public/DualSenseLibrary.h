@@ -28,6 +28,20 @@ struct FTouchPoint2
 	unsigned char Id;
 };
 
+struct FAccelerometer
+{
+	unsigned char X;
+	unsigned char Y;
+	unsigned char Z;
+};
+
+struct FGyro
+{
+	unsigned char X;
+	unsigned char Y;
+	unsigned char Z;
+};
+
 /**
  * 
  */
@@ -79,8 +93,8 @@ public:
 
 	void SetAcceleration(bool bIsAccelerometer);
 	void SetGyroscope(bool bIsGyroscope);
-	void SetTouch1(bool bIsGyroscope);
-	void SetTouch2(bool bIsGyroscope);
+	void SetTouch1(bool bIsTouch);
+	void SetTouch2(bool bIsTouch);
 
 	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
 

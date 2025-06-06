@@ -207,83 +207,90 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		if (EnableTouch1 || EnableTouch2)
 		{
 
-			// Copy accelerometer readings
-			// memcpy(&ptrInputState->accelerometer, &hidInBuffer[0x0F], 2 * 3);
-			
-			//TEMP: Copy gyro data (no processing currently done!)
-			
-
 			// Evaluate touch state 1
-			// FTouchPoint1 Touch;
-			// const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
-			// Touch.Y = (Touchpad1Raw & 0xFFF00000) >> 20;
-			// Touch.X = (Touchpad1Raw & 0x000FFF00) >> 8;
-			// Touch.Down = (Touchpad1Raw & (1 << 7)) == 0;
-			// Touch.Id = (Touchpad1Raw & 127);
-			//
-			// // Evaluate touch state 2
-			// FTouchPoint2 Touch2;
-			// const UINT32 Touchpad2Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
-			// Touch2.Y = (Touchpad2Raw & 0xFFF00000) >> 20;
-			// Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
-			// Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;
-			// Touch2.Id = (Touchpad2Raw & 127);
-			//
-			// // Evaluate headphone input
-			// // ptrInputState->headPhoneConnected = hidInBuffer[0x35] & 0x01;
-			//
-			// // Trigger force feedback
-			// // ptrInputState->leftTriggerFeedback = hidInBuffer[0x2A];
-			// // ptrInputState->rightTriggerFeedback = hidInBuffer[0x29];
-			//
-			// const unsigned int MaxX = 2000;
-			// const unsigned int MaxY = 2048;
-			//
-			// if (EnableTouch1)
-			// {
-			// 	const float Touch1X = (2.0f * Touch.X / MaxX) - 1.0f;
-			// 	const float Touch1Y = (2.0f * Touch.Y / MaxY) - 1.0f;
-			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch1X);
-			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_Y"), UserId, InputDeviceId, Touch1Y);
-			// }
-			//
-			// if (EnableTouch2)
-			// {
-			// 	const float Touch2X = (2.0f * Touch2.X / MaxX) - 1.0f;
-			// 	const float Touch2Y = (2.0f * Touch2.Y / MaxY) - 1.0f;
-			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch1_X"), UserId, InputDeviceId, Touch2X);
-			// 	InMessageHandler->OnControllerAnalog(FName("Dualsense_Touch2_Y"), UserId, InputDeviceId, Touch2Y);
-			// }
-		}
+			FTouchPoint1 Touch;
+			const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			Touch.Y = (Touchpad1Raw & 0xFFF00000) >> 20;
+			Touch.X = (Touchpad1Raw & 0x000FFF00) >> 8;
+			Touch.Down = (Touchpad1Raw & (1 << 7)) == 0;
+			Touch.Id = (Touchpad1Raw & 127);
 
+			// // Evaluate touch state 2
+			FTouchPoint2 Touch2;
+			const UINT32 Touchpad2Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			Touch2.Y = (Touchpad2Raw & 0xFFF00000) >> 20;
+			Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
+			Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;
+			Touch2.Id = (Touchpad2Raw & 127);
+
+
+		    if (Touch.Down) // pressed
+		    {
+		        InMessageHandler->OnTouchStarted(
+		            nullptr,
+		            FVector2D(Touch.X, Touch.Y),
+		            1.0f,
+		            Touch.Id,
+		            UserId,
+		            InputDeviceId
+		        );
+		    }
+		    else
+		    {
+		    	// OnTouchEnded
+		        InMessageHandler->OnTouchEnded(
+		            FVector2D(Touch.X, Touch.Y),
+		            Touch.Id,
+		            UserId,
+		            InputDeviceId
+		        );
+		    }
+
+		    if (Touch2.Down) // pressed
+		    {
+		        InMessageHandler->OnTouchStarted(
+		            nullptr,
+		            FVector2D(Touch2.X, Touch2.Y),
+		            1.0f,
+		            Touch2.Id,
+		            UserId,
+		            InputDeviceId
+		        );
+		    }
+		    else
+		    {
+		    	// OnTouchEnded
+		        InMessageHandler->OnTouchEnded(
+		            FVector2D(Touch2.X, Touch2.Y),
+		            Touch2.Id,
+		            UserId,
+		            InputDeviceId
+		        );
+		    }
+		}
 		
 		
 		if (EnableAccelerometer || EnableGyroscope)
 		{
-			// Accelerometer = InputState.accelerometer;
 
-			// Gyroscope;
-			// if (EnableAccelerometer)
-			// {
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.x);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.y);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Acceleration.GetFName(), UserId, InputDeviceId, Accelerometer.z);
-			// }
-			//
-			// if (EnableGyroscope)
-			// {
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.x);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.y);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::RotationRate.GetFName(), UserId, InputDeviceId, Gyroscope.z);
-			// }
-			//
-			// if (EnableGyroscope && EnableAccelerometer)
-			// {
-			// 	FVector Tilt = FVector(Accelerometer.x + Gyroscope.x, Accelerometer.y + Gyroscope.y, Accelerometer.z + Gyroscope.z);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.X);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Y);
-			// 	InMessageHandler.Get().OnControllerAnalog(EKeys::Tilt.GetFName(), UserId, InputDeviceId, Tilt.Z);
-			// }
+			// &HIDInput[0x1B], &HIDInput[0x1D], &HIDInput[0x1F] 
+			FGyro Gyro;
+			Gyro.X = HIDInput[0x15];
+			Gyro.Y = HIDInput[0x17];
+			Gyro.Z = HIDInput[0x19];
+
+			FAccelerometer Acc;
+			Acc.X = HIDInput[0x21];
+			Acc.Y = HIDInput[0x23];
+			Acc.Z = HIDInput[0x25];
+
+
+			const FVector Tilts = FVector(Acc.X +  Gyro.X, Acc.Y + Gyro.Y, Acc.Z +  Gyro.Z);
+			const FVector Gravity = FVector(0.f, 0.f, 0.f);
+			const FVector Gyroscope = FVector(Gyro.X, Gyro.Y, Gyro.Z);
+			const FVector Accelerometer = FVector(Acc.X, Acc.Y, Acc.Z);
+
+			InMessageHandler.Get().OnMotionDetected( Tilts, Gyroscope, Gravity, Accelerometer, UserId, InputDeviceId);
 		}
 
 		// PrintBufferAsHex(HIDDeviceContexts.Internal.Buffer, 64);
@@ -412,14 +419,14 @@ void UDualSenseLibrary::SetGyroscope(bool bIsGyroscope)
 	EnableGyroscope = bIsGyroscope;
 }
 
-void UDualSenseLibrary::SetTouch1(bool bIsGyroscope)
+void UDualSenseLibrary::SetTouch1(bool bIsTouch)
 {
-	EnableTouch1 = bIsGyroscope;
+	EnableTouch1 = bIsTouch;
 }
 
-void UDualSenseLibrary::SetTouch2(bool bIsGyroscope)
+void UDualSenseLibrary::SetTouch2(bool bIsTouch)
 {
-	EnableTouch2 = bIsGyroscope;
+	EnableTouch2 = bIsTouch;
 }
 
 void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(

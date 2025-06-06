@@ -1,4 +1,4 @@
-# Windows Dualsense for Unreal Engine version 5.2 ~ 5.5
+# Windows Dualsense for Unreal Engine version 5.2 ~ 5.6
 
 > **Important Update Note (2025-06-04)** 
 > 
@@ -11,7 +11,7 @@
 [Manual installation](#manual-installation)
 
 
-### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.5, for Windows platforms. No configuration needed**
+### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
 
@@ -244,13 +244,15 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
-[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](https://drive.google.com/file/d/11yPv6iF1YrvFXyVY-MNaIpskAfgt-8fe/view?usp=drive_link)
+[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](https://drive.google.com/file/d/11yPv6iF1YrvFXyVY-MNaIpskAfgt-8fe/view?usp=sharing)
 
-[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](https://drive.google.com/file/d/1Y-buH-0HEW4QqEN6BfeHvV3gEgFDh5Mo/view?usp=drive_link)
+[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](https://drive.google.com/file/d/1Y-buH-0HEW4QqEN6BfeHvV3gEgFDh5Mo/view?usp=sharing)
 
-[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](https://drive.google.com/file/d/1ZcZoR2pMmAFIt_1xKLRzMCIIE52W-sdy/view?usp=drive_link)
+[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](https://drive.google.com/file/d/1ZcZoR2pMmAFIt_1xKLRzMCIIE52W-sdy/view?usp=sharing)
 
-[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](https://drive.google.com/file/d/11x3rC3n-9jc8tLFCASX_VUQVNRKavr_a/view?usp=drive_link)
+[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](https://drive.google.com/file/d/11x3rC3n-9jc8tLFCASX_VUQVNRKavr_a/view?usp=sharing)
+
+[UE 5.6 download plugin WindowsDualsense_ds5w_5.6.zip](https://drive.google.com/file/d/1KXvVX4iSp8pUXiSR2eYeJHKsSBr7CS8u/view?usp=sharing)
 
 ## Installing the Plugin in the Project's Directory
 

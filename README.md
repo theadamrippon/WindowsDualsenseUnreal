@@ -10,7 +10,6 @@
 
 [Manual installation](#manual-installation)
 
-
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
@@ -220,24 +219,7 @@ Now enable the plugin in the Unreal Editor, connect your DualSense device, and r
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Buttons.gif)
 
-### The keys for the Gyroscope and Accelerometer are as follows:
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GyroscopeBTN.gif)
-
-You don’t need to map the keys. By default, the plugin already maps the standard Gamepad layout.
-
 > **NOTE:** Enable Gyroscope, Accelerometer, and Touch only after mapping the actions to avoid interfering with button press recognition, as Gyroscope, Accelerometer, and Touch constantly emit values.
-
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Mapp.gif)
-
-
-> **NOTE:** It may be necessary to enable haptic feedback in the project settings, under **Edit > Project Settings > Input**.
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/GamepadEnable.gif)
-
-
-
 
 # Install on FAB official page plugin
 
@@ -290,12 +272,17 @@ Download plugin UE_Version
     - Restart the Unreal Engine editor.
 
 ## Contributions
+Thanks to,
 
-Thanks to the [DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.
+[DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.
+
+[Nielk1 on GIST](https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db) code, which facilitated the development of this plugin.
+
+[DualSenseAPI](https://github.com/BadMagic100/DualSenseAPI/tree/master) library, which facilitated the development of this plugin.
+
+[flok pydualsense](https://github.com/flok/pydualsense) library, which facilitated the development of this plugin.
 
 ***
-
-# Important update for plugin*
 
 > **UPDATED NOTE (2025-06-04)**
 > 

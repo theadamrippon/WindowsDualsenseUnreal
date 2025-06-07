@@ -23,9 +23,9 @@
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
-## Example of using DualSense effects via C++
+# Example of using DualSense effects via C++
 
-#### New effects
+### New effects
 ```
    int32 ControllerId = 0; 
    
@@ -40,7 +40,7 @@
    UDualSenseProxy::EffectBow(ControllerId, 0, 5, 5, 8, EControllerHand::Left);
    UDualSenseProxy::EffectBow(ControllerId, 5, 8, 8, 8, EControllerHand::Right);
 ```
-#### Example haptics effects...
+### Example haptics effects
 ```
    int32 ControllerId = 0; 
    
@@ -71,8 +71,8 @@
     SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
     SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
 ```
-#### Players and led effects
 
+### Players and led effects
 ```
 #include "DualSenseProxy.h"
 
@@ -103,15 +103,17 @@ void APlayerController::BeginPlay()
 }
 
 ```
-#### Vibrations
+### Vibrations
+
+##### The plugin is compatible with Unreal's native Blueprints Force Feedback
 ```` 
     // Vibrations example 
     PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
 ````
 ## Multiple players with multiple controllers
-```
-// MyGameModeBase.h
 
+MyGameModeBase.h
+```
 #pragma once
 
 #include "CoreMinimal.h"
@@ -137,6 +139,7 @@ protected:
 	virtual void HandleConnectedControllers(APlayerController* PlayerController);
 };
 ```
+MyGameModeBase.cpp
 ```
 // MyGameModeBase.cpp
 
@@ -204,10 +207,7 @@ void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerContro
 }
 ```
 
-
-### The plugin is compatible with Unreal's native Blueprints Force Feedback
-
-Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
+### Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Install.gif)
 

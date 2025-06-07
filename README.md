@@ -4,17 +4,13 @@
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
 
-[See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
-
 ### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
-## Links for installation
-
-### [Install on FAB official page](#Install-on-FAB-official-page-plugin)
-
-[Manual installation](#manual-installation)
+### [Links for installation](#Install-on-FAB-official-page-plugin)
 
 # Usage via Blueprints
+### [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
+
 ### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
@@ -74,148 +70,138 @@
 
 ### Players and led effects
 ```
-#include "DualSenseProxy.h"
-
-void APlayerController::BeginPlay()
-{
-    Super::BeginPlay();
-	
-    int32 ControllerId = 0; 
-    
-    // Reset buffer all values 
-    UDualSenseProxy::ResetEffects(ControllerId);
-    
-    // Gyroscope and Accelerometer are set to false by default.
-    UDualSenseProxy::EnableAccelerometerValues(ControllerId, false);
-    UDualSenseProxy::EnableGyroscopeValues(ControllerId, false);
-
-    // Touch pad values default false
-    UDualSenseProxy::EnableTouch1(ControllerId, false);
-    UDualSenseProxy::EnableTouch2(ControllerId, false);
-
-    // Level battery Full load max 100.0f
-    float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
-
-    // Leds configs
-    UDualSenseProxy::LedMicEffects(ControllerId, ELedMicEnum::MicOn);
-    UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
-    UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
-}
+   #include "DualSenseProxy.h"
+   
+   void APlayerController::BeginPlay()
+   {
+       Super::BeginPlay();
+       
+       int32 ControllerId = 0; 
+       
+       // Reset buffer all values 
+       UDualSenseProxy::ResetEffects(ControllerId);
+       
+       // Gyroscope and Accelerometer are set to false by default.
+       UDualSenseProxy::EnableAccelerometerValues(ControllerId, false);
+       UDualSenseProxy::EnableGyroscopeValues(ControllerId, false);
+   
+       // Touch pad values default false
+       UDualSenseProxy::EnableTouch1(ControllerId, false);
+       UDualSenseProxy::EnableTouch2(ControllerId, false);
+   
+       // Level battery Full load max 100.0f
+       float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
+   
+       // Leds configs
+       UDualSenseProxy::LedMicEffects(ControllerId, ELedMicEnum::MicOn);
+       UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
+       UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
+   }
 
 ```
 ### Vibrations
 
 ##### The plugin is compatible with Unreal's native Blueprints Force Feedback
-```` 
+``` 
     // Vibrations example 
     PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
-````
+```
 ## Multiple players with multiple controllers
 
 MyGameModeBase.h
 ```
-#pragma once
-
-#include "CoreMinimal.h"
-#include "GameFramework/GameModeBase.h"
-#include "MyGameModeBase.generated.h"
-
-/**
- * 
- */
-UCLASS()
-class PLUGINTESTE_API AMyGameModeBase : public AGameModeBase
-{
-	GENERATED_BODY()
-public:
-	AMyGameModeBase();
-	virtual void BeginPlay() override;
-
-protected:
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameMode")
-	TSubclassOf<APawn> Player1PawnClass;
-
-	virtual void PostLogin(APlayerController* NewPlayer) override;
-	virtual void HandleConnectedControllers(APlayerController* PlayerController);
-};
+   #pragma once
+   
+   #include "CoreMinimal.h"
+   #include "GameFramework/GameModeBase.h"
+   #include "MyGameModeBase.generated.h"
+   
+   /**
+    * 
+    */
+   UCLASS()
+   class PLUGINTESTE_API AMyGameModeBase : public AGameModeBase
+   {
+       GENERATED_BODY()
+   public:
+       AMyGameModeBase();
+       virtual void BeginPlay() override;
+   
+   protected:
+       UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GameMode")
+       TSubclassOf<APawn> Player1PawnClass;
+   
+       virtual void PostLogin(APlayerController* NewPlayer) override;
+       virtual void HandleConnectedControllers(APlayerController* PlayerController);
+   };
 ```
 MyGameModeBase.cpp
 ```
-// MyGameModeBase.cpp
-
-
-#include "MyGameModeBase.h"
-
-AMyGameModeBase::AMyGameModeBase()
-{
-	static ConstructorHelpers::FClassFinder<APawn> Player(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.BP_ThirdPersonCharacter_C"));
-	if (Player.Class != nullptr)
-	{
-		DefaultPawnClass = Player.Class;
-	}
-	PlayerControllerClass = APlayerController::StaticClass();
-}
-
-void AMyGameModeBase::BeginPlay()
-{
-	Super::BeginPlay();
-}
-
-void AMyGameModeBase::PostLogin(APlayerController* NewPlayer)
-{
-	Super::PostLogin(NewPlayer);
-	
-	UE_LOG(LogTemp, Warning, TEXT("Player local %d login..."), NewPlayer->GetLocalPlayer()->GetControllerId())
-
-	const int32 PlayerId = NewPlayer->GetLocalPlayer()->GetControllerId();
-	if (constexpr int32 MaxPlayer = 2; NewPlayer->IsLocalController() &&  (PlayerId + 1) < MaxPlayer)
-	{
-		HandleConnectedControllers(NewPlayer);
-	}
-
-	if (NewPlayer->IsLocalController() && NewPlayer->GetLocalPlayer()->GetControllerId() > 0)
-	{
-		FTimerHandle TimerHandle;
-		GetWorld()->GetTimerManager().SetTimer(
-			TimerHandle,
-			FTimerDelegate::CreateLambda([=]()
-			{
-				FCoreDelegates::OnUserLoginChangedEvent.Broadcast(true, NewPlayer->GetLocalPlayer()->GetControllerId(), NewPlayer->GetLocalPlayer()->GetControllerId());
-			}),
-			0.2f,
-			false
-		);
-	}
-}
-
-void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerController)
-{
-	UE_LOG(LogTemp, Warning, TEXT("Registering new player..."));
-	
-	if (!GetWorld() || !GetGameInstance() || !PlayerController)
-	{
-		UE_LOG(LogTemp, Error, TEXT("GameInstance or World are not available."));
-		return;
-	}
-
-	FString Error;
-	UGameInstance* GameInstance = GetGameInstance();
-	if (const ULocalPlayer* NewLocalPlayer = GameInstance->CreateLocalPlayer(PlayerController->GetLocalPlayer()->GetControllerId() + 1, Error, true))
-	{
-		UE_LOG(LogTemp, Warning, TEXT("New player created for ControllerId: %d"), NewLocalPlayer->GetControllerId());
-	}
-}
+   // MyGameModeBase.cpp
+   
+   
+   #include "MyGameModeBase.h"
+   
+   AMyGameModeBase::AMyGameModeBase()
+   {
+       static ConstructorHelpers::FClassFinder<APawn> Player(TEXT("/Game/ThirdPerson/Blueprints/BP_ThirdPersonCharacter.BP_ThirdPersonCharacter_C"));
+       if (Player.Class != nullptr)
+       {
+           DefaultPawnClass = Player.Class;
+       }
+       PlayerControllerClass = APlayerController::StaticClass();
+   }
+   
+   void AMyGameModeBase::BeginPlay()
+   {
+       Super::BeginPlay();
+   }
+   
+   void AMyGameModeBase::PostLogin(APlayerController* NewPlayer)
+   {
+       Super::PostLogin(NewPlayer);
+       
+       UE_LOG(LogTemp, Warning, TEXT("Player local %d login..."), NewPlayer->GetLocalPlayer()->GetControllerId())
+   
+       const int32 PlayerId = NewPlayer->GetLocalPlayer()->GetControllerId();
+       if (constexpr int32 MaxPlayer = 2; NewPlayer->IsLocalController() &&  (PlayerId + 1) < MaxPlayer)
+       {
+           HandleConnectedControllers(NewPlayer);
+       }
+   
+       if (NewPlayer->IsLocalController() && NewPlayer->GetLocalPlayer()->GetControllerId() > 0)
+       {
+           FTimerHandle TimerHandle;
+           GetWorld()->GetTimerManager().SetTimer(
+               TimerHandle,
+               FTimerDelegate::CreateLambda([=]()
+               {
+                   FCoreDelegates::OnUserLoginChangedEvent.Broadcast(true, NewPlayer->GetLocalPlayer()->GetControllerId(), NewPlayer->GetLocalPlayer()->GetControllerId());
+               }),
+               0.2f,
+               false
+           );
+       }
+   }
+   
+   void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerController)
+   {
+       UE_LOG(LogTemp, Warning, TEXT("Registering new player..."));
+       
+       if (!GetWorld() || !GetGameInstance() || !PlayerController)
+       {
+           UE_LOG(LogTemp, Error, TEXT("GameInstance or World are not available."));
+           return;
+       }
+   
+       FString Error;
+       UGameInstance* GameInstance = GetGameInstance();
+       if (const ULocalPlayer* NewLocalPlayer = GameInstance->CreateLocalPlayer(PlayerController->GetLocalPlayer()->GetControllerId() + 1, Error, true))
+       {
+           UE_LOG(LogTemp, Warning, TEXT("New player created for ControllerId: %d"), NewLocalPlayer->GetControllerId());
+       }
+   }
 ```
-
-### Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Install.gif)
-
-### Native Gamepad Mapping in Unreal
-
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/Buttons.gif)
-
-> **NOTE:** Enable Gyroscope, Accelerometer, and Touch only after mapping the actions to avoid interfering with button press recognition, as Gyroscope, Accelerometer, and Touch constantly emit values.
 
 # Install on FAB official page plugin
 
@@ -241,15 +227,15 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
-[UE 5.2 download plugin WindowsDualsense_ds5w_5.2.zip](https://drive.google.com/file/d/11yPv6iF1YrvFXyVY-MNaIpskAfgt-8fe/view?usp=sharing)
+[UE 5.2 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/1dyDkXjNqnt_gkvGkfMSEGJ9oN0prqQn-/view?usp=drive_link)
 
-[UE 5.3 download plugin WindowsDualsense_ds5w_5.3.zip](https://drive.google.com/file/d/1Y-buH-0HEW4QqEN6BfeHvV3gEgFDh5Mo/view?usp=sharing)
+[UE 5.3 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/141AI1vbBWFOu-UsogfBX7eG4OhurEGJ3/view?usp=drive_link)
 
-[UE 5.4 download plugin WindowsDualsense_ds5w_5.4.zip](https://drive.google.com/file/d/1ZcZoR2pMmAFIt_1xKLRzMCIIE52W-sdy/view?usp=sharing)
+[UE 5.4 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/1seGUIslOO3Zm1ZuvA6g9YtbFg_iYk_ub/view?usp=drive_link)
 
-[UE 5.5 download plugin WindowsDualsense_ds5w_5.5.zip](https://drive.google.com/file/d/11x3rC3n-9jc8tLFCASX_VUQVNRKavr_a/view?usp=sharing)
+[UE 5.5 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/1NJ1snCv0D3Ng_4arYvHg0LpgyJbYErgI/view?usp=drive_link)
 
-[UE 5.6 download plugin WindowsDualsense_ds5w_5.6.zip](https://drive.google.com/file/d/1KXvVX4iSp8pUXiSR2eYeJHKsSBr7CS8u/view?usp=sharing)
+[UE 5.6 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/17uUbXM9R8YARK8vEkdSZ2LFRoa8KZGwu/view?usp=drive_link)
 
 ## Installing the Plugin in the Project's Directory
 

@@ -82,6 +82,12 @@ public:
 	static void EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
+	static void EffectGalloping(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginForce, int32 EndForce, float Frequency, EControllerHand Hand);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
+	static void EffectMachine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 LasFoot, float Frequency, float Period, EControllerHand Hand);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")

@@ -28,9 +28,92 @@
 
 ![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
 
+## Example of using DualSense effects via C++
 
+#### New effects
+```
+   int32 ControllerId = 0; 
+   
+   UDualSenseProxy::EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
+   
+   UDualSenseProxy::EffectGalloping(ControllerId, 5, 8, 5, 7, 0.01f, EControllerHand::Left);
+   UDualSenseProxy::EffectGalloping(ControllerId, 0, 5, 0, 4, 0.005f, EControllerHand::Right);
+   
+   UDualSenseProxy::EffectMachine(ControllerId, 1, 5, 1, 5, 0.5f, 3.f, EControllerHand::Left);
+   UDualSenseProxy::EffectMachine(ControllerId, 5, 8, 5, 8, 0.4f, 1.0f, EControllerHand::Right);
+   
+   UDualSenseProxy::EffectBow(ControllerId, 0, 5, 5, 8, EControllerHand::Left);
+   UDualSenseProxy::EffectBow(ControllerId, 5, 8, 8, 8, EControllerHand::Right);
+```
+#### Example haptics effects...
+```
+   int32 ControllerId = 0; 
+   
+    // Stop triggers effects
+    UDualSenseProxy::StopAllTriggersEffects(ControllerId);
+    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Left);
+    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Right);
+
+    // Normalize triggers
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
+
+    // Start position max value 8 | Forces max value 8
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
+
+    // Start position max value 8 | Forces max value 8
+    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 8, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Right);
+
+    
+
+    // Start position max value 8 | Forces max value 8
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 6, EControllerHand::Left, true);
+    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 7, EControllerHand::Right, true);
+
+    // SetHapticsByValue is a method of PlayerController.
+    SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
+    SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
+```
+#### Players and led effects
+
+```
+#include "DualSenseProxy.h"
+
+void APlayerController::BeginPlay()
+{
+    Super::BeginPlay();
+	
+    int32 ControllerId = 0; 
+    
+    // Reset buffer all values 
+    UDualSenseProxy::ResetEffects(ControllerId);
+    
+    // Gyroscope and Accelerometer are set to false by default.
+    UDualSenseProxy::EnableAccelerometerValues(ControllerId, false);
+    UDualSenseProxy::EnableGyroscopeValues(ControllerId, false);
+
+    // Touch pad values default false
+    UDualSenseProxy::EnableTouch1(ControllerId, false);
+    UDualSenseProxy::EnableTouch2(ControllerId, false);
+
+    // Level battery Full load max 100.0f
+    float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
+
+    // Leds configs
+    UDualSenseProxy::LedMicEffects(ControllerId, ELedMicEnum::MicOn);
+    UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
+    UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
+}
+
+```
+#### Vibrations
+```` 
+    // Vibrations example 
+    PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
+````
 ## Multiple players with multiple controllers
-
 ```
 // MyGameModeBase.h
 
@@ -126,71 +209,7 @@ void AMyGameModeBase::HandleConnectedControllers(APlayerController* PlayerContro
 }
 ```
 
-## Example of using DualSense effects via C++
 
-```
-#include "DualSenseProxy.h"
-
-void APlayerController::BeginPlay()
-{
-    Super::BeginPlay();
-	
-    int32 ControllerId = 0; 
-    
-    // It is necessary to change the value to false in PlayerController if HapticFeedback is to be used. SetDisableHaptics(true) is set by default.
-    SetDisableHaptics(false);
-
-    // Reset buffer all values 
-    UDualSenseProxy::ResetEffects(ControllerId);
-    
-    // Gyroscope and Accelerometer are set to false by default. Calibration needs to be implemented
-    UDualSenseProxy::EnableAccelerometerValues(ControllerId, false);
-    UDualSenseProxy::EnableGyroscopeValues(ControllerId, false);
-
-    // Touch pad values default false, values max 1.0f
-    UDualSenseProxy::EnableTouch1(ControllerId, false);
-    UDualSenseProxy::EnableTouch2(ControllerId, false);
-
-    // Level battery Full load max 100.0f
-    float levelBattery = UDualSenseProxy::LevelBatteryDevice(ControllerId);
-
-    // Leds configs
-    UDualSenseProxy::LedMicEffects(ControllerId, ELedMicEnum::MicOn);
-    UDualSenseProxy::LedPlayerEffects(ControllerId, ELedPlayerEnum::One, ELedBrightnessEnum::Medium);
-    UDualSenseProxy::LedColorEffects(ControllerId, FColor(255, 255, 255));
-
-    // Vibrations example 
-    PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
-	
-    // Stop triggers effects
-    UDualSenseProxy::StopAllTriggersEffects(ControllerId);
-    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Left);
-    UDualSenseProxy::StopTriggerEffect(ControllerId, EControllerHand::Right);
-
-    // Normalize triggers
-    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
-    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
-
-    // Start position max value 8 | Force max value 9
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Left); 
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
-
-    // Start and end positions max value 8
-    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 8, EControllerHand::Left); 
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Right);
-
-    // Example Haptics Effects...
-
-    // Start position max value 8 | Forces max value 9 
-    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 6, EControllerHand::Left, true);
-    UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 7, EControllerHand::Right, true);
-
-    // SetHapticsByValue is a method of PlayerController.
-    SetHapticsByValue(0.1f, 1.0f, EControllerHand::Left);
-    SetHapticsByValue(1.0f, 1.0f, EControllerHand::Right);
-}
-
-```
 ### The plugin is compatible with Unreal's native Blueprints Force Feedback
 
 Now enable the plugin in the Unreal Editor, connect your DualSense device, and restart the editor.

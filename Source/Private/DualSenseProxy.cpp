@@ -77,15 +77,10 @@ void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 S
                                                      int32 MiddleForce, int32 EndForce, EControllerHand Hand,
                                                      bool KeepEffect)
 {
-	if (
-		!FValidationUtils::ValidateMaxForce(BeginForce) &&
-		!FValidationUtils::ValidateMaxForce(MiddleForce) &&
-		!FValidationUtils::ValidateMaxForce(EndForce) &&
-		!FValidationUtils::ValidateMaxPosition(StartPosition)
-	)
-	{
-		return;
-	}
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(BeginForce)) BeginForce = 8;
+	if (!FValidationUtils::ValidateMaxPosition(MiddleForce)) MiddleForce = 8;
+	if (!FValidationUtils::ValidateMaxPosition(EndForce)) EndForce = 8;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
@@ -110,14 +105,9 @@ void UDualSenseProxy::EffectNoResitance(int32 ControllerId, EControllerHand Hand
 void UDualSenseProxy::EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force,
                                                 EControllerHand Hand)
 {
-	if (
-		!FValidationUtils::ValidateMaxForce(Force) ||
-		!FValidationUtils::ValidateMaxPosition(StartPosition) ||
-		!FValidationUtils::ValidateMaxPosition(EndPosition)
-	)
-	{
-		return;
-	}
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
+	if (!FValidationUtils::ValidateMaxPosition(Force)) Force = 8;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
@@ -131,14 +121,9 @@ void UDualSenseProxy::EffectSectionResitance(int32 ControllerId, int32 StartPosi
 void UDualSenseProxy::EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force,
 	EControllerHand Hand)
 {
-	if (
-		!FValidationUtils::ValidateMaxForce(Force) ||
-		!FValidationUtils::ValidateMaxPosition(StartPosition) ||
-		!FValidationUtils::ValidateMaxPosition(EndPosition)
-	)
-	{
-		return;
-	}
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
+	if (!FValidationUtils::ValidateMaxPosition(Force)) Force = 8;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
@@ -149,16 +134,48 @@ void UDualSenseProxy::EffectWeapon(int32 ControllerId, int32 StartPosition, int3
 	DualSenseInstance->SetWeaponEffects(StartPosition, EndPosition, Force, Hand);
 }
 
-void UDualSenseProxy::EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,  EControllerHand Hand)
+void UDualSenseProxy::EffectGalloping(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginForce,
+	int32 EndForce, float Frequency, EControllerHand Hand)
 {
-	if (
-		!FValidationUtils::ValidateMaxForce(BegingForce) ||
-		!FValidationUtils::ValidateMaxPosition(StartPosition) ||
-		!FValidationUtils::ValidateMaxPosition(EndPosition)
-	)
+
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
+	if (!FValidationUtils::ValidateMaxPosition(BeginForce)) BeginForce = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndForce)) EndForce = 8;
+
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
 	{
 		return;
 	}
+	
+	DualSenseInstance->SetGallopingEffects(StartPosition, EndPosition, BeginForce, EndForce, Frequency, Hand);
+}
+
+void UDualSenseProxy::EffectMachine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot,
+	int32 LasFoot, float Frequency, float Period, EControllerHand Hand)
+{
+	
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
+	if (!FValidationUtils::ValidateMaxPosition(FirstFoot)) FirstFoot = 0;
+	if (!FValidationUtils::ValidateMaxPosition(LasFoot)) LasFoot = 8;
+
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
+	DualSenseInstance->SetMachineEffects(StartPosition, EndPosition, FirstFoot, LasFoot, Frequency, Period, Hand);
+}
+
+void UDualSenseProxy::EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,  EControllerHand Hand)
+{
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
+	if (!FValidationUtils::ValidateMaxPosition(BegingForce)) BegingForce = 0;
+	if (!FValidationUtils::ValidateMaxPosition(EndForce)) EndForce = 8;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
@@ -172,13 +189,9 @@ void UDualSenseProxy::EffectBow(int32 ControllerId, int32 StartPosition, int32 E
 void UDualSenseProxy::EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force,
                                              EControllerHand ContinuousHand)
 {
-	if (
-		!FValidationUtils::ValidateMaxPosition(StartPosition) ||
-		!FValidationUtils::ValidateMaxForce(Force)
-	)
-	{
-		return;
-	}
+
+	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
+	if (!FValidationUtils::ValidateMaxPosition(Force)) Force = 8;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)

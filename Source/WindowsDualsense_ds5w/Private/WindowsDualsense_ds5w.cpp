@@ -53,37 +53,7 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 	const FKey PlayStationButton("PS_Button");
 	const FKey PS_PushLeftStick("PS_PushLeftStick");
 	const FKey PS_PushRightStick("PS_PushRightStick");
-
-	// touch
-	const FKey Dualsense_Touch1_X("Dualsense_Touch1_X");
-	const FKey Dualsense_Touch1_Y("Dualsense_Touch1_Y");
-	const FKey Dualsense_Touch2_X("Dualsense_Touch2_X");
-	const FKey Dualsense_Touch2_Y("Dualsense_Touch2_Y");
 	
-
-	EKeys::AddKey(FKeyDetails(
-		Dualsense_Touch1_X,
-		FText::FromString("PS Dualsense Touch1 X"),
-		FKeyDetails::GamepadKey
-	));
-
-	EKeys::AddKey(FKeyDetails(
-		Dualsense_Touch1_Y,
-		FText::FromString("PS Dualsense Touch1 Y"),
-		FKeyDetails::GamepadKey
-	));
-
-	EKeys::AddKey(FKeyDetails(
-		Dualsense_Touch2_X,
-		FText::FromString("PS Dualsense Touch2 X"),
-		FKeyDetails::GamepadKey
-	));
-
-	EKeys::AddKey(FKeyDetails(
-		Dualsense_Touch2_Y,
-		FText::FromString("PS Dualsense Touch2 Y"),
-		FKeyDetails::GamepadKey
-	));
 
 	EKeys::AddKey(FKeyDetails(
 		PS_PushLeftStick,

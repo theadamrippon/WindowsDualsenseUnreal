@@ -35,7 +35,6 @@ bool UDualSenseLibrary::InitializeLibrary(const FHIDDeviceContext& Context)
 	EnableAccelerometer = false;
 
 	HIDDeviceContexts = Context;
-	
 	StopAll();
 	return true;
 }
@@ -206,7 +205,6 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 	
 		if (EnableTouch1 || EnableTouch2)
 		{
-
 			// Evaluate touch state 1
 			FTouchPoint1 Touch;
 			const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
@@ -222,7 +220,6 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 			Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
 			Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;
 			Touch2.Id = (Touchpad2Raw & 127);
-
 
 		    if (Touch.Down) // pressed
 		    {
@@ -272,21 +269,23 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		
 		if (EnableAccelerometer || EnableGyroscope)
 		{
-
-			// &HIDInput[0x1B], &HIDInput[0x1D], &HIDInput[0x1F] 
+			// &HIDInput[0x1B], &HIDInput[0x1D], &HIDInput[0x1F]
+			
 			FGyro Gyro;
-			Gyro.X = HIDInput[0x15];
-			Gyro.Y = HIDInput[0x17];
-			Gyro.Z = HIDInput[0x19];
+			Gyro.X = static_cast<int16_t>((HIDInput[15]) | (HIDInput[16] << 8));
+			Gyro.Y = static_cast<int16_t>((HIDInput[17]) | (HIDInput[18] << 8));
+			Gyro.Z = static_cast<int16_t>((HIDInput[19]) | (HIDInput[20] << 8));
 
 			FAccelerometer Acc;
-			Acc.X = HIDInput[0x21];
-			Acc.Y = HIDInput[0x23];
-			Acc.Z = HIDInput[0x25];
+			Acc.X = static_cast<int16_t>((HIDInput[21]) | (HIDInput[22] << 8));
+			Acc.Y = static_cast<int16_t>((HIDInput[23]) | (HIDInput[24] << 8));
+			Acc.Z = static_cast<int16_t>((HIDInput[25]) | (HIDInput[26] << 8));
 
+			constexpr float RealGravityValue = 9.81f;
+			const float GravityMagnitude = FMath::Sqrt(FMath::Square(static_cast<float>(Acc.X)) + FMath::Square(static_cast<float>(Acc.Y)) + FMath::Square(static_cast<float>(Acc.Z)));
 
 			const FVector Tilts = FVector(Acc.X +  Gyro.X, Acc.Y + Gyro.Y, Acc.Z +  Gyro.Z);
-			const FVector Gravity = FVector(0.f, 0.f, 0.f);
+			const FVector Gravity = FVector(static_cast<float>(Acc.X) / GravityMagnitude, static_cast<float>(Acc.Y) / GravityMagnitude, static_cast<float>(Acc.Z) / GravityMagnitude) * RealGravityValue;
 			const FVector Gyroscope = FVector(Gyro.X, Gyro.Y, Gyro.Z);
 			const FVector Accelerometer = FVector(Acc.X, Acc.Y, Acc.Z);
 
@@ -333,7 +332,6 @@ void UDualSenseLibrary::SetVibration(const FForceFeedbackValues& Vibration)
 	if (IsResetVibration && (RightRumble <= 0 || LeftRumble <= 0))
 	{
 		HidOutput.MotorsHid = { 0x00, 0x00};
-		SendOut();
 	}
 	
 	if (RightRumble > 0 || LeftRumble > 0)
@@ -341,8 +339,9 @@ void UDualSenseLibrary::SetVibration(const FForceFeedbackValues& Vibration)
 		IsResetVibration = true;
 		HidOutput.MotorsHid.Left = static_cast<unsigned char>(LeftRumble);
 		HidOutput.MotorsHid.Right = static_cast<unsigned char>(RightRumble);
-		SendOut();
 	}
+
+	SendOut();
 }
 
 unsigned char UDualSenseLibrary::CalculateLeftRumble(const FForceFeedbackValues& Values)
@@ -434,28 +433,51 @@ void UDualSenseLibrary::ConfigTriggerHapticFeedbackEffect(
 	const EControllerHand& Hand, bool KeepEffect
 )
 {
+	unsigned char PositionalAmplitudes[10];
+	PositionalAmplitudes[0] = BeginForce;
+	PositionalAmplitudes[1] = BeginForce;
+	PositionalAmplitudes[2] = BeginForce;
+	PositionalAmplitudes[3] = BeginForce;
+	PositionalAmplitudes[4] = MiddleForce;
+	PositionalAmplitudes[5] = MiddleForce;
+	PositionalAmplitudes[6] = MiddleForce;
+	PositionalAmplitudes[7] = MiddleForce;
+	PositionalAmplitudes[8] = KeepEffect ? 8 : EndForce;
+	PositionalAmplitudes[9] = KeepEffect ? 8 : EndForce;
+
+	unsigned char Strengths[10];
+	for (int i = 0; i < 10; i++)
+	{
+		Strengths[i] = static_cast<uint64_t>(PositionalAmplitudes[i] * 8.0f);
+	}
+
+	
+	int64 StrengthZones = 0;
+	int32 ActiveZones   = 0;
+	for (int i = 0; i < 10; i++)
+	{
+		if (PositionalAmplitudes[i] > 0)
+		{
+			const uint64_t StrengthValue = static_cast<uint64_t>((Strengths[i] - 1) & 0x07);
+			StrengthZones |= static_cast<int64>(StrengthValue << (3 * i));
+			ActiveZones   |= (1 << i);
+		}
+	}
+	
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.LeftTrigger.Mode = 0x26;
-		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.LeftTrigger.EndPosition = ConvertTo255(5, 8);
-		
-		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(BeginForce, 9);
-		HidOutput.LeftTrigger.Strengths.Middle = ConvertTo255(MiddleForce, 9);
-		HidOutput.LeftTrigger.KeepEffect = KeepEffect ? 0x02 : ConvertTo255(8, 9);
-		HidOutput.LeftTrigger.Strengths.End = ConvertTo255(EndForce, 9);
-		HidOutput.LeftTrigger.Frequency = 0;
+		HidOutput.LeftTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.LeftTrigger.Strengths.StrengthZones = StrengthZones;
+		HidOutput.LeftTrigger.Frequency = ConvertTo255(0.2f);
 	}
 	
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.RightTrigger.Mode = 0x26;
-		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.RightTrigger.KeepEffect = KeepEffect ? 0x02 : 0x00;
-		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(BeginForce, 9);
-		HidOutput.RightTrigger.Strengths.Middle = ConvertTo255(BeginForce, 9);
-		HidOutput.RightTrigger.Strengths.End = ConvertTo255(EndForce, 9);
-		HidOutput.RightTrigger.Frequency = 0;
+		HidOutput.RightTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.RightTrigger.Strengths.StrengthZones = StrengthZones;
+		HidOutput.RightTrigger.Frequency = ConvertTo255(0.2f);
 	}
 	
 	SendOut();
@@ -465,12 +487,12 @@ void UDualSenseLibrary::NoResitance(const EControllerHand& Hand)
 {
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
-		HidOutput.ResetEffectsLeftTrigger = true;
+		HidOutput.LeftTrigger.Mode = 0x05;
 	}
 	
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
-		HidOutput.ResetEffectsRightTrigger = true;
+		HidOutput.RightTrigger.Mode = 0x05;
 	}
 	
 	SendOut();
@@ -478,7 +500,6 @@ void UDualSenseLibrary::NoResitance(const EControllerHand& Hand)
 
 void UDualSenseLibrary::ContinuousResitance(int32 StartPosition, int32 Force, const EControllerHand& Hand)
 {
-	
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.LeftTrigger.Mode = 0x01;
@@ -518,60 +539,103 @@ void UDualSenseLibrary::SectionResitance(int32 StartPosition, int32 EndPosition,
 	SendOut();
 }
 
-void UDualSenseLibrary::SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force,
-	const EControllerHand& Hand)
+void UDualSenseLibrary::Feedback(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand)
 {
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
-		HidOutput.LeftTrigger.Mode = 0x25;
+		HidOutput.LeftTrigger.Mode = 0x21;
 		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition, 8);
 		HidOutput.LeftTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(Force, 9);
+		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(Force, 9) / 3;
+		HidOutput.LeftTrigger.Strengths.Middle = ConvertTo255(Force, 9) / 2;
+		HidOutput.LeftTrigger.Strengths.End = ConvertTo255(Force, 9);
 	}
-	
+
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
-		HidOutput.RightTrigger.Mode = 0x25;
+		HidOutput.RightTrigger.Mode = 0x21;
 		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition, 8);
 		HidOutput.RightTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(Force, 9);
+		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(Force, 9) / 3;
+		HidOutput.RightTrigger.Strengths.Middle = ConvertTo255(Force, 9) / 2;
+		HidOutput.RightTrigger.Strengths.End = ConvertTo255(Force, 9);
 	}
 
 	SendOut();
 }
 
-// Galloping = , // 00 10 0 011
-// Machine   = 0x27, // 00 10 0 111
-//
-// // Leftover versions of offical modes with simpler logic and no paramater protections
-// // These should not be used
-// Simple_Feedback  = 0x01, // 00 00 0 001
-// Simple_Weapon    = 0x02, // 00 00 0 010
-// Simple_Vibration = 0x06, // 00 00 0 110
-//
-// // Leftover versions of offical modes with limited paramater ranges
-// // These should not be used
-// Limited_Feedback = 0x11, // 00 01 0 001
-// Limited_Weapon   = 0x12, // 00 01 0 010
-
-void UDualSenseLibrary::SetGallopingEffects(int32 StartPosition, int32 EndPosition, float TimeRatio, float Frequency, const EControllerHand& Hand)
+void UDualSenseLibrary::SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force,
+                                         const EControllerHand& Hand)
 {
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
+		HidOutput.LeftTrigger.Mode = 0x25;
+		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition);
+		HidOutput.LeftTrigger.EndPosition = ConvertTo255(EndPosition);
+		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(Force);
+	}
+	
+	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
+	{
+		HidOutput.RightTrigger.Mode = 0x25;
+		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition);
+		HidOutput.RightTrigger.EndPosition = ConvertTo255(EndPosition);
+		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(Force);
+	}
+
+	SendOut();
+}
+
+void UDualSenseLibrary::SetGallopingEffects(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency, const EControllerHand& Hand)
+{
+
+	const uint32_t ActiveZones = ((1 << StartPosition) | (1 << EndPosition));
+	const uint32_t TimeAndRatio = (((SecondFoot & 0x07) << (3 * 0)) | ((FirstFoot  & 0x07) << (3 * 1)));
+	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
+	{
 		HidOutput.LeftTrigger.Mode = 0x23;
-		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.LeftTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.LeftTrigger.TimeRatio = ConvertTo255(TimeRatio);
+		HidOutput.LeftTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.LeftTrigger.Strengths.TimeAndRatio = TimeAndRatio;
 		HidOutput.LeftTrigger.Frequency = ConvertTo255(Frequency);
 	}
 	
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.RightTrigger.Mode = 0x23;
-		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.RightTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(TimeRatio);
-		HidOutput.RightTrigger.Strengths.End = ConvertTo255(Frequency);
+		HidOutput.RightTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.RightTrigger.Strengths.TimeAndRatio = TimeAndRatio;
+		HidOutput.RightTrigger.Frequency = ConvertTo255(Frequency);
+	}
+
+	SendOut();
+}
+
+void UDualSenseLibrary::SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd, float Frequency, float Period, const EControllerHand& Hand)
+{
+
+	const uint32_t ActiveZones = ((1 << StartPosition) | (1 << EndPosition));
+	const uint32_t Forces = (((AmplitudeBegin & 0x07) << (3 * 0)) | ((AmplitudeEnd & 0x07) << (3 * 1)));
+
+	if (Period < 0.0f || Period > 3.f) {
+		Period = 3.f;
+	}
+
+	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
+	{
+		HidOutput.LeftTrigger.Mode = 0x27;
+		HidOutput.LeftTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.LeftTrigger.Strengths.StrengthZones = Forces;
+		HidOutput.LeftTrigger.Strengths.Period = ConvertTo255(Period);
+		HidOutput.LeftTrigger.Frequency = ConvertTo255(Frequency);
+	}
+	
+	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
+	{
+		HidOutput.RightTrigger.Mode = 0x27;
+		HidOutput.RightTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.RightTrigger.Strengths.StrengthZones = Forces;
+		HidOutput.RightTrigger.Strengths.Period = ConvertTo255(Period);
+		HidOutput.RightTrigger.Frequency = ConvertTo255(Frequency);
 	}
 
 	SendOut();
@@ -580,22 +644,20 @@ void UDualSenseLibrary::SetGallopingEffects(int32 StartPosition, int32 EndPositi
 void UDualSenseLibrary::SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,
 	const EControllerHand& Hand)
 {
+	const uint32_t ActiveZones = ((1 << StartPosition) | (1 << EndPosition));
+	const uint32_t Forces = ((((BegingForce  - 1) & 0x07) << (3 * 0)) | (((EndForce - 1) & 0x07) << (3 * 1)));
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.LeftTrigger.Mode = 0x22;
-		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.LeftTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(BegingForce, 9);
-		HidOutput.LeftTrigger.Strengths.End = ConvertTo255(EndForce, 9);
+		HidOutput.LeftTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.LeftTrigger.Strengths.StrengthZones = Forces;
 	}
 	
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.RightTrigger.Mode = 0x22;
-		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.RightTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(BegingForce, 9);
-		HidOutput.RightTrigger.Strengths.End = ConvertTo255(EndForce, 9);
+		HidOutput.RightTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.RightTrigger.Strengths.StrengthZones = Forces;
 	}
 
 	SendOut();
@@ -713,8 +775,12 @@ float UDualSenseLibrary::GetLevelBattery()
 
 unsigned char UDualSenseLibrary::ConvertTo255(unsigned char Value, unsigned char MaxInput)
 {
+	if (Value <= 0) return 0;
+	if (Value >= MaxInput) return 255;
+
 	return static_cast<unsigned char>((Value * 255) / MaxInput);
 }
+
 
 int UDualSenseLibrary::ConvertTo255(const float Value)
 {

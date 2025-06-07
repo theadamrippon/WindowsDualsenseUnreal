@@ -102,6 +102,10 @@ struct FOutputBuffer
 
 		typedef struct FStrengths
 		{
+			uint8_t  Period = 0;
+			uint32_t ActiveZones = 0;
+			uint32_t TimeAndRatio = 0;
+			uint64_t StrengthZones = 0;
 			unsigned char Start = 0x00;
 			unsigned char Middle = 0x00;
 			unsigned char End = 0x00;
@@ -122,6 +126,10 @@ struct FOutputBuffer
 
 		typedef struct FStrengths
 		{
+			uint8_t  Period = 0;
+			uint32_t ActiveZones = 0;
+			uint32_t TimeAndRatio = 0;
+			uint64_t StrengthZones = 0;
 			unsigned char Start = 0x00;
 			unsigned char Middle = 0x00;
 			unsigned char End = 0x00;

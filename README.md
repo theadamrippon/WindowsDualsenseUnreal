@@ -256,6 +256,9 @@ Download plugin UE_Version
 ## Contributions
 Thanks to,
 
+
+[Nondebug Dualsense](https://github.com/nondebug/dualsense/blob/main/report-descriptor-bluetooth.txt) instructions, which facilitated the development of this plugin.
+
 [DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.
 
 [Nielk1 on GIST](https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db) code, which facilitated the development of this plugin.

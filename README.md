@@ -1,15 +1,5 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.6
 
-> **Important Update Note (2025-06-04)** 
-> 
-> [Click go to the section](#Important-update-for-plugin)
-
-## Links for installation
-
-### [Install on FAB official page](#Install-on-FAB-official-page-plugin)
-
-[Manual installation](#manual-installation)
-
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
@@ -17,6 +7,12 @@
 [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
 
 ### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
+
+## Links for installation
+
+### [Install on FAB official page](#Install-on-FAB-official-page-plugin)
+
+[Manual installation](#manual-installation)
 
 # Usage via Blueprints
 ### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.

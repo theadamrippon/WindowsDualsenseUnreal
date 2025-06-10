@@ -28,6 +28,7 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler)
 {
 	DeviceInstance = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler));
+
 	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
@@ -38,6 +39,8 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	DualSenseLibraryManager->CreateLibraryInstances();
 	for (int32 i = 0; i < DualSenseLibraryManager->GetAllocatedDevices(); i++)
 	{
+		if (i < 1) continue;
+		
 		DeviceInstance->SetController(FInputDeviceId::CreateFromInternalId(i));
 	}
 	

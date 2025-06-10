@@ -2,27 +2,31 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-#include "Public/DualSenseLibrary.h"
+#include "DualSenseLibrary.h"
 
 #include <Windows.h>
 #include <algorithm>
 #include "InputCoreTypes.h"
-#include "StaticMeshAttributes.h"
 
 
 //
 bool UDualSenseLibrary::Reconnect()
 {
-	if (IsConnected())
+	if (HIDDeviceContexts.Internal.Connected)
 	{
 		return true;
 	}
-
-	if (DualSenseHIDManager::ReconnectDevice(&HIDDeviceContexts))
+	
+	if (DualSenseHIDManager::ReconnectDevice(&HIDDeviceContexts, ControllerID))
 	{
+		PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Connected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
+		UE_LOG(LogTemp, Log, TEXT("Dualsense: Reconnected device successful."));
 		return true;
 	}
 
+	PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
+	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
+	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	return false;
 }
 
@@ -47,7 +51,8 @@ bool UDualSenseLibrary::Connection()
 void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
-	ZeroMemory(HIDDeviceContexts.Internal.Buffer, sizeof(HIDDeviceContexts.Internal.Buffer));
+	HIDDeviceContexts.Internal.Connected = false;
+	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
 	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected with success... ShutdownLibrary"));
 }
@@ -59,6 +64,12 @@ bool UDualSenseLibrary::IsConnected()
 
 void UDualSenseLibrary::SendOut()
 {
+	if (!HIDDeviceContexts.Internal.Connected)
+	{
+		Reconnect();
+		return;
+	}
+	
 	DualSenseHIDManager::OutputBuffering(&HIDDeviceContexts, HidOutput);
 }
 
@@ -300,6 +311,8 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 	UE_LOG(LogTemp, Error, TEXT("Unknown Input Device"));
 	HIDDeviceContexts.Internal.Connected = false;
+	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
+	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	return false;
 }
 
@@ -692,9 +705,32 @@ void UDualSenseLibrary::StopAllEffects()
 
 void UDualSenseLibrary::StopAll()
 {
-	HidOutput.ColorHid = {0, 0, 255, 255};
+	
 	HidOutput.LedPlayerHid.Brightness = 0x00;
-	HidOutput.LedPlayerHid.Led = PLAYER_LED_MIDDLE;
+	if (ControllerID == 0)
+	{
+		HidOutput.ColorHid = {0, 0, 255, 255};
+		HidOutput.LedPlayerHid.Led = PLAYER_LED_MIDDLE;
+	}
+
+	if (ControllerID == 1)
+	{
+		HidOutput.ColorHid = {255, 0, 0, 255};
+		HidOutput.LedPlayerHid.Led = PLAYER_LED_MIDDLE_RIGHT | PLAYER_LED_MIDDLE_LEFT;
+	}
+
+	if (ControllerID == 2)
+	{
+		HidOutput.ColorHid = {0, 255, 0, 255};
+		HidOutput.LedPlayerHid.Led = PLAYER_LED_LEFT | PLAYER_LED_MIDDLE | PLAYER_LED_RIGHT;
+	}
+
+	if (ControllerID == 3)
+	{
+		HidOutput.ColorHid = {255, 255, 255, 255};
+		HidOutput.LedPlayerHid.Led = PLAYER_LED_LEFT | PLAYER_LED_RIGHT | PLAYER_LED_MIDDLE_LEFT | PLAYER_LED_MIDDLE_RIGHT;	
+	}
+	
 	HidOutput.LedPlayerHid.Player = 0x02;
 	HidOutput.LeftTrigger.Mode = 0x05;
 	HidOutput.RightTrigger.Mode = 0x05;

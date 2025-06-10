@@ -54,12 +54,8 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DetailDataBuffer, RequiredSize,
 		                                    nullptr, nullptr))
 		{
-			UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo encontrados: %s"),
-			       DetailDataBuffer->DevicePath);
-			FHIDDeviceContext Context = {};
-			wcscpy_s(Context.Internal.DevicePath, DetailDataBuffer->DevicePath);
 			const HANDLE TempDeviceHandle = CreateFileW(
-				Context.Internal.DevicePath,
+				DetailDataBuffer->DevicePath,
 				GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
 			);
 
@@ -72,14 +68,18 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 				{
 					if (Attributes.VendorID == 0x054C && Attributes.ProductID == 0x0CE6)
 					{
-						if (!HidD_GetProductString(TempDeviceHandle, Context.Internal.DevicePath,
-						                           sizeof(Context.Internal.DevicePath)))
+						FHIDDeviceContext Context = {};
+						size_t PathSize = 260;
+						WCHAR DeviceProductString[260]; // Variável separada para o nome do produto.
+						if (!HidD_GetProductString(TempDeviceHandle, DeviceProductString, PathSize))
 						{
-							UE_LOG(LogTemp, Warning,
-							       TEXT("HIDManager: Falha ao obter caminho do dispositivo para o DualSense."));
-							return false;
+							UE_LOG(LogTemp, Error, TEXT("HIDManager: Failed to obtain device path for the DualSense."));
+							continue;
 						}
 
+						wcscpy_s(Context.Internal.DevicePath, 260, DetailDataBuffer->DevicePath);
+						// UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo encontrados: %s %s"), DetailDataBuffer->DevicePath, Context.Internal.DevicePath);
+						
 						Context.Internal.Connected = true;
 						Context.Internal.DeviceHandle = TempDeviceHandle;
 						Context.Internal.Connection = EHIDDeviceConnection::Usb;
@@ -87,6 +87,7 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 					}
 				}
 			}
+			// CloseHandle(TempDeviceHandle);
 		}
 		free(DetailDataBuffer);
 	}
@@ -97,29 +98,20 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 
 bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState)
 {
-	if (!DeviceContext || !DeviceContext->Internal.Connected)
+	if (!DeviceContext->Internal.Connected)
 	{
-		UE_LOG(LogTemp, Warning,
-		       TEXT("GetDeviceInputState: Dispositivo não está conectado ou o contexto é inválido. %d"),
-		       DeviceContext->Internal.Connected);
+		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Internal.Connected, false"));
 		FreeContext(DeviceContext);
 		return false;
 	}
-
-	if (DeviceContext->Internal.DeviceHandle == nullptr || DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+	
+	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Handle do dispositivo inválido antes de tentar leitura."));
-		FreeContext(DeviceContext);
+		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
+		CloseHandle(DeviceContext->Internal.DeviceHandle);
 		return false;
 	}
-
-	if (!DeviceContext->Internal.DeviceHandle || DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Erro de leitura do DualSense: Handle inválido."));
-		FreeContext(DeviceContext);
-		return false;
-	}
-
+	
 	HidD_FlushQueue(DeviceContext->Internal.DeviceHandle);
 
 	DWORD BytesRead = 0;
@@ -127,13 +119,12 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	              sizeof(DeviceContext->Internal.Buffer), &BytesRead, NULL))
 	{
 		const DWORD Error = GetLastError();
-		UE_LOG(LogTemp, Error, TEXT("Erro de leitura do DualSense: tamanho do buffer interno %llu, Erro: %d"),
-		       sizeof(DeviceContext->Internal.Buffer), Error);
-
-		CloseHandle(DeviceContext->Internal.DeviceHandle);
+		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
+		
 		DeviceContext->Internal.Connected = false;
 		DeviceContext->Internal.DeviceHandle = nullptr;
 		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
+		CloseHandle(DeviceContext->Internal.DeviceHandle);
 		return false;
 	}
 
@@ -149,30 +140,77 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 		return true;
 	}
 
-	memcpy(&InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
+	memcpy(&InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
 	return true;
 }
 
-
-bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext)
+bool bIsLogError = false;
+bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext, int32 DeviceId)
 {
-	if (DeviceContext->Internal.DeviceHandle && DeviceContext->Internal.DeviceHandle != INVALID_HANDLE_VALUE)
+	EHIDDeviceConnection OldConnection = DeviceContext->Internal.Connection;
+	TArray<FHIDDeviceContext> DetectedDevices;
+	DetectedDevices.Reset();
+	
+	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
 		FreeContext(DeviceContext);
-	}
+		if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
+		{
+			if (bIsLogError)
+			{
+				DeviceContext->Internal.Connected = false;
+				DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
+				CloseHandle(DeviceContext->Internal.DeviceHandle);
+				return false;
+			}
 
+			bIsLogError = true;
+			UE_LOG(LogTemp, Error, TEXT("DualSense: INVALID_HANDLE_VALUE Device not found. Please restart unreal editor."));
+			return false;
+		}
+		
+		wcscpy_s(DeviceContext->Internal.DevicePath, 260, DetectedDevices[DeviceId].Internal.DevicePath);
+		DeviceContext->Internal.DeviceHandle = CreateFileW(
+			DetectedDevices[DeviceId].Internal.DevicePath,
+			GENERIC_READ | GENERIC_WRITE,
+			FILE_SHARE_READ | FILE_SHARE_WRITE,
+			nullptr,
+			OPEN_EXISTING,
+			NULL,
+			nullptr
+		);
+
+		if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+		{
+			FreeContext(DeviceContext);
+			UE_LOG(LogTemp, Error, TEXT("Dualsense: INVALID_HANDLE_VALUE Erro code: %lu"), GetLastError());
+			return false;
+		}
+		
+		DeviceContext->Internal.Connected = true;
+		DeviceContext->Internal.Connection = OldConnection;
+		return true;
+	}
+	
+	UE_LOG(LogTemp, Log, TEXT("Dualsense: Init reconnect device. %s"), DeviceContext->Internal.DevicePath);
 	DeviceContext->Internal.DeviceHandle = CreateFileW(
 		DeviceContext->Internal.DevicePath,
-		GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr);
+		GENERIC_READ | GENERIC_WRITE,
+		FILE_SHARE_READ | FILE_SHARE_WRITE,
+		nullptr,
+		OPEN_EXISTING,
+		NULL,
+		nullptr
+	);
 
 	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Falha ao reconectar ao dispositivo DualSense. Código de erro: %lu"),
-		       GetLastError());
+		UE_LOG(LogTemp, Error, TEXT("Dualsense: INVALID_HANDLE_VALUE 2 Erro code: %lu"), GetLastError());
 		return false;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("Reconexão ao dispositivo DualSense realizada com sucesso."));
+	DeviceContext->Internal.Connected = true;
+	DeviceContext->Internal.Connection = OldConnection;
 	return true;
 }
 
@@ -181,11 +219,12 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 {
 	if (Context->Internal.DeviceHandle)
 	{
+		Context->Internal.Connected = false;
+		Context->Internal.Connection = EHIDDeviceConnection::Unknown;
 		ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
 		ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
 		CloseHandle(Context->Internal.DeviceHandle);
 	}
-	Context->Internal.Connected = false;
 }
 
 
@@ -432,7 +471,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 	               &BytesWritten, nullptr))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. Error Code: %d"), GetLastError());
-		CloseHandle(Context->Internal.DeviceHandle);
+		FreeContext(Context);
 	}
 }
 

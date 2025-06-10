@@ -8,6 +8,7 @@
 #include "DualSenseHIDManager.h"
 #include "UObject/Object.h"
 #include "InputCoreTypes.h"
+#include "Misc/CoreDelegates.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 #include "DualSenseLibrary.generated.h"
@@ -58,6 +59,8 @@ public:
 	bool InitializeLibrary(const FHIDDeviceContext& Context);
 	void ShutdownLibrary();
 
+	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
+
 	bool Reconnect();
 	bool IsConnected();
 
@@ -99,6 +102,8 @@ public:
 	void SetTouch2(bool bIsTouch);
 
 	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
+
+	int32 ControllerID;
 
 	TMap<const FName, bool> ButtonStates;
 private:

@@ -8,6 +8,9 @@
 #include "IHapticDevice.h"
 #include "IInputDevice.h"
 
+
+
+
 /**
  * 
  */
@@ -17,7 +20,7 @@ class WINDOWSDUALSENSE_DS5W_API FDualSenseInputDevice final : public IInputDevic
 public:
 	explicit FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler);
 	virtual ~FDualSenseInputDevice() override;
-	
+
 	virtual void Tick(float DeltaTime) override;
 	virtual void SendControllerEvents() override {};
 	virtual void SetMessageHandler(const TSharedRef< FGenericApplicationMessageHandler >& InMessageHandler) override {}
@@ -44,16 +47,19 @@ public:
 	
 	void SetController(const FInputDeviceId Device) const
 	{
-		if (Device.GetId() == 0)
-		{
-			return;
-		}
+		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
+	}
 
+	void UnsetController(const FInputDeviceId Device) const
+	{
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}
 
 	void OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId, int32 UserIndex);
+	void OnConnectionChange(bool Connected, FPlatformUserId PlatformUserId, int32 InputDeviceId);
+	void OnConnectionChange(EInputDeviceConnectionState Connected, FPlatformUserId PlatformUserId, FInputDeviceId InputDeviceId);
 	
 protected:
 	void Reconnect(const FInputDeviceId& Device) const;
@@ -61,5 +67,6 @@ protected:
 	
 private:
 	IPlatformInputDeviceMapper* DeviceMapper;
+	TMap<int32, bool> IsConnectionChange = TMap<int32, bool>();
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;
 };

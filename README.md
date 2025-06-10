@@ -223,8 +223,6 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 # Manual Installation
 
-[See the example video](https://drive.google.com/file/d/1i4afhW-tG-FkWqjeI6sDr8aoo5KcnPZI/view?usp=sharing)
-
 Download plugin UE_Version
 
 [UE 5.2 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/1dyDkXjNqnt_gkvGkfMSEGJ9oN0prqQn-/view?usp=drive_link)
@@ -239,19 +237,54 @@ Download plugin UE_Version
 
 ## Installing the Plugin in the Project's Directory
 
+
+
+For your convenience, here are the resources:
+
+Video Tutorial: [Watch here](https://drive.google.com/file/d/1i4afhW-tG-FkWqjeI6sDr8aoo5KcnPZI/view?usp=sharing)
+
 ### Steps:
 
-1. **Move to the Plugins Folder**  
-   Move the cloned repository to your Unreal Engine project’s `Plugins` directory. If the folder does not exist, create it manually:
-    - Navigate to your Unreal project’s root directory.
-    - Create a folder named `Plugins`, if it doesn’t already exist.
-    - Move the cloned repository folder into this newly created `Plugins` folder.
+Here’s a brief outline of the installation and compilation steps shown in the video:
 
-2. **Verify Plugin Installation in Unreal Engine**
-    - Open your Unreal Engine project.
-    - Go to the "Plugins" section under the `Edit` menu (`Edit > Plugins`).
-    - Look for the new plugin in the list and enable it if it is not enabled by default.
-    - Restart the Unreal Engine editor.
+1. Create a new Unreal Engine project.
+   - Navigate to the directory where your Unreal project is located. The default location is typically:
+   -      C:\Users\<User>\Documents\Unreal Projects\<ProjectName>\Plugins
+
+   
+2. Copy the extracted plugin folder to your project's `Plugins` directory:
+   -      C:\Users\<User>\Documents\Unreal Projects\<ProjectName>\Plugins
+
+**Note**: If the `Plugins` folder does not exist, create it manually in your project's root folder.
+
+3. Activate the Plugin:
+   - Go to the **Plugins** section in Unreal Engine:
+   -      Edit > Plugins > WindowsDualsense_ds5w
+
+- Enable the plugin if it is not already active. 
+4. **Restart the Unreal Editor**:
+   - After enabling the plugin, close and restart the Unreal Editor to apply the changes.
+
+## Make the Plugin Available for All Projects
+
+If you want to make the plugin available for all Unreal Engine projects, follow these steps:
+
+1. **Compile the Plugin**:
+   - Open the Unreal Editor with a project where the plugin is integrated.
+   - Navigate to the **Plugins** section:
+   -      Edit > Plugins > WindowsDualsense_ds5w
+- Click on the **Package** button for the plugin. This will generate the compiled files needed.
+
+2. **Move the Compiled Plugin**:
+   - Once the plugin is successfully compiled, navigate to the output directory where the packaged files were generated (typically inside your project directory).
+   - Copy the compiled plugin files and move them to the following directory:
+   -      C:\Program Files\Epic Games\UE_{Version}\Engine\Plugins
+
+
+3. **Access the Plugin From Any Project**:
+   - Now the plugin is installed globally for all Unreal Engine Version projects. You can enable it in any project directly from the Unreal Editor's **Plugins** menu. 
+
+
 
 ## Contributions
 Thanks to,
@@ -276,4 +309,4 @@ Thanks to,
 >If you have cloned the project and still use the older version with the third-party DLL, please update to this latest version to benefit from the native HIDAPI integration.
 >
 > This eliminates the dependency on external DLLs and provides a more streamlined setup.
-For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.
+> For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.

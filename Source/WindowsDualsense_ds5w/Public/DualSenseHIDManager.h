@@ -158,8 +158,8 @@ public:
 	~DualSenseHIDManager();
 
 	
-	bool FindDevices(TArray<FHIDDeviceContext>& Devices);
-	static bool ReconnectDevice(FHIDDeviceContext* DeviceContext);
+	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
+	static bool ReconnectDevice(FHIDDeviceContext* DeviceContext, int32 DeviceId);
 	static void FreeContext(FHIDDeviceContext* Context);
 	static void OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut);
 	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState);

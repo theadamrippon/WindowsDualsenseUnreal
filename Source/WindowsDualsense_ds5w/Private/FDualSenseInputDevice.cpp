@@ -10,16 +10,17 @@
 #include "Windows/WindowsPlatformApplicationMisc.h"
 #include "Misc/CoreDelegates.h"
 
-
 FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler): MessageHandler(InMessageHandler)
 {
 	DeviceMapper = FWindowsPlatformApplicationMisc::CreatePlatformInputDeviceManager();
-	FCoreDelegates::OnUserLoginChangedEvent.AddRaw(this, &FDualSenseInputDevice::OnUserLoginChangedEvent);	
+	DeviceMapper->Get().GetOnInputDeviceConnectionChange().AddRaw(this, &FDualSenseInputDevice::OnConnectionChange);
+	FCoreDelegates::OnUserLoginChangedEvent.AddRaw(this, &FDualSenseInputDevice::OnUserLoginChangedEvent);
 }
 
 FDualSenseInputDevice::~FDualSenseInputDevice()
 {
 	FCoreDelegates::OnUserLoginChangedEvent.RemoveAll(this);
+	DeviceMapper->Get().GetOnInputDeviceConnectionChange().RemoveAll(this);
 	UE_LOG(LogTemp, Log, TEXT("Destroying DualSense Input Device"));
 }
 
@@ -45,6 +46,10 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 			{
 				Disconnect(Device);
 			}
+		}
+		else
+		{
+			Disconnect(DeviceId);
 		}
 	}
 }
@@ -109,10 +114,56 @@ void FDualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId
 	if (const FPlatformUserId& UserPair = DeviceMapper->Get().GetUserForInputDevice(Device); UserPair != User)
 	{
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
+	}
+}
+
+
+void FDualSenseInputDevice::OnConnectionChange(bool Connected, FPlatformUserId PlatformUserId, int32 InputDeviceId)
+{
+	if (!IsConnectionChange.Contains(InputDeviceId))
+	{
+		IsConnectionChange.Add(InputDeviceId, false);
 		return;
 	}
 	
-	Reconnect(Device);
+	if (IsConnectionChange[InputDeviceId] == Connected)
+	{
+		return;
+	}
+
+	IsConnectionChange[InputDeviceId] = Connected;
+	if (!Connected)
+	{
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(FInputDeviceId::CreateFromInternalId(InputDeviceId), PlatformUserId, EInputDeviceConnectionState::Disconnected);
+		return;
+	}
+	
+	DeviceMapper->Get().Internal_MapInputDeviceToUser(FInputDeviceId::CreateFromInternalId(InputDeviceId), PlatformUserId, EInputDeviceConnectionState::Connected);
+}
+
+void FDualSenseInputDevice::OnConnectionChange(EInputDeviceConnectionState Connected, FPlatformUserId PlatformUserId, FInputDeviceId InputDeviceId)
+{
+	bool bIsConnected = Connected == EInputDeviceConnectionState::Connected;
+	int32 Device = InputDeviceId.GetId();
+	if (!IsConnectionChange.Contains(Device))
+	{
+		IsConnectionChange.Add(bIsConnected, false);
+		return;
+	}
+	
+	if (IsConnectionChange[Device] == bIsConnected)
+	{
+		return;
+	}
+
+	IsConnectionChange[Device] = bIsConnected;
+	if (!bIsConnected)
+	{
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Disconnected);
+		return;
+	}
+
+	DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Connected);
 }
 
 void FDualSenseInputDevice::Reconnect(const FInputDeviceId& Device) const

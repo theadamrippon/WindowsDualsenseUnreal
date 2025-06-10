@@ -208,7 +208,7 @@ MyGameModeBase.cpp
 To install this plugin directly via FAB (Official Source), follow the steps below:
 
 1. **Access the plugin's official page on FAB**  
-   Go to the official plugin page [by clicking here](?).
+   Go to the official plugin page [by clicking here](https://www.fab.com/listings/e77a8f1d-8bbe-4673-a5ae-7f222c8c0960).
 
 3. **Install the Plugin**
    - On the plugin page, click the **Install** or **Add to Project** button (depending on the FAB interface).

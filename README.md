@@ -6,6 +6,9 @@
 
 ### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
+# **!Important**
+DualSense controller is connected via Bluetooth. Using a USB connection may cause unexpected behavior such as frequent “input device disconnected” messages or the controller not being properly recognized
+
 ### [Links for installation](#Install-on-FAB-official-page-plugin)
 
 # Usage via Blueprints

@@ -43,13 +43,16 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 
 		SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, nullptr, 0, &RequiredSize, nullptr);
 
-		const auto DetailDataBuffer = reinterpret_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(malloc(RequiredSize));
+		const auto DetailDataBuffer = static_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(malloc(RequiredSize));
 		if (!DetailDataBuffer)
 		{
 			UE_LOG(LogTemp, Error, TEXT("HIDManager: Falha ao alocar memória para os detalhes do dispositivo."));
 			continue;
 		}
 		DetailDataBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
+
+		
+
 
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DetailDataBuffer, RequiredSize,
 		                                    nullptr, nullptr))
@@ -79,10 +82,19 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 
 						wcscpy_s(Context.Internal.DevicePath, 260, DetailDataBuffer->DevicePath);
 						// UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo encontrados: %s %s"), DetailDataBuffer->DevicePath, Context.Internal.DevicePath);
-						
+
+						Context.Internal.Connection = EHIDDeviceConnection::Usb;
+						FString DevicePath(DetailDataBuffer->DevicePath);
+						if (DevicePath.Contains(TEXT("{00001124-0000-1000-8000-00805f9b34fb}")) ||
+							DevicePath.Contains(TEXT("bth")) ||
+							DevicePath.Contains(TEXT("BTHENUM")))
+						{
+							UE_LOG(LogTemp, Log, TEXT("HIDManager: Connection Bluetooth: %s"), DetailDataBuffer->DevicePath);
+							Context.Internal.Connection = EHIDDeviceConnection::Bluetooth;
+						}
+
 						Context.Internal.Connected = true;
 						Context.Internal.DeviceHandle = TempDeviceHandle;
-						Context.Internal.Connection = EHIDDeviceConnection::Usb;
 						Devices.Add(Context);
 					}
 				}
@@ -230,9 +242,15 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 
 void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut)
 {
-	Context->Internal.Buffer[0] = 0x31;
-	Context->Internal.Buffer[1] = 0x02;
-	unsigned char* Output = &Context->Internal.Buffer[2];
+
+	Context->Internal.Buffer[0] = 0x02;
+	if (Context->Internal.Connection == EHIDDeviceConnection::Bluetooth)
+	{
+		Context->Internal.Buffer[0] = 0x31;
+		Context->Internal.Buffer[1] = 0x02;
+	}
+	
+	unsigned char* Output = Context->Internal.Connection == EHIDDeviceConnection::Bluetooth ? &Context->Internal.Buffer[2] : &Context->Internal.Buffer[1];
 	Output[0x00] = 0xff;
 	Output[0x01] = 0xF7;
 
@@ -349,10 +367,6 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 		TriggerL[0x4] = HidOut.LeftTrigger.Frequency;
 		TriggerL[0x5] = HidOut.LeftTrigger.Strengths.Period;
 	}
-
-	
-
-	
 
 
 	// Trigger R

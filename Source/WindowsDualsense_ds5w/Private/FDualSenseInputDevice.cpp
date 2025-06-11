@@ -47,10 +47,6 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 				Disconnect(Device);
 			}
 		}
-		else
-		{
-			Disconnect(DeviceId);
-		}
 	}
 }
 

@@ -14,7 +14,8 @@ bool UDualSenseLibrary::Reconnect()
 {
 	if (HIDDeviceContexts.Internal.Connected)
 	{
-		return true;
+		CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
+		DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	}
 	
 	if (DualSenseHIDManager::ReconnectDevice(&HIDDeviceContexts, ControllerID))
@@ -64,12 +65,6 @@ bool UDualSenseLibrary::IsConnected()
 
 void UDualSenseLibrary::SendOut()
 {
-	if (!HIDDeviceContexts.Internal.Connected)
-	{
-		Reconnect();
-		return;
-	}
-	
 	DualSenseHIDManager::OutputBuffering(&HIDDeviceContexts, HidOutput);
 }
 
@@ -106,7 +101,7 @@ void UDualSenseLibrary::CheckButtonInput(const TSharedRef<FGenericApplicationMes
 
 bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId)
 {
-	unsigned char* HIDInput = &HIDDeviceContexts.Internal.Buffer[2];
+	unsigned char* HIDInput = HIDDeviceContexts.Internal.Connection ==  EHIDDeviceConnection::Bluetooth ? &HIDDeviceContexts.Internal.Buffer[2] : &HIDDeviceContexts.Internal.Buffer[1];
 	if (DualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts, HIDInput))
 	{
 		// Shoulders

@@ -1,7 +1,6 @@
-﻿{
+{
 	"FileVersion": 3,
-	"Version": 1,
-	"VersionName": "1.0.0",
+	"VersionName": "1.1.3",
 	"FriendlyName": "WindowsDualsense_ds5w",
 	"Description": "Dualsense PS5 device for Windows platforms. Zero Configs. Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone",
 	"Category": "Input Devices",
@@ -11,7 +10,7 @@
 	"FabURL": "com.epicgames.launcher://ue/Fab/e77a8f1d-8bbe-4673-a5ae-7f222c8c0960/",
 	"IsExperimentalVersion": false,
 	"CanContainContent": false,
-	"IsBetaVersion": true,
+	"IsBetaVersion": false,
 	"Installed": true,
 	"EngineVersion": "5.2.0",
 	"EnabledByDefault": false,

@@ -78,6 +78,13 @@ public:
 				SetIsBroadcasting(ControllerId, true);
 				SetIsBlockCreateInstance(true);
 			}
+
+			
+			return nullptr;
+		}
+
+		if (const UDualSenseLibrary* DS = LibraryInstances[ControllerId]; !IsValid(DS) || DS == nullptr)
+		{
 			return nullptr;
 		}
 		

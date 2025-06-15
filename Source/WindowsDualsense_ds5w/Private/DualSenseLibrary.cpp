@@ -116,6 +116,9 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		const bool PushRightStick = HIDInput[0x08] & BTN_RIGHT_STICK;
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PushLeftStick"), PushLeftStick);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PushRightStick"), PushRightStick);
+		// mapped urenal native gamepad Push Stick
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::LeftThumb, PushLeftStick);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::RightThumb, PushRightStick);
 
 
 		// // Specials Actions
@@ -131,6 +134,9 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		const bool Select = HIDInput[0x08] & BTN_SELECT;
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Menu"), Start);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Share"), Select);
+		// mapped urenal native gamepad Start and Select
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::SpecialRight, Start);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::SpecialLeft, Select);
 
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));
 		const float LeftAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x01] - 127) * -1);
@@ -301,13 +307,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		// PrintBufferAsHex(HIDDeviceContexts.Internal.Buffer, 64);
 		return true;
 	}
-
-
-
-	UE_LOG(LogTemp, Error, TEXT("Unknown Input Device"));
-	HIDDeviceContexts.Internal.Connected = false;
-	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
-	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
+	
 	return false;
 }
 

@@ -57,7 +57,34 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 	const FKey PlayStationButton("PS_Button");
 	const FKey PS_PushLeftStick("PS_PushLeftStick");
 	const FKey PS_PushRightStick("PS_PushRightStick");
+	const FKey PS_FunctionL("PS_FunctionL");
+	const FKey PS_FunctionR("PS_FunctionR");
+	const FKey PS_PaddleL("PS_PaddleL");
+	const FKey PS_PaddleR("PS_PaddleR");
+
+	EKeys::AddKey(FKeyDetails(
+		PS_FunctionL,
+		FText::FromString("PlayStation Left Function Button"),
+		FKeyDetails::GamepadKey
+	));
+
+	EKeys::AddKey(FKeyDetails(
+		PS_FunctionR,
+		FText::FromString("PlayStation Right Function Button"),
+		FKeyDetails::GamepadKey
+	));
 	
+	EKeys::AddKey(FKeyDetails(
+		PS_PaddleL,
+		FText::FromString("PlayStation Left Paddle"),
+		FKeyDetails::GamepadKey
+	));
+
+	EKeys::AddKey(FKeyDetails(
+		PS_PaddleR,
+		FText::FromString("PlayStation Right Paddle"),
+		FKeyDetails::GamepadKey
+	));
 
 	EKeys::AddKey(FKeyDetails(
 		PS_PushLeftStick,

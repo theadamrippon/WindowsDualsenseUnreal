@@ -170,16 +170,7 @@ bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext, int3
 		FreeContext(DeviceContext);
 		if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 		{
-			if (bIsLogError)
-			{
-				DeviceContext->Internal.Connected = false;
-				DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-				CloseHandle(DeviceContext->Internal.DeviceHandle);
-				return false;
-			}
-
-			bIsLogError = true;
-			UE_LOG(LogTemp, Error, TEXT("DualSense: INVALID_HANDLE_VALUE Device not found. Please restart unreal editor."));
+			FreeContext(DeviceContext);
 			return false;
 		}
 		
@@ -206,7 +197,6 @@ bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext, int3
 		return true;
 	}
 	
-	UE_LOG(LogTemp, Log, TEXT("Dualsense: Init reconnect device. %s"), DeviceContext->Internal.DevicePath);
 	DeviceContext->Internal.DeviceHandle = CreateFileW(
 		DeviceContext->Internal.DevicePath,
 		GENERIC_READ | GENERIC_WRITE,
@@ -243,9 +233,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 {
 	if (!Context->Internal.Connected || Context->Internal.Connection == EHIDDeviceConnection::Unknown || Context->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Dualsense: Device not connected"));
-
-		
+		FreeContext(Context);
 		return;
 	}
 	
@@ -491,12 +479,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 	               &BytesWritten, nullptr))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. Error Code: %d"), GetLastError());
-		Context->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
-		Context->Internal.Connected = false;
-	    Context->Internal.Connection = EHIDDeviceConnection::Unknown;
-	    ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
-	    ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
-		CloseHandle(Context->Internal.DeviceHandle);
+		FreeContext(Context);
 	}
 }
 

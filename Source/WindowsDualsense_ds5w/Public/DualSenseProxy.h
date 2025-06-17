@@ -53,6 +53,9 @@ public:
 	static bool DeviceReconnect(int32 ControllerId);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense")
+	static bool DeviceDisconnect(int32 ControllerId);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense")
 	static float LevelBatteryDevice(int32 ControllerId);
 	
 	// return feedback trigger

@@ -11,34 +11,48 @@
 # Usage via Blueprints
 ### [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
 
-### Basic example to check connection, reconnect device, and apply LEDs to the DualSense.
+### Basic example to check connection, reconnect or disconnect device.
 
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/ExampleBasic.png)
+![Unreal Editor](Images/ReconnectAndDisconnectDevice.png)
+
+### Basic example apply LEDs to the DualSense.
+
+![Unreal Editor](Images/ExampleBasic.png)
 
 ### Haptic trigger feedback
 
-![Unreal Editor](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/blob/master/Images/haptic1.png)
+![Unreal Editor](Images/haptic1.png)
 
 # Example of using DualSense effects via C++
 
-### New effects
+### Trigger effects
 ```
-   int32 ControllerId = 0; 
-   
-   UDualSenseProxy::EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
-   
-   UDualSenseProxy::EffectGalloping(ControllerId, 5, 8, 5, 7, 0.01f, EControllerHand::Left);
-   UDualSenseProxy::EffectGalloping(ControllerId, 0, 5, 0, 4, 0.005f, EControllerHand::Right);
-   
-   UDualSenseProxy::EffectMachine(ControllerId, 1, 5, 1, 5, 0.5f, 3.f, EControllerHand::Left);
-   UDualSenseProxy::EffectMachine(ControllerId, 5, 8, 5, 8, 0.4f, 1.0f, EControllerHand::Right);
-   
-   UDualSenseProxy::EffectBow(ControllerId, 0, 5, 5, 8, EControllerHand::Left);
-   UDualSenseProxy::EffectBow(ControllerId, 5, 8, 8, 8, EControllerHand::Right);
+    // Forces max value 8
+    // Positions max value 8
+    
+    int32 ControllerId = 0; 
+
+    UDualSenseProxy::EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
+      
+    UDualSenseProxy::EffectGalloping(ControllerId, 5, 8, 5, 7, 0.01f, EControllerHand::Left);
+    UDualSenseProxy::EffectGalloping(ControllerId, 0, 5, 0, 4, 0.005f, EControllerHand::Right);
+      
+    UDualSenseProxy::EffectMachine(ControllerId, 1, 5, 1, 5, 0.5f, 3.f, EControllerHand::Left);
+    UDualSenseProxy::EffectMachine(ControllerId, 5, 8, 5, 8, 0.4f, 1.0f, EControllerHand::Right);
+      
+    UDualSenseProxy::EffectBow(ControllerId, 0, 5, 5, 8, EControllerHand::Left);
+    UDualSenseProxy::EffectBow(ControllerId, 5, 8, 8, 8, EControllerHand::Right);
+      
+    UDualSenseProxy::EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, EControllerHand Hand);
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
+
+    // Start position max value 8 | Forces max value 8
+    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 8, EControllerHand::Left); 
+    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Right);
 ```
-### Example haptics effects
+### Example reset effects
 ```
-   int32 ControllerId = 0; 
+    int32 ControllerId = 0;
    
     // Stop triggers effects
     UDualSenseProxy::StopAllTriggersEffects(ControllerId);
@@ -48,17 +62,15 @@
     // Normalize triggers
     UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
     UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
-
-    // Start position max value 8 | Forces max value 8
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Left); 
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 1, 4, EControllerHand::Right);
-
-    // Start position max value 8 | Forces max value 8
-    UDualSenseProxy::EffectSectionResitance(ControllerId, 1, 8, EControllerHand::Left); 
-    UDualSenseProxy::EffectContinuousResitance(ControllerId, 5, 8, EControllerHand::Right);
-
     
-
+    // Normalize triggers
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Left);
+    UDualSenseProxy::EffectNoResitance(ControllerId, EControllerHand::Right);
+```
+### Example haptics effects
+```
+   int32 ControllerId = 0; 
+   
     // Start position max value 8 | Forces max value 8
     UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 6, EControllerHand::Left, true);
     UDualSenseProxy::SetTriggerHapticFeedbackEffect(ControllerId, 8, 0, 0, 7, EControllerHand::Right, true);
@@ -225,6 +237,20 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
+v1.1.6 latest
+- Fixed issues with controller disconnection and reconnection handling
+- Improved controller auto-reconnection stability
+- Enhanced detection and recovery of controller connection states
+
+[UE 5.2 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1xmOU56rCx9uLGbcb-WOwQ4Opz-UWMr4e/view?usp=drive_link)
+
+[UE 5.3 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1oQ2LODFi7blEJ5pQvR0fOWOkIEI6NxoP/view?usp=drive_link)
+
+[UE 5.4 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/13UZb9Rx2uFo4OBr3QbVrxUH7GZg_U0yw/view?usp=drive_link)
+
+[UE 5.5 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1Isc7Sg15qqJ0YhgqiBNkuuGTsnuSu8iG/view?usp=drive_link)
+
+[UE 5.6 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1i-5sE1fwv6TcKMMS96S02p2nytA3xm0o/view?usp=drive_link)
 
 v1.1.5
 

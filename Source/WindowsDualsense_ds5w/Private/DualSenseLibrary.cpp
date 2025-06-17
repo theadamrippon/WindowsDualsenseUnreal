@@ -127,15 +127,22 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::LeftThumb, PushLeftStick);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::RightThumb, PushRightStick);
 
-
-		// // Specials Actions
+		// Function & Special Actions
 		const bool Playstation = HIDInput[0x09] & BTN_PLAYSTATION_LOGO;
 		const bool TouchPad = HIDInput[0x09] & BTN_PAD_BUTTON;
 		const bool Mic = HIDInput[0x09] & BTN_MIC_BUTTON;
-
+		const bool bFn1 = HIDInput[0x09] & BTN_FN1;
+		const bool bFn2 = HIDInput[0x09] & BTN_FN2;
+		const bool bPaddleLeft = HIDInput[0x09] & BTN_PADDLE_LEFT;
+		const bool bPaddleRight = HIDInput[0x09] & BTN_PADDLE_RIGHT;
+		
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Mic"), Mic);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_TouchButtom"), TouchPad);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_Button"), Playstation);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_FunctionL"), bFn1);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_FunctionR"), bFn2);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PaddleL"),  bPaddleLeft);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FName("PS_PaddleR"),  bPaddleRight);
 		
 		const bool Start = HIDInput[0x08] & BTN_START;
 		const bool Select = HIDInput[0x08] & BTN_SELECT;

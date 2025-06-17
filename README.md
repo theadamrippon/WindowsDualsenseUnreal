@@ -226,7 +226,7 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 Download plugin UE_Version
 
 
-v1.5
+v1.1.5
 
 [UE 5.2 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/14WGXvBt_a35iayGYX25nydPVRZY4nHBk/view?usp=drive_link)
 

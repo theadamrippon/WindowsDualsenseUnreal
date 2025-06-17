@@ -226,19 +226,17 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 Download plugin UE_Version
 
 
-v1.1
+v1.5
 
-[UE 5.3 download plugin WindowsDualsense1.1.zip](https://drive.google.com/file/d/141AI1vbBWFOu-UsogfBX7eG4OhurEGJ3/view?usp=drive_link)
+[UE 5.2 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/14WGXvBt_a35iayGYX25nydPVRZY4nHBk/view?usp=drive_link)
 
-v1.4
+[UE 5.3 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1DZInQnKrcC30Uzz01ajV6__Z5JesIp0r/view?usp=drive_link)
 
-[UE 5.2 download plugin WindowsDualsense1.4.zip](https://drive.google.com/file/d/1SpT4mKJZenyrzEGUIP6MSo0yKkl9-6GN/view?usp=drive_link)
+[UE 5.4 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1vlvkCInFh_6fZR48owwuJQthlebvql9G/view?usp=drive_link)
 
-[UE 5.4 download plugin WindowsDualsense1.4.zip](https://drive.google.com/file/d/1RIiGOsm-XT3cRQnC-am603Re5aW9L5Uq/view?usp=drive_link)
+[UE 5.5 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1_1axnSnJO-ik9omtW8PycgnK-nMeALIq/view?usp=drive_link)
 
-[UE 5.5 download plugin WindowsDualsense1.4.zip](https://drive.google.com/file/d/1ocs9Ewi0rJpzf_-KKMlMVRwvnXtPdRWf/view?usp=drive_link)
-
-[UE 5.6 download plugin WindowsDualsense1.4.zip](https://drive.google.com/file/d/1K-t95EwpiKYsFE6RKLaTYIgsKJ-zqDOE/view?usp=drive_link)
+[UE 5.6 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1q_CLrSNzzYS_jOaVOoPu2xtS2czRUPTm/view?usp=drive_link)
 
 ## Installing the Plugin in the Project's Directory
 

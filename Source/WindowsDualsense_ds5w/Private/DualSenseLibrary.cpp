@@ -27,7 +27,6 @@ bool UDualSenseLibrary::Reconnect()
 
 	PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
 	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
-	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	return false;
 }
 
@@ -52,9 +51,12 @@ bool UDualSenseLibrary::Connection()
 void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
+	
 	HIDDeviceContexts.Internal.Connected = false;
+	HIDDeviceContexts.Internal.Connection = EHIDDeviceConnection::Unknown;
+	ZeroMemory(&HIDDeviceContexts.Internal.DevicePath, sizeof(HIDDeviceContexts.Internal.DevicePath));
+	ZeroMemory(&HIDDeviceContexts.Internal.Buffer, sizeof(HIDDeviceContexts.Internal.Buffer));
 	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
-	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected with success... ShutdownLibrary"));
 }
 
@@ -65,6 +67,11 @@ bool UDualSenseLibrary::IsConnected()
 
 void UDualSenseLibrary::SendOut()
 {
+	if (!HIDDeviceContexts.Internal.Connected || HIDDeviceContexts.Internal.Connection == EHIDDeviceConnection::Unknown)
+	{
+		return;
+	}
+	
 	DualSenseHIDManager::OutputBuffering(&HIDDeviceContexts, HidOutput);
 }
 
@@ -700,7 +707,6 @@ void UDualSenseLibrary::StopAllEffects()
 
 void UDualSenseLibrary::StopAll()
 {
-	
 	HidOutput.LedPlayerHid.Brightness = 0x00;
 	if (ControllerID == 0)
 	{

@@ -18,7 +18,7 @@ class WINDOWSDUALSENSE_DS5W_API FDualSenseInputDevice final : public IInputDevic
 {
 
 public:
-	explicit FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler);
+	explicit FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, bool IsBlock);
 	virtual ~FDualSenseInputDevice() override;
 
 	virtual void Tick(float DeltaTime) override;
@@ -54,11 +54,15 @@ public:
 	void UnsetController(const FInputDeviceId Device) const
 	{
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
-		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Disconnected);
 	}
 
+	void SetOnIsblock(bool IsBlock)
+	{
+		bIsBlock = IsBlock;
+	}
+	
 	void OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId, int32 UserIndex);
-	void OnConnectionChange(bool Connected, FPlatformUserId PlatformUserId, int32 InputDeviceId);
 	void OnConnectionChange(EInputDeviceConnectionState Connected, FPlatformUserId PlatformUserId, FInputDeviceId InputDeviceId);
 	
 protected:
@@ -66,6 +70,7 @@ protected:
 	void Disconnect(const FInputDeviceId& Device) const;
 	
 private:
+	bool bIsBlock;
 	IPlatformInputDeviceMapper* DeviceMapper;
 	TMap<int32, bool> IsConnectionChange = TMap<int32, bool>();
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;

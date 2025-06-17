@@ -35,6 +35,7 @@ public:
 		{
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Creating new instance UFDualSenseLibraryManager"));
 			Instance = NewObject<UFDualSenseLibraryManager>();
+			Instance->AddToRoot();
 		}
 		return Instance;
 	}
@@ -65,27 +66,14 @@ public:
 	{
 		if (!LibraryInstances.Contains(ControllerId))
 		{
-			if (!GetIsBlockCreateInstance() && !Instance->IsBroadcasting[ControllerId])
+			LibraryInstances.Add(ControllerId, nullptr);
+			UDualSenseLibrary* DSLibrary = CreateLibraryInstance(ControllerId);
+			if (!DSLibrary)
 			{
-				UDualSenseLibrary* DSLibrary = CreateLibraryInstance(ControllerId);
-				if (DSLibrary)
-				{
-					PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Connected, FPlatformUserId::CreateFromInternalId(ControllerId), FInputDeviceId::CreateFromInternalId(ControllerId));
-					SetIsBroadcasting(ControllerId, false);
-					SetIsBlockCreateInstance(false);
-					return DSLibrary;
-				}
-				SetIsBroadcasting(ControllerId, true);
-				SetIsBlockCreateInstance(true);
+				return nullptr;
 			}
-
 			
-			return nullptr;
-		}
-
-		if (const UDualSenseLibrary* DS = LibraryInstances[ControllerId]; !IsValid(DS) || DS == nullptr)
-		{
-			return nullptr;
+			LibraryInstances[ControllerId] = DSLibrary;
 		}
 		
 		return LibraryInstances[ControllerId];
@@ -133,36 +121,25 @@ public:
 		for (int32 DeviceIndex = 0; DeviceIndex < DetectedDevices.Num(); DeviceIndex++)
 		{
 			FHIDDeviceContext& Context = DetectedDevices[DeviceIndex];
-
-			SetIsBroadcasting(DeviceIndex, true);
-			UE_LOG(LogTemp, Log, TEXT("DualSense: init device isConnected %d"), Context.Internal.Connected);
 			if (Context.Internal.Connected)
 			{
+				UE_LOG(LogTemp, Log, TEXT("DualSense: init device isConnected %d"), Context.Internal.Connected);
+				
 				UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
-				if (DualSense)
+				if (!Context.Internal.Connected || !DualSense)
 				{
-					DualSense->AddToRoot();
-					DualSense->ControllerID = DeviceIndex;
-					DualSense->InitializeLibrary(Context);
-
-					if (!DualSense->IsConnected())
-					{
-						UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), DeviceIndex);
-						PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(DeviceIndex), FInputDeviceId::CreateFromInternalId(DeviceIndex));
-						DualSense->ShutdownLibrary();
-						continue;
-					}
-
-					LibraryInstances.Add(DeviceIndex, DualSense);
-					UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
+					UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), DeviceIndex);
+					DualSense->ShutdownLibrary();
+					continue;
 				}
+
+				DualSense->AddToRoot();
+				DualSense->ControllerID = DeviceIndex;
+				DualSense->InitializeLibrary(Context);
+
+				LibraryInstances.Add(DeviceIndex, DualSense);
+				UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
 			}
-		}
-		
-		SetIsBlockCreateInstance(false);
-		for (int32 i = 0; i < Get()->GetAllocatedDevices(); i++)
-		{
-			SetIsBroadcasting(i, false);
 		}
 	}
 
@@ -176,29 +153,15 @@ private:
 	static UFDualSenseLibraryManager* Instance;
 	static TMap<int32, UDualSenseLibrary*> LibraryInstances;
 	static TMap<int32, bool*> IsBroadcasting;
-
 	bool IsNewInstance = false;
+	
 	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
 	{
-		if (GetAllocatedDevices() == ControllerID && ControllerID <= 0)
-		{
-			Get()->RemoveAllLibraryInstance();
-		}
-
-		if (GetIsBlockCreateInstance())
-		{
-			return nullptr;
-		}
-
 		TArray<FHIDDeviceContext> DetectedDevices;
 		DetectedDevices.Reset();
 		
 		if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 		{
-			LibraryInstances.Reset();
-			PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
-			SetIsBroadcasting(ControllerID, true);
-
 			UE_LOG(LogTemp, Error, TEXT("DualSense: device not found. Creating default library instance."));
 			return nullptr;
 		}
@@ -222,8 +185,6 @@ private:
 			{
 				UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), ControllerID);
 				DualSense->ShutdownLibrary();
-				PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
-				SetIsBroadcasting(ControllerID, true);
 				return nullptr;
 			}
 
@@ -234,7 +195,6 @@ private:
 			
 			return LibraryInstances[ControllerID];
 		}
-		SetIsBroadcasting(ControllerID, true);
 		return nullptr; 
 	}
 };

@@ -10,8 +10,9 @@
 #include "Windows/WindowsPlatformApplicationMisc.h"
 #include "Misc/CoreDelegates.h"
 
-FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler): MessageHandler(InMessageHandler)
+FDualSenseInputDevice::FDualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, bool IsBlock): MessageHandler(InMessageHandler)
 {
+	bIsBlock = IsBlock;
 	DeviceMapper = FWindowsPlatformApplicationMisc::CreatePlatformInputDeviceManager();
 	DeviceMapper->Get().GetOnInputDeviceConnectionChange().AddRaw(this, &FDualSenseInputDevice::OnConnectionChange);
 	FCoreDelegates::OnUserLoginChangedEvent.AddRaw(this, &FDualSenseInputDevice::OnUserLoginChangedEvent);
@@ -26,6 +27,11 @@ FDualSenseInputDevice::~FDualSenseInputDevice()
 
 void FDualSenseInputDevice::Tick(float DeltaTime)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	TArray<FInputDeviceId> OutInputDevices;
 	OutInputDevices.Reset();
 
@@ -40,12 +46,13 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 			continue;
 		}
 		
-		if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary) && DsLibrary != nullptr)
+		if (UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary))
 		{
 			if (!DsLibrary->UpdateInput(MessageHandler, UserId, Device))
 			{
-				UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnecting DeviceId=%d"), DeviceId.GetId());
 				Disconnect(DeviceId);
+				UFDualSenseLibraryManager::Get()->RemoveLibraryInstance(DeviceId.GetId());
+				UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnecting DeviceId=%d"), DeviceId.GetId());
 			}
 		}
 		else
@@ -57,6 +64,11 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 
 void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	if (!Property)
 	{
 		return;
@@ -68,7 +80,7 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 		SetLightColor(ControllerId, ColorProperty->Color);
 	}
 	
-	if (Property->Name != "InputDeviceLightColor")
+	if (Property->Name == FName("InputDeviceTriggerResistance"))
 	{
 		UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 		if (!DsLibrary)
@@ -82,16 +94,27 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 
 void FDualSenseInputDevice::SetLightColor(const int32 ControllerId, const FColor Color)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)
 	{
 		return;
 	}
+
 	DsLibrary->UpdateColorOutput(Color);
 }
 
 void FDualSenseInputDevice::ResetLightColor(const int32 ControllerId)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)
 	{
@@ -104,7 +127,6 @@ void FDualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId
 {
 	if (!bLoggedIn)
 	{
-		Disconnect(FInputDeviceId::CreateFromInternalId(UserId));
 		return;
 	}
 	
@@ -112,67 +134,51 @@ void FDualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId
 	const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(UserIndex);
 	if (const FPlatformUserId& UserPair = DeviceMapper->Get().GetUserForInputDevice(Device); UserPair != User)
 	{
-		if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) == EInputDeviceConnectionState::Connected)
+		if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) != EInputDeviceConnectionState::Connected)
 		{
-			return;
+			UE_LOG(LogTemp, Log, TEXT("DualSense: IsLoggin=%d, UserId=%d, UserIndex=%d"), bLoggedIn, UserId, UserIndex);
+			DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 		}
-		
-		UE_LOG(LogTemp, Log, TEXT("DualSense: IsLoggin=%d, UserId=%d, UserIndex=%d"), bLoggedIn, UserId, UserIndex);
-		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}
-}
-
-
-void FDualSenseInputDevice::OnConnectionChange(bool Connected, FPlatformUserId PlatformUserId, int32 InputDeviceId)
-{
-	if (!IsConnectionChange.Contains(InputDeviceId))
-	{
-		IsConnectionChange.Add(InputDeviceId, false);
-		return;
-	}
-	
-	if (IsConnectionChange[InputDeviceId] == Connected)
-	{
-		return;
-	}
-
-	IsConnectionChange[InputDeviceId] = Connected;
-	if (!Connected)
-	{
-		DeviceMapper->Get().Internal_MapInputDeviceToUser(FInputDeviceId::CreateFromInternalId(InputDeviceId), PlatformUserId, EInputDeviceConnectionState::Disconnected);
-		return;
-	}
-	
-	DeviceMapper->Get().Internal_MapInputDeviceToUser(FInputDeviceId::CreateFromInternalId(InputDeviceId), PlatformUserId, EInputDeviceConnectionState::Connected);
 }
 
 void FDualSenseInputDevice::OnConnectionChange(EInputDeviceConnectionState Connected, FPlatformUserId PlatformUserId, FInputDeviceId InputDeviceId)
 {
-	bool bIsConnected = (Connected == EInputDeviceConnectionState::Connected);
-	int32 Device = InputDeviceId.GetId();
+	const bool bIsConnected = (Connected == EInputDeviceConnectionState::Connected);
+	const int32 Device = InputDeviceId.GetId();
+
+	UE_LOG(LogTemp, Log, TEXT("DualSense: OnConnectionChange IsConnected=%d, DeviceId=%d"), bIsConnected, Device);
+	
 	if (!IsConnectionChange.Contains(Device))
 	{
-		IsConnectionChange.Add(Device, false);
+		IsConnectionChange.Add(Device, !bIsConnected);
 	}
-	
+
 	if (IsConnectionChange[Device] == bIsConnected)
 	{
 		return;
 	}
-
+	
 	IsConnectionChange[Device] = bIsConnected;
-	if (!bIsConnected)
+	if (DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId) != EInputDeviceConnectionState::Connected && bIsConnected)
 	{
-		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Disconnected);
-		return;
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Connected);
 	}
 
-	DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Connected);
+	if (DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId) != EInputDeviceConnectionState::Disconnected && !bIsConnected)
+	{
+		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Disconnected);
+	}
 }
 
 void FDualSenseInputDevice::Reconnect(const FInputDeviceId& Device) const
 {
-	if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) != EInputDeviceConnectionState::Connected)
+	if (bIsBlock)
+	{
+		return;
+	}
+	
+	if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) == EInputDeviceConnectionState::Disconnected)
 	{
 		DeviceMapper->Get().Internal_SetInputDeviceConnectionState(Device, EInputDeviceConnectionState::Connected);
 	}
@@ -180,14 +186,24 @@ void FDualSenseInputDevice::Reconnect(const FInputDeviceId& Device) const
 
 void FDualSenseInputDevice::Disconnect(const FInputDeviceId& Device) const
 {
-	if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) != EInputDeviceConnectionState::Disconnected)
+	if (bIsBlock)
 	{
-		DeviceMapper->Get().Internal_SetInputDeviceConnectionState(Device, EInputDeviceConnectionState::Disconnected);	
+		return;
+	}
+	
+	if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) == EInputDeviceConnectionState::Connected)
+	{
+		DeviceMapper->Get().Internal_SetInputDeviceConnectionState(Device, EInputDeviceConnectionState::Disconnected);
 	}
 }
 
 void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)
 	{
@@ -209,6 +225,11 @@ bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 
 void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& values)
 {
+	if (bIsBlock)
+	{
+		return;
+	}
+	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)
 	{

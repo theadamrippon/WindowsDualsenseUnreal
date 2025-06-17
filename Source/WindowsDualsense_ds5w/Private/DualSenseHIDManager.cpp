@@ -113,12 +113,19 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	if (!DeviceContext->Internal.Connected)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Internal.Connected, false"));
-		FreeContext(DeviceContext);
+		DeviceContext->Internal.Connected = false;
+		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
+		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
+		CloseHandle(DeviceContext->Internal.DeviceHandle);
 		return false;
 	}
 	
 	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
+		DeviceContext->Internal.Connected = false;
+		DeviceContext->Internal.DeviceHandle = nullptr;
+		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
+		
 		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
 		CloseHandle(DeviceContext->Internal.DeviceHandle);
 		return false;
@@ -132,9 +139,9 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	{
 		const DWORD Error = GetLastError();
 		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
-		
+
 		DeviceContext->Internal.Connected = false;
-		DeviceContext->Internal.DeviceHandle = nullptr;
+		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
 		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
 		CloseHandle(DeviceContext->Internal.DeviceHandle);
 		return false;
@@ -143,11 +150,6 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 
 	if (DeviceContext->Internal.Buffer[0] == 0x31 && DeviceContext->Internal.Buffer[1] == 0x02)
 	{
-		if (DeviceContext->Internal.Connection != EHIDDeviceConnection::Bluetooth)
-		{
-			DeviceContext->Internal.Connection = EHIDDeviceConnection::Bluetooth;
-		}
-
 		memcpy(&InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
 		return true;
 	}
@@ -229,20 +231,24 @@ bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext, int3
 
 void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 {
-	if (Context->Internal.DeviceHandle)
-	{
-		Context->Internal.Connected = false;
-		Context->Internal.Connection = EHIDDeviceConnection::Unknown;
-		ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
-		ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
-		CloseHandle(Context->Internal.DeviceHandle);
-	}
+	Context->Internal.Connected = false;
+	Context->Internal.Connection = EHIDDeviceConnection::Unknown;
+	ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
+	ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
+	CloseHandle(Context->Internal.DeviceHandle);
 }
 
 
 void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut)
 {
+	if (!Context->Internal.Connected || Context->Internal.Connection == EHIDDeviceConnection::Unknown || Context->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Dualsense: Device not connected"));
 
+		
+		return;
+	}
+	
 	Context->Internal.Buffer[0] = 0x02;
 	if (Context->Internal.Connection == EHIDDeviceConnection::Bluetooth)
 	{
@@ -485,7 +491,12 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 	               &BytesWritten, nullptr))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. Error Code: %d"), GetLastError());
-		FreeContext(Context);
+		Context->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
+		Context->Internal.Connected = false;
+	    Context->Internal.Connection = EHIDDeviceConnection::Unknown;
+	    ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
+	    ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
+		CloseHandle(Context->Internal.DeviceHandle);
 	}
 }
 

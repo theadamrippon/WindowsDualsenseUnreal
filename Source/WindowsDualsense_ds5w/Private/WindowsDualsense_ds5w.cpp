@@ -1,4 +1,4 @@
-﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
+// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
@@ -61,13 +61,13 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 
 	EKeys::AddKey(FKeyDetails(
 		PS_PushLeftStick,
-		FText::FromString("PS Push Left Stick"),
+		FText::FromString("PlayStation Left Thumbstick Button"),
 		FKeyDetails::GamepadKey
 	));
 
 	EKeys::AddKey(FKeyDetails(
 		PS_PushRightStick,
-		FText::FromString("PS Push Right Stick"),
+		FText::FromString("PlayStation Right Thumbstick Button"),
 		FKeyDetails::GamepadKey
 	));
 
@@ -97,7 +97,7 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 
 	EKeys::AddKey(FKeyDetails(
 		TouchButtom,
-		FText::FromString("PlayStation Touch Buttom"),
+		FText::FromString("PlayStation Touchpad Button"),
 		FKeyDetails::GamepadKey
 	));
 }

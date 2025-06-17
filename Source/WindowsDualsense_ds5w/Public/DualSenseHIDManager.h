@@ -5,6 +5,11 @@
 #pragma once
 #include "CoreMinimal.h"
 
+// Function Buttons
+#define BTN_FN1          0x10
+#define BTN_FN2          0x20
+#define BTN_PADDLE_LEFT  0x40
+#define BTN_PADDLE_RIGHT 0x80
 
 // DPad
 #define BTN_DPAD_UP 0x8

@@ -237,7 +237,23 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
-v1.1.6 latest
+v1.1.7 latest
+### Added
+- DualSense Edge controller support
+- Custom button mapping functionality
+- Additional back button inputs (FL/FR)
+
+[UE 5.2 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/11y84IfAD39L7b1sQt9baPc1p0gVQuaQu/view?usp=drive_link)
+
+[UE 5.3 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/12uUGX8TibfPIssEPNERfm6AekUfxZ9Bh/view?usp=drive_link)
+
+[UE 5.4 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1FrLaRdsUAE--6jXYKp8aw_onxbtrqlVN/view?usp=drive_link)
+
+[UE 5.5 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1xhpELcftJTB1y44Yqfv2ixD2BK-0hhUe/view?usp=drive_link)
+
+[UE 5.6 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1T0u4QFwQe_QpVd1_y4eV0Voq7oW4HVFw/view?usp=drive_link)
+
+v1.1.6
 - Fixed issues with controller disconnection and reconnection handling
 - Improved controller auto-reconnection stability
 - Enhanced detection and recovery of controller connection states
@@ -251,18 +267,6 @@ v1.1.6 latest
 [UE 5.5 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1Isc7Sg15qqJ0YhgqiBNkuuGTsnuSu8iG/view?usp=drive_link)
 
 [UE 5.6 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1i-5sE1fwv6TcKMMS96S02p2nytA3xm0o/view?usp=drive_link)
-
-v1.1.5
-
-[UE 5.2 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/14WGXvBt_a35iayGYX25nydPVRZY4nHBk/view?usp=drive_link)
-
-[UE 5.3 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1DZInQnKrcC30Uzz01ajV6__Z5JesIp0r/view?usp=drive_link)
-
-[UE 5.4 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1vlvkCInFh_6fZR48owwuJQthlebvql9G/view?usp=drive_link)
-
-[UE 5.5 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1_1axnSnJO-ik9omtW8PycgnK-nMeALIq/view?usp=drive_link)
-
-[UE 5.6 download plugin WindowsDualsense1.5.zip](https://drive.google.com/file/d/1q_CLrSNzzYS_jOaVOoPu2xtS2czRUPTm/view?usp=drive_link)
 
 ## Installing the Plugin in the Project's Directory
 

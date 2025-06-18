@@ -113,21 +113,14 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	if (!DeviceContext->Internal.Connected)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Internal.Connected, false"));
-		DeviceContext->Internal.Connected = false;
-		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
-		CloseHandle(DeviceContext->Internal.DeviceHandle);
+		FreeContext(DeviceContext);
 		return false;
 	}
 	
 	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{
-		DeviceContext->Internal.Connected = false;
-		DeviceContext->Internal.DeviceHandle = nullptr;
-		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-		
 		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
-		CloseHandle(DeviceContext->Internal.DeviceHandle);
+		FreeContext(DeviceContext);
 		return false;
 	}
 	
@@ -140,10 +133,8 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 		const DWORD Error = GetLastError();
 		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
 
-		DeviceContext->Internal.Connected = false;
 		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
-		DeviceContext->Internal.Connection = EHIDDeviceConnection::Unknown;
-		CloseHandle(DeviceContext->Internal.DeviceHandle);
+		FreeContext(DeviceContext);
 		return false;
 	}
 
@@ -157,67 +148,6 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	memcpy(&InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
 	return true;
 }
-
-bool bIsLogError = false;
-bool DualSenseHIDManager::ReconnectDevice(FHIDDeviceContext* DeviceContext, int32 DeviceId)
-{
-	EHIDDeviceConnection OldConnection = DeviceContext->Internal.Connection;
-	TArray<FHIDDeviceContext> DetectedDevices;
-	DetectedDevices.Reset();
-	
-	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
-	{
-		FreeContext(DeviceContext);
-		if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
-		{
-			FreeContext(DeviceContext);
-			return false;
-		}
-		
-		wcscpy_s(DeviceContext->Internal.DevicePath, 260, DetectedDevices[DeviceId].Internal.DevicePath);
-		DeviceContext->Internal.DeviceHandle = CreateFileW(
-			DetectedDevices[DeviceId].Internal.DevicePath,
-			GENERIC_READ | GENERIC_WRITE,
-			FILE_SHARE_READ | FILE_SHARE_WRITE,
-			nullptr,
-			OPEN_EXISTING,
-			NULL,
-			nullptr
-		);
-
-		if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
-		{
-			FreeContext(DeviceContext);
-			UE_LOG(LogTemp, Error, TEXT("Dualsense: INVALID_HANDLE_VALUE Erro code: %lu"), GetLastError());
-			return false;
-		}
-		
-		DeviceContext->Internal.Connected = true;
-		DeviceContext->Internal.Connection = OldConnection;
-		return true;
-	}
-	
-	DeviceContext->Internal.DeviceHandle = CreateFileW(
-		DeviceContext->Internal.DevicePath,
-		GENERIC_READ | GENERIC_WRITE,
-		FILE_SHARE_READ | FILE_SHARE_WRITE,
-		nullptr,
-		OPEN_EXISTING,
-		NULL,
-		nullptr
-	);
-
-	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Dualsense: INVALID_HANDLE_VALUE 2 Erro code: %lu"), GetLastError());
-		return false;
-	}
-
-	DeviceContext->Internal.Connected = true;
-	DeviceContext->Internal.Connection = OldConnection;
-	return true;
-}
-
 
 void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 {
@@ -247,6 +177,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 	unsigned char* Output = Context->Internal.Connection == EHIDDeviceConnection::Bluetooth ? &Context->Internal.Buffer[2] : &Context->Internal.Buffer[1];
 	Output[0x00] = 0xff;
 	Output[0x01] = 0xF7;
+	Output[0x30] = 0x80;
+	Output[0x31] = 0xFF;
 
 	// Rrigger R
 	unsigned char* TriggerR = &Output[0x0A];
@@ -298,12 +230,19 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 
 	if (HidOut.LeftTrigger.Mode == 0x21)
 	{
-		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut.LeftTrigger.EndPosition;
-		TriggerL[0x3] = HidOut.LeftTrigger.Strengths.Start;
-		TriggerL[0x4] = HidOut.LeftTrigger.Strengths.Middle;
-		TriggerL[0x5] = HidOut.LeftTrigger.Strengths.Middle;
-		TriggerL[0x6] = HidOut.LeftTrigger.Strengths.End;
+		const uint64_t LeftTriggerStrengthZones = HidOut.LeftTrigger.Strengths.StrengthZones;
+		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
+		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
+		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xff);
+		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
+		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
+		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
+
+		if (sizeof(LeftTriggerStrengthZones) > 4)
+		{
+			TriggerL[0x7] = ((LeftTriggerStrengthZones >> 32) & 0xff);
+			TriggerL[0x8] = ((LeftTriggerStrengthZones >> 40) & 0xff);
+		}
 	}
 
 	if (HidOut.LeftTrigger.Mode == 0x22) // Bow
@@ -376,15 +315,16 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOut
 		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
 		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
 	}
-	
+
 	if (HidOut.RightTrigger.Mode == 0x21)
 	{
-		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
-		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
-		TriggerR[0x4] = HidOut.RightTrigger.Strengths.Middle;
-		TriggerR[0x5] = HidOut.RightTrigger.Strengths.Middle;
-		TriggerR[0x6] = HidOut.RightTrigger.Strengths.End;
+		const uint64_t RightTriggerStrengthZones = HidOut.RightTrigger.Strengths.StrengthZones;
+		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
+		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
+		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xff);
+		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xff);
+		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
+		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
 	}
 
 	if (HidOut.RightTrigger.Mode == 0x22) // Bow

@@ -63,15 +63,23 @@ void UDualSenseLibrary::SendOut()
 
 int32 UDualSenseLibrary::GetTrirggersFeedback(const EControllerHand& HandTrigger)
 {
-	// if (DS5W_ReturnValue::OK == getDeviceInputState(&DeviceContexts, &InputState))
-	// {
-	// 	if (HandTrigger == EControllerHand::Left)
-	// 	{
-	// 		return InputState.leftTriggerFeedback;
-	// 	}
-	//
-	// 	return InputState.rightTriggerFeedback;	
-	// }
+	unsigned char* HIDInput = HIDDeviceContexts.Internal.Connection ==  EHIDDeviceConnection::Bluetooth ? &HIDDeviceContexts.Internal.Buffer[2] : &HIDDeviceContexts.Internal.Buffer[1];
+	if (DualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts, HIDInput))
+	{
+		unsigned char FeedbackLeft = HIDInput[0x2A];
+		unsigned char FeedbackRight = HIDInput[0x29];
+		
+		if (HandTrigger == EControllerHand::Right)
+		{
+			return ConvertTo255(FeedbackRight);
+		}
+
+		if (HandTrigger == EControllerHand::Left)
+		{
+			return ConvertTo255(FeedbackLeft);
+		}
+	}
+	
 	return 0;
 }
 
@@ -304,7 +312,8 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 			InMessageHandler.Get().OnMotionDetected( Tilts, Gyroscope, Gravity, Accelerometer, UserId, InputDeviceId);
 		}
 
-		// PrintBufferAsHex(HIDDeviceContexts.Internal.Buffer, 64);
+		
+		// PrintBufferAsHex(HIDInput, 64);
 		return true;
 	}
 	
@@ -313,15 +322,14 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 void UDualSenseLibrary::PrintBufferAsHex(const unsigned char* Buffer, int BufferSize)
 {
-	FString HexString;
-	for (int i = 0; i < BufferSize; i++)
-	{
-		// Adiciona o valor hexadecimal de cada byte ao HexString
-		HexString += FString::Printf(TEXT("%02X "), Buffer[i]);
-	}
+	// FString HexString;
+	// for (int i = 0; i < BufferSize; i++)
+	// {
+	// 	// Adiciona o valor hexadecimal de cada byte ao HexString
+	// 	HexString += FString::Printf(TEXT("%02X "), Buffer[i]);
+	// }
 
-	// Imprime no log usando UE_LOG
-	UE_LOG(LogTemp, Log, TEXT("Buffer as Hex String: %s"), *HexString);
+	// UE_LOG(LogTemp, Log, TEXT("Buffer as Hex String: %s"), *HexString);
 }
 
 
@@ -547,28 +555,46 @@ void UDualSenseLibrary::SectionResitance(int32 StartPosition, int32 EndPosition,
 	SendOut();
 }
 
-void UDualSenseLibrary::Feedback(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand)
+void UDualSenseLibrary::Feedback(int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand)
 {
+	unsigned char PositionalAmplitudes[10];
+	PositionalAmplitudes[0] = BeginForce;
+	PositionalAmplitudes[1] = BeginForce;
+	PositionalAmplitudes[2] = BeginForce;
+	PositionalAmplitudes[3] = BeginForce;
+	PositionalAmplitudes[4] = MiddleForce;
+	PositionalAmplitudes[5] = MiddleForce;
+	PositionalAmplitudes[6] = MiddleForce;
+	PositionalAmplitudes[7] = MiddleForce;
+	PositionalAmplitudes[8] = EndForce;
+	PositionalAmplitudes[9] = EndForce;
+	
+	int32 ActiveZones = 0;
+	int16 ForceValues = 0;
+	for (int i = 0; i < 3; i++)
+	{
+		if (PositionalAmplitudes[i] > 0)
+		{
+			const int8_t ForceValue = static_cast<int8_t>((PositionalAmplitudes[i] - 1) & 0x07);
+			ForceValues  |= (ForceValue << (3 * i));
+			ActiveZones |= static_cast<int16>(1 << i);
+		}
+	}
+		
 	if (Hand == EControllerHand::Left || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.LeftTrigger.Mode = 0x21;
-		HidOutput.LeftTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.LeftTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.LeftTrigger.Strengths.Start = ConvertTo255(Force, 9) / 3;
-		HidOutput.LeftTrigger.Strengths.Middle = ConvertTo255(Force, 9) / 2;
-		HidOutput.LeftTrigger.Strengths.End = ConvertTo255(Force, 9);
+		HidOutput.LeftTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.LeftTrigger.Strengths.StrengthZones = ForceValues;
 	}
 
 	if (Hand == EControllerHand::Right || Hand == EControllerHand::AnyHand)
 	{
 		HidOutput.RightTrigger.Mode = 0x21;
-		HidOutput.RightTrigger.StartPosition = ConvertTo255(StartPosition, 8);
-		HidOutput.RightTrigger.EndPosition = ConvertTo255(EndPosition, 8);
-		HidOutput.RightTrigger.Strengths.Start = ConvertTo255(Force, 9) / 3;
-		HidOutput.RightTrigger.Strengths.Middle = ConvertTo255(Force, 9) / 2;
-		HidOutput.RightTrigger.Strengths.End = ConvertTo255(Force, 9);
+		HidOutput.RightTrigger.Strengths.ActiveZones = ActiveZones;
+		HidOutput.RightTrigger.Strengths.StrengthZones = ForceValues;
 	}
-
+	
 	SendOut();
 }
 

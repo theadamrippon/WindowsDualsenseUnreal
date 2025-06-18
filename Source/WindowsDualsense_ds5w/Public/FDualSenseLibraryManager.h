@@ -39,28 +39,6 @@ public:
 		}
 		return Instance;
 	}
-
-	static bool GetIsBlockCreateInstance()
-	{
-		return Instance->bIsBlockCreateInstance;
-	}
-
-	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
-
-	void static SetIsBlockCreateInstance(const bool IsBlock)
-	{
-		Instance->bIsBlockCreateInstance = IsBlock;
-	}
-
-	void static SetIsBroadcasting(int32 ControllerId, bool IsBlock)
-	{
-		if (!Instance->IsBroadcasting.Contains(ControllerId))
-		{
-			Instance->IsBroadcasting.Add(ControllerId, &IsBlock);
-		}
-		Instance->IsBroadcasting[ControllerId] = &IsBlock;
-	}
-
 	
 	static UDualSenseLibrary* GetLibraryOrRecconect(int32 ControllerId)
 	{
@@ -86,7 +64,7 @@ public:
 			LibraryInstances.Add(ControllerId, DSLibrary);
 		}
 
-		// LibraryInstances[ControllerId]->Reconnect();
+		LibraryInstances[ControllerId]->Reconnect();
 		return LibraryInstances[ControllerId];
 	}
 	
@@ -152,7 +130,7 @@ public:
 				UE_LOG(LogTemp, Log, TEXT("DualSense: init device isConnected %d"), Context.Internal.Connected);
 				
 				UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
-				if (!Context.Internal.Connected || !DualSense)
+				if (!DualSense)
 				{
 					UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), DeviceIndex);
 					DualSense->ShutdownLibrary();
@@ -173,13 +151,12 @@ public:
 	{
 		return LibraryInstances.Num();
 	}
-	 
-	bool bIsBlockCreateInstance = true;
+
+	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
+	
 private:
 	static UFDualSenseLibraryManager* Instance;
 	static TMap<int32, UDualSenseLibrary*> LibraryInstances;
-	static TMap<int32, bool*> IsBroadcasting;
-	bool IsNewInstance = false;
 	
 	static UDualSenseLibrary* CreateLibraryInstance(int32 ControllerID)
 	{
@@ -205,8 +182,8 @@ private:
 			}
 
 			DualSense->AddToRoot();
+			DualSense->ControllerID = ControllerID;
 			DualSense->InitializeLibrary(Context);
-			DualSense->Reconnect();
 			return DualSense;
 		}
 		return nullptr; 

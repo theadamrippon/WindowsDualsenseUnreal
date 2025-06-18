@@ -74,6 +74,18 @@ int32 UDualSenseProxy::GetTriggerRightForceFeedback(int32 ControllerId)
 	return DualSenseInstance->GetTrirggersFeedback(HandToUse);
 }
 
+void UDualSenseProxy::SetFeedback(int32 ControllerId, int32 BeginForce,
+													 int32 MiddleForce, int32 EndForce, EControllerHand Hand)
+{
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
+	return DualSenseInstance->Feedback(BeginForce, MiddleForce, EndForce, Hand);
+}
+
 void UDualSenseProxy::SetTriggerHapticFeedbackEffect(int32 ControllerId, int32 StartPosition, int32 BeginForce,
                                                      int32 MiddleForce, int32 EndForce, EControllerHand Hand,
                                                      bool KeepEffect)

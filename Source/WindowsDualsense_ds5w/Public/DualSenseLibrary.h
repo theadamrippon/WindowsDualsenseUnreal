@@ -77,7 +77,7 @@ public:
 	void NoResitance(const EControllerHand& Hand);
 	void ContinuousResitance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
 	void SectionResitance(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
-	void Feedback(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
+	void Feedback(int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand);
 	void SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
 	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, const EControllerHand& Hand);
 	void SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd, float Frequency, float Period, const EControllerHand& Hand);

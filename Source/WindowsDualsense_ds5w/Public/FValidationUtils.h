@@ -17,7 +17,7 @@ public:
 
 	static bool ValidateMaxForce(int32 Force)
 	{
-		return Force <= 9 && Force >= 0;
+		return Force <= 8 && Force >= 0;
 	}
 
 	static bool ValidateMaxPosition(int32 Position)

@@ -57,6 +57,9 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense")
 	static float LevelBatteryDevice(int32 ControllerId);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
+	static void SetFeedback(int32 ControllerId, int32 BeginForce, int32 MiddleForce, int32 EndForce, EControllerHand Hand);
 	
 	// return feedback trigger
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")

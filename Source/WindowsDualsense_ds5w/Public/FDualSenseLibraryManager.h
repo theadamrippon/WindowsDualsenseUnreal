@@ -62,18 +62,44 @@ public:
 	}
 
 	
-	static UDualSenseLibrary* GetLibraryInstance(int32 ControllerId)
+	static UDualSenseLibrary* GetLibraryOrRecconect(int32 ControllerId)
 	{
+		if (LibraryInstances.Contains(ControllerId))
+		{
+			if (LibraryInstances[ControllerId]->IsConnected())
+			{
+				return LibraryInstances[ControllerId];
+			}
+		
+			RemoveLibraryInstance(ControllerId); // destruct instance to reconnect
+		}
+		
 		if (!LibraryInstances.Contains(ControllerId))
 		{
-			LibraryInstances.Add(ControllerId, nullptr);
 			UDualSenseLibrary* DSLibrary = CreateLibraryInstance(ControllerId);
 			if (!DSLibrary)
 			{
 				return nullptr;
 			}
-			
-			LibraryInstances[ControllerId] = DSLibrary;
+
+			UE_LOG(LogTemp, Log, TEXT("DualSense: CreateLibraryInstance UDualSenseLibrary ControllerId, %d"), ControllerId);
+			LibraryInstances.Add(ControllerId, DSLibrary);
+		}
+
+		// LibraryInstances[ControllerId]->Reconnect();
+		return LibraryInstances[ControllerId];
+	}
+	
+	static UDualSenseLibrary* GetLibraryInstance(int32 ControllerId)
+	{
+		if (!LibraryInstances.Contains(ControllerId))
+		{
+			return nullptr;
+		}
+
+		if (!LibraryInstances[ControllerId]->IsConnected())
+		{
+			return nullptr;
 		}
 		
 		return LibraryInstances[ControllerId];
@@ -83,9 +109,9 @@ public:
 	{
 		if (LibraryInstances.Contains(ControllerId))
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: ShutdownLibrary UDualSenseLibrary ControllerId, %d"), ControllerId);
 			LibraryInstances[ControllerId]->ShutdownLibrary();
 			LibraryInstances.Remove(ControllerId);
+			UE_LOG(LogTemp, Log, TEXT("DualSense: ShutdownLibrary UDualSenseLibrary ControllerId, %d"), ControllerId);
 		}
 	}
 
@@ -180,20 +206,8 @@ private:
 
 			DualSense->AddToRoot();
 			DualSense->InitializeLibrary(Context);
-
-			if (!DualSense->IsConnected())
-			{
-				UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), ControllerID);
-				DualSense->ShutdownLibrary();
-				return nullptr;
-			}
-
-			if (!LibraryInstances.Contains(ControllerID))
-			{
-				LibraryInstances.Add(ControllerID, DualSense);
-			}
-			
-			return LibraryInstances[ControllerID];
+			DualSense->Reconnect();
+			return DualSense;
 		}
 		return nullptr; 
 	}

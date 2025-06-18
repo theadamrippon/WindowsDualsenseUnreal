@@ -12,22 +12,8 @@
 //
 bool UDualSenseLibrary::Reconnect()
 {
-	if (HIDDeviceContexts.Internal.Connected)
-	{
-		CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
-		DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
-	}
-	
-	if (DualSenseHIDManager::ReconnectDevice(&HIDDeviceContexts, ControllerID))
-	{
-		PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Connected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
-		UE_LOG(LogTemp, Log, TEXT("Dualsense: Reconnected device successful."));
-		return true;
-	}
-
-	PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Disconnected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
-	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
-	return false;
+	PlatformInputDeviceMapper.Get().GetOnInputDeviceConnectionChange().Broadcast(EInputDeviceConnectionState::Connected, FPlatformUserId::CreateFromInternalId(ControllerID), FInputDeviceId::CreateFromInternalId(ControllerID));
+	return true;
 }
 
 

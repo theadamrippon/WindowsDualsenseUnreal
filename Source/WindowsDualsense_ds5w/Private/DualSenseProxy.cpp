@@ -18,23 +18,24 @@ bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 		return false;
 	}
 	
-	return DualSenseInstance->IsConnected();
+	return true;
 }
 
 bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 {
-	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryOrRecconect(ControllerId);
 	if (!DualSenseInstance)
 	{
 		return false;
 	}
-	
-	if (DualSenseInstance->IsConnected())
-	{
-		return true;
-	}
 
-	return DualSenseInstance->Reconnect();
+	return true;
+}
+
+bool UDualSenseProxy::DeviceDisconnect(int32 ControllerId)
+{
+	UFDualSenseLibraryManager::Get()->RemoveLibraryInstance(ControllerId);
+	return true;
 }
 
 float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)

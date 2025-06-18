@@ -69,7 +69,7 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 
 				if (HidD_GetAttributes(TempDeviceHandle, &Attributes))
 				{
-					if (Attributes.VendorID == 0x054C && Attributes.ProductID == 0x0CE6)
+					if (Attributes.VendorID == 0x054C && (Attributes.ProductID == 0x0CE6 || Attributes.ProductID == 0x0DF2))
 					{
 						FHIDDeviceContext Context = {};
 						size_t PathSize = 260;

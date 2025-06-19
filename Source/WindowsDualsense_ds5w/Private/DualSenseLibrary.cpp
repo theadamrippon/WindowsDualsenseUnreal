@@ -160,8 +160,8 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		// Triggers
 		const float TriggerL = HIDInput[0x04] / 256.0f;
 		const float TriggerR = HIDInput[0x05] / 256.0f;
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_LeftTrigger.GetFName(), UserId, InputDeviceId, TriggerL);
-		InMessageHandler.Get().OnControllerAnalog(EKeys::Gamepad_RightTrigger.GetFName(), UserId, InputDeviceId, TriggerR);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftTriggerAnalog, UserId, InputDeviceId, TriggerL);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightTriggerAnalog, UserId, InputDeviceId, TriggerR);
 
 
 		uint8_t ButtonsMask = HIDInput[0x07] & 0xF0;

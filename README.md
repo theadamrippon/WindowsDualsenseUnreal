@@ -237,21 +237,25 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
-v1.1.7 latest
+v1.1.8 latest
 ### Added
 - DualSense Edge controller support
 - Custom button mapping functionality
 - Additional back button inputs (FL/FR)
+### Fix:
+- Update L2 and R2 trigger mappings for DualSense controller
+- Modify analog trigger mapping configuration for L2 and R2 buttons
+- Improve trigger response handling for better input precision
 
-[UE 5.2 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/11y84IfAD39L7b1sQt9baPc1p0gVQuaQu/view?usp=drive_link)
+[UE 5.2 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1lf6zwXbFck4pAwSUkFCwJEngOm_y7w8k/view?usp=drive_link)
 
-[UE 5.3 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/12uUGX8TibfPIssEPNERfm6AekUfxZ9Bh/view?usp=drive_link)
+[UE 5.3 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1MFfnugTEBcFiybDA_7IOX-CqWRd9X9Z6/view?usp=drive_link)
 
-[UE 5.4 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1FrLaRdsUAE--6jXYKp8aw_onxbtrqlVN/view?usp=drive_link)
+[UE 5.4 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1D7_PmMnwYa2VrPeFe3VxQlEJTwO3zvaW/view?usp=drive_link)
 
-[UE 5.5 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1xhpELcftJTB1y44Yqfv2ixD2BK-0hhUe/view?usp=drive_link)
+[UE 5.5 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1WLW5um1OHsFC6v0MPXLrJ_1IkWcFSxPd/view?usp=drive_link)
 
-[UE 5.6 download plugin WindowsDualsense1.7.zip](https://drive.google.com/file/d/1T0u4QFwQe_QpVd1_y4eV0Voq7oW4HVFw/view?usp=drive_link)
+[UE 5.6 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1WWnTow4je1h7NthwJJO1NQrLcCwkc8jG/view?usp=drive_link)
 
 v1.1.6
 - Fixed issues with controller disconnection and reconnection handling

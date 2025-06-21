@@ -36,7 +36,6 @@ enum class ELedBrightnessEnum : uint8
 	High UMETA(DisplayName = "Brightness High")
 };
 
-
 /**
  * 
  */
@@ -59,11 +58,22 @@ public:
 	static float LevelBatteryDevice(int32 ControllerId);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
-	static void SetFeedback(int32 ControllerId, int32 BeginForce, int32 MiddleForce, int32 EndForce, EControllerHand Hand);
-	
+	static void SetFeedback(int32 ControllerId, int32 BeginForce, int32 MiddleForce, int32 EndForce,
+	                        EControllerHand Hand);
+
 	// return feedback trigger
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
 	static int32 GetTriggerLeftForceFeedback(int32 ControllerId);
+
+	UFUNCTION(BlueprintCallable, Category = "DualSense Audio Vibration")
+	static void SetVibrationFromAudio(
+		const int32 ControllerId,
+		float AverageEnvelopeValue,
+		float MaxEnvelopeValue,
+		int32 NumWaveInstances,
+		float EnvelopeToVibrationMultiplier,
+		float PeakToVibrationMultiplier
+	);
 
 	// return feedback trigger
 	UFUNCTION(BlueprintCallable, Category = "DualSense Triggers Feedback")
@@ -78,23 +88,28 @@ public:
 	static void EffectNoResitance(int32 ControllerId, EControllerHand HandResistence);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand ResistenceHand);
+	static void EffectSectionResitance(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force,
+	                                   EControllerHand ResistenceHand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void EffectContinuousResitance(int32 ControllerId, int32 StartPosition, int32 Force,
-	                                   EControllerHand ContinuousHand);
+	                                      EControllerHand ContinuousHand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force, EControllerHand Hand);
+	static void EffectWeapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Force,
+	                         EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectGalloping(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginForce, int32 EndForce, float Frequency, EControllerHand Hand);
+	static void EffectGalloping(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginForce,
+	                            int32 EndForce, float Frequency, EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectMachine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 LasFoot, float Frequency, float Period, EControllerHand Hand);
+	static void EffectMachine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot,
+	                          int32 LasFoot, float Frequency, float Period, EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
-	static void EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, EControllerHand Hand);
+	static void EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,
+	                      EControllerHand Hand);
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void StopTriggerEffect(int32 ControllerId, EControllerHand HandStop);
@@ -125,6 +140,5 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch Pad")
 	static void EnableTouch2(int32 ControllerId, bool bEnableTouch);
-
 	
 };

@@ -65,7 +65,7 @@ typedef struct FHIDDeviceContext
 } FHIDDeviceContext;
 
 
-struct FOutputBuffer
+struct FDsHIDOutputBuffer
 {
 	typedef struct FLedPlayer
 	{
@@ -166,7 +166,7 @@ public:
 	
 	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
 	static void FreeContext(FHIDDeviceContext* Context);
-	static void OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut);
+	static void OutputBuffering(FHIDDeviceContext* Context, const FDsHIDOutputBuffer& HidOut);
 	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState);
 	
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);

@@ -94,6 +94,7 @@ public:
 	// Colors, vibration and triggers config
 	void UpdateColorOutput(FColor Color);
 	void SetVibration(const FForceFeedbackValues& Vibration);
+	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration);
 	void SetTriggers(const FInputDeviceProperty* Property);
 
 	void SetAcceleration(bool bIsAccelerometer);
@@ -108,7 +109,7 @@ public:
 	TMap<const FName, bool> ButtonStates;
 private:
 	FHIDDeviceContext HIDDeviceContexts;
-	FOutputBuffer HidOutput;
+	FDsHIDOutputBuffer HidOutput;
 
 	bool EnableTouch1;
 	bool EnableTouch2;

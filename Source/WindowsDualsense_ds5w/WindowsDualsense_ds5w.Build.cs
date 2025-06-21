@@ -11,7 +11,7 @@ public class WindowsDualsense_ds5w : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 
- 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice"});
+ 		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice" });
 	    PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
 	    
 	    if (Target.Platform == UnrealTargetPlatform.Win64)

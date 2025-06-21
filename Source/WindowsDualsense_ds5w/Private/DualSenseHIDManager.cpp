@@ -159,7 +159,7 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 }
 
 
-void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FOutputBuffer& HidOut)
+void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsHIDOutputBuffer& HidOut)
 {
 	if (!Context->Internal.Connected || Context->Internal.Connection == EHIDDeviceConnection::Unknown || Context->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
 	{

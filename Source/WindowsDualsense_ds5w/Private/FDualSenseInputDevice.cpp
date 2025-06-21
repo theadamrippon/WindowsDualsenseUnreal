@@ -64,6 +64,8 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 
 void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property)
 {
+	UE_LOG(LogTemp, Log, TEXT("DualSense: SetDeviceProperty Name=%s"), *Property->Name.ToString());
+	
 	if (bIsBlock)
 	{
 		return;
@@ -91,6 +93,7 @@ void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDe
 		DsLibrary->SetTriggers(Property);
 	}
 }
+
 
 void FDualSenseInputDevice::SetLightColor(const int32 ControllerId, const FColor Color)
 {
@@ -191,6 +194,9 @@ void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, co
 	{
 		return;
 	}
+
+	UE_LOG(LogTemp, Log, TEXT("DualSense: SetHapticFeedbackValues Hand=%f"), Values.Frequency);
+	UE_LOG(LogTemp, Log, TEXT("DualSense: SetHapticFeedbackValues Hand=%f"), Values.Amplitude);
 	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)

@@ -156,7 +156,6 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogX, UserId, InputDeviceId, RightAnalogX / 128.0f);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId, RightAnalogY / 128.0f);
 
-
 		// Triggers
 		const float TriggerL = HIDInput[0x04] / 256.0f;
 		const float TriggerR = HIDInput[0x05] / 256.0f;
@@ -339,11 +338,48 @@ void UDualSenseLibrary::UpdateColorOutput(const FColor Color)
 	SendOut();
 }
 
+void UDualSenseLibrary::SetVibrationAudioBased(const FForceFeedbackValues& Vibration)
+{
+	const float Threshold = 0.15f;
+	const float ExponentCurve = 1.8f;  // Curva mais agressiva para graves
+	const float BaseMuliplier = 20.0f;  // Multiplicador aumentado
+
+	// Processa apenas o motor esquerdo (graves)
+	float Intensity = Vibration.LeftLarge;
+	if (Intensity < Threshold)
+	{
+		Intensity = 0.0f;
+	}
+	else
+	{
+		// Normaliza e aplica curva não-linear
+		Intensity = FMath::Pow((Intensity - Threshold) / (1.0f - Threshold), ExponentCurve) * BaseMuliplier;
+	}
+
+	// Converte para bytes (0-255)
+	const float RumbleValue = FMath::Clamp(Intensity * 255.0f, 0.0f, 255.0f);
+
+	if (RumbleValue <= 0)
+	{
+		HidOutput.MotorsHid = { 0x00, 0x00 };
+	}
+	else
+	{
+		// Usa apenas o motor esquerdo para graves
+		HidOutput.MotorsHid.Left = CalculateLeftRumble(Vibration);  // Desativa motor esquerdo
+		HidOutput.MotorsHid.Right = CalculateRightRumble(Vibration);
+	}
+
+	SendOut();
+}
+
 bool IsResetVibration = false;
 void UDualSenseLibrary::SetVibration(const FForceFeedbackValues& Vibration)
 {
 	const float LeftRumble = CalculateLeftRumble(Vibration);
 	const float RightRumble = CalculateRightRumble(Vibration);
+
+	// UE_LOG(LogTemp, Log, TEXT("LeftRumble: %f, RightRumble: %f"), LeftRumble, RightRumble);
 
 	if (IsResetVibration && (RightRumble <= 0 || LeftRumble <= 0))
 	{

@@ -237,7 +237,25 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Download plugin UE_Version
 
-v1.1.8 latest
+v1.1.9 latest
+
+- **Added:** Audio-based vibration support for the DualSense controller. The controller's feedback now responds dynamically to audio inputs, resulting in a more immersive gaming experience.
+- Updated documentation to include instructions and examples on how to utilize the new audio vibration feature.
+- Minor bug fixes and performance improvements in controller overlay rendering.
+
+
+[UE 5.2 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1aLadPApdjuvdaWVy-IBZjFxXpA6peQb0/view?usp=drive_link)
+
+[UE 5.3 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1zlt1ga0fRbjB4XJ5GwCCjE-57BYrBMNK/view?usp=drive_link)
+
+[UE 5.4 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1Dh5mMerd20HIXPZkl5eLPRYK14Sy7Rsr/view?usp=drive_link)
+
+[UE 5.5 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1BUV4TwVEJG95UNCLQzEzHydE-XzzrJBm/view?usp=drive_link)
+
+[UE 5.6 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1phZo6ILEcB087e3iZ6d9M-MKcDFWXs6J/view?usp=drive_link)
+
+Version: v1.1.8
+
 ### Added
 - DualSense Edge controller support
 - Custom button mapping functionality
@@ -257,20 +275,6 @@ v1.1.8 latest
 
 [UE 5.6 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1WWnTow4je1h7NthwJJO1NQrLcCwkc8jG/view?usp=drive_link)
 
-v1.1.6
-- Fixed issues with controller disconnection and reconnection handling
-- Improved controller auto-reconnection stability
-- Enhanced detection and recovery of controller connection states
-
-[UE 5.2 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1xmOU56rCx9uLGbcb-WOwQ4Opz-UWMr4e/view?usp=drive_link)
-
-[UE 5.3 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1oQ2LODFi7blEJ5pQvR0fOWOkIEI6NxoP/view?usp=drive_link)
-
-[UE 5.4 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/13UZb9Rx2uFo4OBr3QbVrxUH7GZg_U0yw/view?usp=drive_link)
-
-[UE 5.5 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1Isc7Sg15qqJ0YhgqiBNkuuGTsnuSu8iG/view?usp=drive_link)
-
-[UE 5.6 download plugin WindowsDualsense1.6.zip](https://drive.google.com/file/d/1i-5sE1fwv6TcKMMS96S02p2nytA3xm0o/view?usp=drive_link)
 
 ## Installing the Plugin in the Project's Directory
 

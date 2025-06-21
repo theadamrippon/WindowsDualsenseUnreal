@@ -23,6 +23,11 @@
 
 ![Unreal Editor](Images/haptic1.png)
 
+### Audio-Based Vibration Support
+The plugin now features audio-based vibration support, enabling controller vibrations to react dynamically to in-game audio signals. This provides a more immersive and responsive user experience.
+
+![Unreal Editor](Images/AudioBasedVibration.png)
+
 # Example of using DualSense effects via C++
 
 ### Trigger effects

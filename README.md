@@ -17,11 +17,14 @@
 
 ### Basic example apply LEDs to the DualSense.
 
-![Unreal Editor](Images/ExampleBasic.png)
+![Unreal Editor](Images/Basic.png)
 
 ### Haptic trigger feedback
 
-![Unreal Editor](Images/haptic1.png)
+![Unreal Editor](Images/HapticFeedbakc.png)
+
+### Battery level, it's recommended to use a timer to avoid drops in FPS.
+![Unreal Editor](Images/BatteryCharge.png)
 
 ### Audio-Based Vibration Support
 The plugin now features audio-based vibration support, enabling controller vibrations to react dynamically to in-game audio signals. This provides a more immersive and responsive user experience.

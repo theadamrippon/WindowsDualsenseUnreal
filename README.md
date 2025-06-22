@@ -9,7 +9,7 @@
 ### [Links for installation](#Install-on-FAB-official-page-plugin)
 
 # Usage via Blueprints
-### [See the example video](https://1drv.ms/v/c/6c07d40187e87b76/EYPKCwWTTuZGqLC7pVkyGgEBONfwM-6fQKzt-RzBpQsKKg?e=lUp8kh)
+### [See the example video](https://www.youtube.com/watch?v=GrCa5s6acmo)
 
 ### Basic example to check connection, reconnect or disconnect device.
 

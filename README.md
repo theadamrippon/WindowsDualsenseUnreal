@@ -1,5 +1,13 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.6
 
+
+
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/rafaelvaloto/WindowsDualsenseUnreal)
+
+
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
@@ -243,49 +251,10 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 # Manual Installation
 
-Download plugin UE_Version
-
-v1.1.9 latest
-
-- **Added:** Audio-based vibration support for the DualSense controller. The controller's feedback now responds dynamically to audio inputs, resulting in a more immersive gaming experience.
-- Updated documentation to include instructions and examples on how to utilize the new audio vibration feature.
-- Minor bug fixes and performance improvements in controller overlay rendering.
-
-
-[UE 5.2 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1aLadPApdjuvdaWVy-IBZjFxXpA6peQb0/view?usp=drive_link)
-
-[UE 5.3 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1zlt1ga0fRbjB4XJ5GwCCjE-57BYrBMNK/view?usp=drive_link)
-
-[UE 5.4 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1Dh5mMerd20HIXPZkl5eLPRYK14Sy7Rsr/view?usp=drive_link)
-
-[UE 5.5 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1BUV4TwVEJG95UNCLQzEzHydE-XzzrJBm/view?usp=drive_link)
-
-[UE 5.6 download plugin WindowsDualsense1.9.zip](https://drive.google.com/file/d/1phZo6ILEcB087e3iZ6d9M-MKcDFWXs6J/view?usp=drive_link)
-
-Version: v1.1.8
-
-### Added
-- DualSense Edge controller support
-- Custom button mapping functionality
-- Additional back button inputs (FL/FR)
-### Fix:
-- Update L2 and R2 trigger mappings for DualSense controller
-- Modify analog trigger mapping configuration for L2 and R2 buttons
-- Improve trigger response handling for better input precision
-
-[UE 5.2 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1lf6zwXbFck4pAwSUkFCwJEngOm_y7w8k/view?usp=drive_link)
-
-[UE 5.3 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1MFfnugTEBcFiybDA_7IOX-CqWRd9X9Z6/view?usp=drive_link)
-
-[UE 5.4 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1D7_PmMnwYa2VrPeFe3VxQlEJTwO3zvaW/view?usp=drive_link)
-
-[UE 5.5 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1WLW5um1OHsFC6v0MPXLrJ_1IkWcFSxPd/view?usp=drive_link)
-
-[UE 5.6 download plugin WindowsDualsense1.8.zip](https://drive.google.com/file/d/1WWnTow4je1h7NthwJJO1NQrLcCwkc8jG/view?usp=drive_link)
-
 
 ## Installing the Plugin in the Project's Directory
 
+[Download plugin UE_Version](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/releases/tag/v1.1.9)
 
 
 For your convenience, here are the resources:

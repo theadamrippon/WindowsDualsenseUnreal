@@ -1,9 +1,9 @@
 # Windows Dualsense for Unreal Engine version 5.2 ~ 5.6
 
-
-
-![GitHub commit activity](https://img.shields.io/github/commit-activity/y/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub Release](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub License](https://img.shields.io/github/license/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/y/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/rafaelvaloto/WindowsDualsenseUnreal)
 
@@ -231,7 +231,7 @@ MyGameModeBase.cpp
    }
 ```
 
-# Install on FAB official page plugin
+# Install on FAB official page plugin ![GitHub Release Download Plugin](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
 
 To install this plugin directly via FAB (Official Source), follow the steps below:
 
@@ -249,13 +249,11 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
    - Restart the project to apply the changes.
 
 
-# Manual Installation
+# Manual Installation ![GitHub Release Download Plugin](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
 
+Installing the Plugin in the Project's Directory
 
-## Installing the Plugin in the Project's Directory
-
-[Download plugin UE_Version](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/releases/tag/v1.1.9)
-
+[GitHub Release Download Plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/releases/tag/v1.1.9)
 
 For your convenience, here are the resources:
 

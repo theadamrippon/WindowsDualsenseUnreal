@@ -3,9 +3,8 @@
 ![GitHub Release](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub License](https://img.shields.io/github/license/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
-![GitHub commit activity](https://img.shields.io/github/commit-activity/y/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
-![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr-closed/rafaelvaloto/WindowsDualsenseUnreal)
+![GitHub Issues or Pull Requests](https://img.shields.io/github/issues-pr/rafaelvaloto/WindowsDualsenseUnreal)
 
 
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**

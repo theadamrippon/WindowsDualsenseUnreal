@@ -141,11 +141,11 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 
 	if (DeviceContext->Internal.Buffer[0] == 0x31 && DeviceContext->Internal.Buffer[1] == 0x02)
 	{
-		memcpy(&InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
+		memcpy(InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
 		return true;
 	}
 
-	memcpy(&InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
+	memcpy(InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
 	return true;
 }
 

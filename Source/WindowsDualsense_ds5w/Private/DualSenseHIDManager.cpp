@@ -8,6 +8,7 @@
 #include <windows.h>
 #include <hidsdi.h>
 #include <setupapi.h>
+
 #include "Windows/HideWindowsPlatformTypes.h"
 
 DualSenseHIDManager::DualSenseHIDManager()
@@ -80,7 +81,7 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 							continue;
 						}
 
-						wcscpy_s(Context.Internal.DevicePath, 260, DetailDataBuffer->DevicePath);
+						wcscpy_s(Context.Internal.DevicePath, PathSize, DetailDataBuffer->DevicePath);
 						// UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo encontrados: %s %s"), DetailDataBuffer->DevicePath, Context.Internal.DevicePath);
 
 						Context.Internal.Connection = EHIDDeviceConnection::Usb;
@@ -127,11 +128,12 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 	HidD_FlushQueue(DeviceContext->Internal.DeviceHandle);
 
 	DWORD BytesRead = 0;
-	if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer,
-	              sizeof(DeviceContext->Internal.Buffer), &BytesRead, NULL))
+	const size_t InputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 64;
+	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 0x31 : 0x01;
+	if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, InputReportLength, &BytesRead, nullptr))
 	{
 		const DWORD Error = GetLastError();
-		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), sizeof(DeviceContext->Internal.Buffer), Error);
+		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), InputReportLength, Error);
 
 		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
 		FreeContext(DeviceContext);
@@ -141,11 +143,11 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 
 	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
 	{
-		memcpy(InputState, &DeviceContext->Internal.Buffer[2], sizeof(DeviceContext->Internal.Buffer));
+		memcpy(InputState, &DeviceContext->Internal.Buffer[2], InputReportLength);
 		return true;
 	}
 
-	memcpy(InputState, &DeviceContext->Internal.Buffer[1], sizeof(DeviceContext->Internal.Buffer));
+	memcpy(InputState, &DeviceContext->Internal.Buffer[1], InputReportLength);
 	return true;
 }
 
@@ -156,78 +158,87 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 	ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
 	ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
 	CloseHandle(Context->Internal.DeviceHandle);
+
+	Context->Internal.Buffer[547] = NULL;
 }
 
 
-void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsHIDOutputBuffer& HidOut)
+void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, const FDsHIDOutputBuffer& HidOut)
 {
-	if (!Context->Internal.Connected || Context->Internal.Connection == EHIDDeviceConnection::Unknown || Context->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+	const size_t Padding = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
+	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 0x31 : 0x02;
+	
+	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
 	{
-		FreeContext(Context);
-		return;
+		DeviceContext->Internal.Buffer[1] = 0x02;
+	}
+
+	unsigned char* Output = &DeviceContext->Internal.Buffer[Padding];
+	Output[0] = HidOut.FFeatureConfigHid.VibrationMode;
+	Output[1] = HidOut.FFeatureConfigHid.FetureMode;
+
+	Output[2] = HidOut.MotorsHid.Left;
+	Output[3] = HidOut.MotorsHid.Right;
+
+	Output[4] = HidOut.FAudioConfigHid.HeadsetVolume;
+	Output[5] = HidOut.FAudioConfigHid.SpeakerVolume;
+	Output[6] = HidOut.FAudioConfigHid.MicVolume;
+    Output[7] = HidOut.FAudioConfigHid.Mode;
+	Output[8] = HidOut.MicLed.Mode;
+	Output[9] = HidOut.FAudioConfigHid.MicStatus;
+
+	Output[36] = ((2 & 0x0F) << 4) | (HidOut.FFeatureConfigHid.SoftRumbleReduce & 0x0F);
+	Output[38] = 0x53;
+	if(HidOut.FFeatureConfigHid.SoftRumble) {
+		Output[38] |=  (1 << 2); // Output[38] - 0x57 (0101 0111)
+	} else {
+		Output[38] &= ~(1 << 2); // Output[38] - 0x57 (0101 0011)
+	}
+
+	for (size_t i = 0; i < 78; ++i)
+	{
+		UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
+		UE_LOG(LogTemp, Log, TEXT("Internal.Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Internal.Buffer[i]);
+	}
+
+	Output[41] = HidOut.LedPlayerHid.Player;
+	Output[42] = HidOut.LedPlayerHid.Brightness;
+
+	Output[43] = HidOut.LedPlayerHid.Led;
+	Output[43] |= 0x20;
+	if (HidOut.LedPlayerHid.Fading)
+	{
+		Output[43] &= ~(0x20);
 	}
 	
-	Context->Internal.Buffer[0] = 0x02;
-	if (Context->Internal.Connection == EHIDDeviceConnection::Bluetooth)
-	{
-		Context->Internal.Buffer[0] = 0x31;
-		Context->Internal.Buffer[1] = 0x02;
-	}
-	
-	unsigned char* Output = Context->Internal.Connection == EHIDDeviceConnection::Bluetooth ? &Context->Internal.Buffer[2] : &Context->Internal.Buffer[1];
-	Output[0x00] = 0xff;
-	Output[0x01] = 0xF7;
-	Output[0x30] = 0x80;
-	Output[0x31] = 0xFF;
-
-	// Rrigger R
-	unsigned char* TriggerR = &Output[0x0A];
-	TriggerR[0x0] = HidOut.RightTrigger.Mode;
-
-	// Trigger L
-	unsigned char* TriggerL = &Output[0x15];
-	TriggerL[0x0] = HidOut.LeftTrigger.Mode;
-
-	Output[0x03] = HidOut.MotorsHid.Left;
-	Output[0x02] = HidOut.MotorsHid.Right;
-	Output[0x08] = HidOut.MicLed.Mode;
-
-	Output[0x26] = 0x03;
-
-	Output[0x29] = HidOut.LedPlayerHid.Player;
-	Output[0x2A] = HidOut.LedPlayerHid.Brightness;
-	Output[0x2B] = HidOut.LedPlayerHid.Led;
-
-
-	Output[0x2C] = HidOut.ColorHid.R;
-	Output[0x2D] = HidOut.ColorHid.G;
-	Output[0x2E] = HidOut.ColorHid.B;
+	Output[44] = HidOut.ColorHid.R;
+	Output[45] = HidOut.ColorHid.G;
+	Output[46] = HidOut.ColorHid.B;
 
 	if (HidOut.ResetLedEffects) // Reset temp effects
 	{
-		Output[0x2B] = 0x00;
-		Output[0x29] = 0x01;
-		Output[0x2A] = 0x00;
-
-		Output[0x2C] = 0x00;
-		Output[0x2D] = 0x00;
-		Output[0x2E] = 0xFF;
+		Output[44] = 0x00;
+		Output[45] = 0x00;
+		Output[46] = 0x00;
 	}
 
-	// Trigger L
+	// Left Trigger
+	unsigned char* TriggerL = &Output[21];
+	TriggerL[0x0] = HidOut.LeftTrigger.Mode;
+	
 	if (HidOut.LeftTrigger.Mode == 0x01)
 	{
 		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
 		TriggerL[0x2] = HidOut.LeftTrigger.Strengths.Start;
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x02)
 	{
 		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
 		TriggerL[0x2] = HidOut.LeftTrigger.EndPosition;
 		TriggerL[0x3] = HidOut.LeftTrigger.Strengths.Start;
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x21)
 	{
 		const uint64_t LeftTriggerStrengthZones = HidOut.LeftTrigger.Strengths.StrengthZones;
@@ -237,14 +248,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
 		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
 		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
-
-		if (sizeof(LeftTriggerStrengthZones) > 4)
-		{
-			TriggerL[0x7] = ((LeftTriggerStrengthZones >> 32) & 0xff);
-			TriggerL[0x8] = ((LeftTriggerStrengthZones >> 40) & 0xff);
-		}
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x22) // Bow
 	{
 		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -252,7 +257,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerL[0x3] = ((HidOut.LeftTrigger.Strengths.StrengthZones >> 0) & 0xff);
 		TriggerL[0x4] = ((HidOut.LeftTrigger.Strengths.StrengthZones >> 8) & 0xff);
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x23) // Gallopping
 	{
 		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -260,20 +265,14 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerL[0x3] = ((HidOut.LeftTrigger.Strengths.TimeAndRatio >> 0) & 0xff);
 		TriggerL[0x4] = HidOut.LeftTrigger.Frequency;
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x25) // Weapon
 	{
 		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
 		TriggerL[0x2] = HidOut.LeftTrigger.EndPosition;
 		TriggerL[0x3] = HidOut.LeftTrigger.Strengths.Start;
-		TriggerL[0x4] = 0x00;
-		TriggerL[0x5] = 0x00;
-		TriggerL[0x6] = 0x00;
-		TriggerL[0x7] = 0x00;
-		TriggerL[0x8] = 0x00;
-		TriggerL[0x9] = 0x00;
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x26)
 	{
 		const uint64_t LeftTriggerStrengthZones = HidOut.LeftTrigger.Strengths.StrengthZones;
@@ -283,15 +282,9 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
 		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
 		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
-
-		if (sizeof(LeftTriggerStrengthZones) > 4)
-		{
-			TriggerL[0x7] = ((LeftTriggerStrengthZones >> 32) & 0xff);
-			TriggerL[0x8] = ((LeftTriggerStrengthZones >> 40) & 0xff);
-		}
 		TriggerL[0x9] = HidOut.LeftTrigger.Frequency;
 	}
-
+	
 	if (HidOut.LeftTrigger.Mode == 0x27) // Machine
 	{
 		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -301,21 +294,23 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerL[0x5] = HidOut.LeftTrigger.Strengths.Period;
 	}
 
-
-	// Trigger R
+	// Right Trigger
+	unsigned char* TriggerR = &Output[10];
+	TriggerR[0x0] = HidOut.RightTrigger.Mode;
+	
 	if (HidOut.RightTrigger.Mode == 0x01)
 	{
 		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
 		TriggerR[0x2] = HidOut.RightTrigger.Strengths.Start;
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x02)
 	{
 		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
 		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
 		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x21)
 	{
 		const uint64_t RightTriggerStrengthZones = HidOut.RightTrigger.Strengths.StrengthZones;
@@ -326,7 +321,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
 		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x22) // Bow
 	{
 		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -334,7 +329,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerR[0x3] = ((HidOut.RightTrigger.Strengths.StrengthZones >> 0) & 0xff);
 		TriggerR[0x4] = ((HidOut.RightTrigger.Strengths.StrengthZones >> 8) & 0xff);
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x23) // Gallopping
 	{
 		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -342,32 +337,26 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerR[0x3] = ((HidOut.RightTrigger.Strengths.TimeAndRatio >> 0) & 0xff);
 		TriggerR[0x4] = HidOut.RightTrigger.Frequency;
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x25) // Weapon
 	{
 		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
 		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
 		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x26)
 	{
 		const uint64_t RightTriggerStrengthZones = HidOut.RightTrigger.Strengths.StrengthZones;
-
 		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
 		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
 		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xff);
 		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xff);
 		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
 		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
-		if (sizeof(RightTriggerStrengthZones) > 4)
-		{
-			TriggerR[0x7] = ((RightTriggerStrengthZones >> 32) & 0xff);
-			TriggerR[0x8] = ((RightTriggerStrengthZones >> 40) & 0xff);
-		}
 		TriggerR[0x9] = HidOut.RightTrigger.Frequency;
 	}
-
+	
 	if (HidOut.RightTrigger.Mode == 0x27) // Machine
 	{
 		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
@@ -377,58 +366,58 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* Context, const FDsH
 		TriggerR[0x5] = HidOut.RightTrigger.Strengths.Period;
 	}
 	
-	if (HidOut.LeftTrigger.Mode == 0x05)
+	if (HidOut.LeftTrigger.Mode == 0x0)
 	{
-		TriggerL[0x1] = 0x00;
-		TriggerL[0x2] = 0x00;
-		TriggerL[0x3] = 0x00;
-		TriggerL[0x4] = 0x00;
-		TriggerL[0x5] = 0x00;
-		TriggerL[0x6] = 0x00;
-		TriggerL[0x7] = 0x00;
-		TriggerL[0x8] = 0x00;
-		TriggerL[0x9] = 0x00;
+		TriggerL[0x1] = 0;
+		TriggerL[0x2] = 0;
+		TriggerL[0x3] = 0;
+		TriggerL[0x4] = 0;
+		TriggerL[0x5] = 0;
+		TriggerL[0x6] = 0;
+		TriggerL[0x9] = 0;
+	}
+	
+	if (HidOut.RightTrigger.Mode == 0x0) // Reset temp effects trigger
+	{
+		TriggerR[0x1] = 0;
+		TriggerR[0x2] = 0;
+		TriggerR[0x3] = 0;
+		TriggerR[0x4] = 0;
+		TriggerR[0x5] = 0;
+		TriggerR[0x6] = 0;
+		TriggerR[0x9] = 0;
+	}
+	
+	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
+	{
+		const UINT32 CrcChecksum = Compute(Output, 74);
+		DeviceContext->Internal.Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+		DeviceContext->Internal.Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+		DeviceContext->Internal.Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+		DeviceContext->Internal.Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x05) // Reset temp effects trigger
-	{
-		TriggerR[0x1] = 0x00;
-		TriggerR[0x2] = 0x00;
-		TriggerR[0x3] = 0x00;
-		TriggerR[0x4] = 0x00;
-		TriggerR[0x5] = 0x00;
-		TriggerR[0x6] = 0x00;
-		TriggerR[0x7] = 0x00;
-		TriggerR[0x8] = 0x00;
-		TriggerR[0x9] = 0x00;
-	}
-
-	/**
-	 *
-	 * Copyright (c) 2020 Ludwig Füchsl
-	 * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
-	 */
-	const UINT32 CrcChecksum = Compute(Context->Internal.Buffer, 74);
-	Context->Internal.Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
-	Context->Internal.Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
-	Context->Internal.Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
-	Context->Internal.Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+	// for (size_t i = 0; i < 78; ++i)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
+	// 	UE_LOG(LogTemp, Log, TEXT("Internal.Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Internal.Buffer[i]);
+	// }
 
 	DWORD BytesWritten = 0;
-	if (!WriteFile(Context->Internal.DeviceHandle, Context->Internal.Buffer, sizeof(Context->Internal.Buffer),
-	               &BytesWritten, nullptr))
+	size_t OutputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 48;
+	if (!WriteFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, OutputReportLength,  &BytesWritten, nullptr))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. Error Code: %d"), GetLastError());
-		FreeContext(Context);
+		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"),
+		       OutputReportLength, GetLastError());
+		FreeContext(DeviceContext);
 	}
 }
 
-
-/**
- *
- * Copyright (c) 2020 Ludwig Füchsl
- * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
- */
+// /**
+//  *
+//  * Copyright (c) 2020 Ludwig Füchsl
+//  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
+//  */
 const UINT32 DualSenseHIDManager::HashTable[256] = {
 	0xd202ef8d, 0xa505df1b, 0x3c0c8ea1, 0x4b0bbe37, 0xd56f2b94, 0xa2681b02, 0x3b614ab8, 0x4c667a2e,
 	0xdcd967bf, 0xabde5729, 0x32d70693, 0x45d03605, 0xdbb4a3a6, 0xacb39330, 0x35bac28a, 0x42bdf21c,
@@ -464,22 +453,15 @@ const UINT32 DualSenseHIDManager::HashTable[256] = {
 	0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xff000000
 };
 
-/**
- *
- * Copyright (c) 2020 Ludwig Füchsl
- * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
- */
+// /**
+//  *
+//  * Copyright (c) 2020 Ludwig Füchsl
+//  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
+//  */
 const UINT32 DualSenseHIDManager::CRCSeed = 0xeada2d49;
-
-/**
- *
- * Copyright (c) 2020 Ludwig Füchsl
- * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
- */
 UINT32 DualSenseHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
 {
 	UINT32 Result = CRCSeed;
-
 	for (size_t i = 0; i < Len; i++)
 	{
 		Result = HashTable[static_cast<unsigned char>(Result) ^ static_cast<unsigned char>(Buffer[i])] ^ (Result >> 8);

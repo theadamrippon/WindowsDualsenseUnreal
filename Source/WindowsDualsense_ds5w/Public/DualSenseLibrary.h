@@ -13,6 +13,9 @@
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 #include "DualSenseLibrary.generated.h"
 
+enum class EDualSenseAudioFeatureReport : uint8;
+enum class EDualSenseDeviceFeatureReport : uint8;
+
 struct FTouchPoint1
 {
 	unsigned char X;
@@ -61,8 +64,8 @@ public:
 
 	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
 
-	bool Reconnect();
-	bool IsConnected();
+	bool Reconnect() const;
+	bool IsConnected() const;
 
 	// Input
 	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
@@ -89,38 +92,52 @@ public:
 	void SetLedMicEffects(int32 LedMic);
 
 	// Status
-	float GetLevelBattery();
+	float GetLevelBattery() const;
 
 	// Colors, vibration and triggers config
 	void UpdateColorOutput(FColor Color);
 	void SetVibration(const FForceFeedbackValues& Vibration);
-	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration);
+	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration, float Threshold, float ExponentCurve, float BaseMultiplier);
 	void SetTriggers(const FInputDeviceProperty* Property);
 
+	void SetHasPhoneConnected(bool bHasConnected);
+	void SetLevelBattery(float Level, bool FullyCharged, bool Chargin);
+	void SetLeftTriggerFeedback(float L2Feedback);
+	void SetRigthTriggerFeedback(float R2Feedback);
+	
 	void SetAcceleration(bool bIsAccelerometer);
 	void SetGyroscope(bool bIsGyroscope);
 	void SetTouch1(bool bIsTouch);
 	void SetTouch2(bool bIsTouch);
-
-	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
-
+	void RegisterSettings(
+		EDualSenseAudioFeatureReport MicStatus,
+		EDualSenseAudioFeatureReport AudioHeadset,
+		EDualSenseAudioFeatureReport AudioSpeaker,
+		EDualSenseDeviceFeatureReport VibrationMode,
+		int32 MicVolume,
+		int32 AudioVolume,
+		int32 SoftRumbleReduce,
+		bool SoftRumble
+	);
+	
 	int32 ControllerID;
 
 	TMap<const FName, bool> ButtonStates;
 private:
+	bool EnableTouch;
+	bool EnableAccelerometerAndGyroscope;
+
+	// properties device
+	float LevelBattery;
+	float LeftTriggerFeedback;
+	float RigthTriggerFeedback;
+	bool HasPhoneConnected;
+	
 	FHIDDeviceContext HIDDeviceContexts;
 	FDsHIDOutputBuffer HidOutput;
-
-	bool EnableTouch1;
-	bool EnableTouch2;
-	bool EnableGyroscope;
-	bool EnableAccelerometer;
-
-	bool Connection();
-	void SendOut();
 	
-	unsigned char CalculateLeftRumble(const FForceFeedbackValues& Values);
-	unsigned char CalculateRightRumble(const FForceFeedbackValues& Values);
+	void SendOut();
+	void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
 	
 	int ConvertTo255(float Value);
 	unsigned char ConvertTo255(unsigned char Value, unsigned char MaxInput);

@@ -10,6 +10,26 @@
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 
 
+void UDualSenseProxy::DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings)
+{
+	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
+	if (!DualSenseInstance)
+	{
+		return;
+	}
+	
+	DualSenseInstance->RegisterSettings(
+		Settings.MicStatus,
+		Settings.AudioHeadset,
+		Settings.AudioSpeaker,
+		Settings.VibrationMode,
+		Settings.MicVolume,
+		Settings.AudioVolume,
+		Settings.SoftRumbleReduce,
+		Settings.SoftRumble
+	);
+}
+
 bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
@@ -34,11 +54,14 @@ bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 
 void UDualSenseProxy::SetVibrationFromAudio(
 	const int32 ControllerId,
-	float AverageEnvelopeValue,
-	float MaxEnvelopeValue,
-	int32 NumWaveInstances,
-	float EnvelopeToVibrationMultiplier = 1.2f,
-	float PeakToVibrationMultiplier = 0.8f
+	const float AverageEnvelopeValue,
+	const float MaxEnvelopeValue,
+	const int32 NumWaveInstances,
+	const float EnvelopeToVibrationMultiplier,
+	const float PeakToVibrationMultiplier,
+	const float Threshold,
+	const float ExponentCurve,
+	const float BaseMultiplier
 )
 {
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
@@ -47,14 +70,15 @@ void UDualSenseProxy::SetVibrationFromAudio(
 		return;
 	}
 
-	float InstancesFactor = FMath::Clamp(static_cast<float>(NumWaveInstances), 1.0f, 4.0f);
-	float VibrationLeft = FMath::Clamp(AverageEnvelopeValue * EnvelopeToVibrationMultiplier * InstancesFactor, 0.0f, 1.0f);
-	float VibrationRight = FMath::Clamp(MaxEnvelopeValue * PeakToVibrationMultiplier * InstancesFactor, 0.0f, 1.0f);
+	const float VibrationLeft = FMath::Clamp(AverageEnvelopeValue * EnvelopeToVibrationMultiplier * NumWaveInstances, 0.0f, 1.0f);
+	const float VibrationRight = FMath::Clamp(MaxEnvelopeValue * PeakToVibrationMultiplier * NumWaveInstances, 0.0f, 1.0f);
 
+	UE_LOG(LogTemp, Warning, TEXT("Vibrando com audio. %f, %f"), VibrationLeft, VibrationRight);
+	
 	FForceFeedbackValues FeedbackValues;
 	FeedbackValues.LeftLarge = VibrationLeft;
 	FeedbackValues.RightLarge = VibrationRight;
-	DualSenseInstance->SetVibrationAudioBased(FeedbackValues);
+	DualSenseInstance->SetVibrationAudioBased(FeedbackValues, Threshold, ExponentCurve, BaseMultiplier);
 }
 
 bool UDualSenseProxy::DeviceDisconnect(int32 ControllerId)
@@ -195,8 +219,8 @@ void UDualSenseProxy::EffectMachine(int32 ControllerId, int32 StartPosition, int
 {
 	if (!FValidationUtils::ValidateMaxPosition(StartPosition)) StartPosition = 0;
 	if (!FValidationUtils::ValidateMaxPosition(EndPosition)) EndPosition = 8;
-	if (!FValidationUtils::ValidateMaxPosition(FirstFoot)) FirstFoot = 0;
-	if (!FValidationUtils::ValidateMaxPosition(LasFoot)) LasFoot = 8;
+	if (!FValidationUtils::ValidateMaxPosition(FirstFoot)) FirstFoot = 1;
+	if (!FValidationUtils::ValidateMaxPosition(LasFoot)) LasFoot = 7;
 
 	UDualSenseLibrary* DualSenseInstance = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)

@@ -36,6 +36,57 @@ enum class ELedBrightnessEnum : uint8
 	High UMETA(DisplayName = "Brightness High")
 };
 
+
+UENUM(BlueprintType)
+enum class EDualSenseAudioFeatureReport : uint8
+{
+	On UMETA(DisplayName = "Audio On"),
+	Off UMETA(DisplayName = "Audio Off"),
+};
+
+UENUM(BlueprintType)
+enum class EDualSenseDeviceFeatureReport : uint8
+{
+	DefaultRumble UMETA(DisplayName = "Default Rumble"),
+	HapictSoftRumble UMETA(DisplayName = "Hapict Soft Rumble")
+};
+
+
+USTRUCT(BlueprintType)
+struct FDualSenseFeatureReport
+{
+	GENERATED_BODY();
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	EDualSenseAudioFeatureReport MicStatus;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	EDualSenseAudioFeatureReport AudioHeadset;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	EDualSenseAudioFeatureReport AudioSpeaker;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	EDualSenseDeviceFeatureReport VibrationMode;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	int32 MicVolume;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	bool SoftRumble;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	int32 AudioVolume;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense")
+	int32 SoftRumbleReduce;
+
+	FDualSenseFeatureReport()
+		: MicStatus(EDualSenseAudioFeatureReport::Off)
+		, AudioHeadset(EDualSenseAudioFeatureReport::Off)
+		, AudioSpeaker(EDualSenseAudioFeatureReport::On)
+		, VibrationMode(EDualSenseDeviceFeatureReport::HapictSoftRumble)
+		, MicVolume(0)
+		, SoftRumble(true)
+		, AudioVolume(100)
+		, SoftRumbleReduce(0)
+	{}
+};
+
 /**
  * 
  */
@@ -43,8 +94,10 @@ UCLASS(Blueprintable, BlueprintType)
 class WINDOWSDUALSENSE_DS5W_API UDualSenseProxy : public UObject
 {
 	GENERATED_BODY()
-
 public:
+	UFUNCTION(BlueprintCallable, Category = "DualSense Settings")
+	static void DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings);
+	
 	UFUNCTION(BlueprintCallable, Category = "DualSense")
 	static bool DeviceIsConnected(int32 ControllerId);
 
@@ -68,11 +121,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Audio Vibration")
 	static void SetVibrationFromAudio(
 		const int32 ControllerId,
-		float AverageEnvelopeValue,
-		float MaxEnvelopeValue,
-		int32 NumWaveInstances,
-		float EnvelopeToVibrationMultiplier,
-		float PeakToVibrationMultiplier
+		const float AverageEnvelopeValue,
+		const float MaxEnvelopeValue,
+		const int32 NumWaveInstances,
+		const float EnvelopeToVibrationMultiplier = 0.5,
+		const float PeakToVibrationMultiplier = 0.8,
+		const float Threshold = 0.015f,
+		const float ExponentCurve = 2.f,
+		const float BaseMultiplier = 1.5f
 	);
 
 	// return feedback trigger
@@ -140,5 +196,6 @@ public:
 
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch Pad")
 	static void EnableTouch2(int32 ControllerId, bool bEnableTouch);
+
 	
 };

@@ -64,8 +64,6 @@ void FDualSenseInputDevice::Tick(float DeltaTime)
 
 void FDualSenseInputDevice::SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property)
 {
-	UE_LOG(LogTemp, Log, TEXT("DualSense: SetDeviceProperty Name=%s"), *Property->Name.ToString());
-	
 	if (bIsBlock)
 	{
 		return;
@@ -139,7 +137,6 @@ void FDualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId
 	{
 		if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) != EInputDeviceConnectionState::Connected)
 		{
-			UE_LOG(LogTemp, Log, TEXT("DualSense: IsLoggin=%d, UserId=%d, UserIndex=%d"), bLoggedIn, UserId, UserIndex);
 			DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 		}
 	}
@@ -158,8 +155,6 @@ void FDualSenseInputDevice::OnConnectionChange(EInputDeviceConnectionState Conne
 	{
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId, EInputDeviceConnectionState::Disconnected);
 	}
-
-	UE_LOG(LogTemp, Log, TEXT("DualSense: OnConnectionChange IsConnected=%d, DeviceId=%d"), bIsConnected, InputDeviceId.GetId());
 }
 
 void FDualSenseInputDevice::Reconnect(const FInputDeviceId& Device) const
@@ -195,9 +190,6 @@ void FDualSenseInputDevice::SetHapticFeedbackValues(const int32 ControllerId, co
 		return;
 	}
 
-	UE_LOG(LogTemp, Log, TEXT("DualSense: SetHapticFeedbackValues Hand=%f"), Values.Frequency);
-	UE_LOG(LogTemp, Log, TEXT("DualSense: SetHapticFeedbackValues Hand=%f"), Values.Amplitude);
-	
 	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DsLibrary)
 	{
@@ -217,17 +209,13 @@ bool FDualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 	return true;
 }
 
+/**
+ * Temporarily disabling FDualSenseInputDevice::SetChannelValues function
+ * as it is causing conflicts with the audio output on the DualSense speaker.
+ * This will need further investigation to resolve the issue properly.
+ */
 void FDualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& values)
 {
-	if (bIsBlock)
-	{
-		return;
-	}
-	
-	UDualSenseLibrary* DsLibrary = UFDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DsLibrary)
-	{
-		return;
-	}
-	DsLibrary->SetVibration(values);
+	// UE_LOG(LogTemp, Log, TEXT("DualSense: SetChannelValues is disabled"));
+	// UE_LOG(LogTemp, Log, TEXT("DualSense: %f, %f"), values.RightLarge, values.LeftLarge);
 }

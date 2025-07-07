@@ -254,7 +254,7 @@ To install this plugin directly via FAB (Official Source), follow the steps belo
 
 Installing the Plugin in the Project's Directory
 
-[GitHub Release Download Plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/releases/tag/v1.1.9)
+[GitHub Release Download Plugin](https://github.com/rafaelvaloto/WindowsDualsenseUnreal/releases)
 
 For your convenience, here are the resources:
 

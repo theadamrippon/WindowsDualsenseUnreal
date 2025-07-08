@@ -4,6 +4,8 @@
 
 #pragma once
 
+#include <algorithm>
+
 #include "CoreMinimal.h"
 #include "DualSenseHIDManager.h"
 #include "UObject/Object.h"
@@ -46,6 +48,11 @@ struct FGyro
 	unsigned char Z;
 };
 
+
+struct FDualSenseLibrarySettings
+{
+};
+
 /**
  * 
  */
@@ -53,6 +60,7 @@ UCLASS()
 class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject
 {
 	GENERATED_BODY()
+
 public:
 	virtual ~UDualSenseLibrary() override
 	{
@@ -68,47 +76,56 @@ public:
 	bool IsConnected() const;
 
 	// Input
-	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
-	virtual void CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId, const FName ButtonName, const bool IsButtonPressed);
-	
+	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
+	                         const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
+	virtual void CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
+	                              const FPlatformUserId UserId, const FInputDeviceId InputDeviceId,
+	                              const FName ButtonName, const bool IsButtonPressed);
+
 	// Haptic Feedback and Effects
 	virtual void SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values);
-	virtual int32 GetTrirggersFeedback(const EControllerHand& HandTrigger);
-	virtual void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
+	virtual void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce,
+	                                               int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
 
 	// Effects
-	void NoResitance(const EControllerHand& Hand);
-	void ContinuousResitance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
-	void SectionResitance(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
+	void ContinuousResistance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
+	void SectionResistance(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
 	void Feedback(int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand);
 	void SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
-	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce, const EControllerHand& Hand);
-	void SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd, float Frequency, float Period, const EControllerHand& Hand);
-	void SetGallopingEffects(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency, const EControllerHand& Hand);
-	void StopEffect(const EControllerHand& Hand);
-	void StopAllEffects();
-	void StopAll();
+	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,
+	                   const EControllerHand& Hand);
+	void SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd,
+	                       float Frequency, float Period, const EControllerHand& Hand);
+	void SetGallopingEffects(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency,
+	                         const EControllerHand& Hand);
 	void SetLedPlayerEffects(int32 NumberLeds, int32 BrightnessValue);
 	void SetLedMicEffects(int32 LedMic);
 
+	// Reset Effects
+	void NoResistance(const EControllerHand& Hand);
+	void StopEffect(const EControllerHand& Hand);
+	void StopAllEffects();
+	void StopAll();
+
 	// Status
 	float GetLevelBattery() const;
+	virtual int32 GetTrirggersFeedback(const EControllerHand& HandTrigger);
 
 	// Colors, vibration and triggers config
 	void UpdateColorOutput(FColor Color);
 	void SetVibration(const FForceFeedbackValues& Vibration);
-	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration, float Threshold, float ExponentCurve, float BaseMultiplier);
+	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration, float Threshold, float ExponentCurve,
+	                            float BaseMultiplier);
 	void SetTriggers(const FInputDeviceProperty* Property);
 
 	void SetHasPhoneConnected(bool bHasConnected);
-	void SetLevelBattery(float Level, bool FullyCharged, bool Chargin);
+	void SetLevelBattery(float Level, bool FullyCharged, bool Charging);
 	void SetLeftTriggerFeedback(float L2Feedback);
-	void SetRigthTriggerFeedback(float R2Feedback);
-	
+	void SetRightTriggerFeedback(float R2Feedback);
+
 	void SetAcceleration(bool bIsAccelerometer);
 	void SetGyroscope(bool bIsGyroscope);
-	void SetTouch1(bool bIsTouch);
-	void SetTouch2(bool bIsTouch);
+	void SetTouch(bool bIsTouch);
 	void RegisterSettings(
 		EDualSenseAudioFeatureReport MicStatus,
 		EDualSenseAudioFeatureReport AudioHeadset,
@@ -119,26 +136,54 @@ public:
 		int32 SoftRumbleReduce,
 		bool SoftRumble
 	);
-	
+
 	int32 ControllerID;
 
 	TMap<const FName, bool> ButtonStates;
+
+protected:
+	void SendOut();
+
 private:
 	bool EnableTouch;
+	bool HasPhoneConnected;
 	bool EnableAccelerometerAndGyroscope;
 
 	// properties device
 	float LevelBattery;
 	float LeftTriggerFeedback;
-	float RigthTriggerFeedback;
-	bool HasPhoneConnected;
-	
+	float RightTriggerFeedback;
+
+	FHIDOutput HidOutput;
 	FHIDDeviceContext HIDDeviceContexts;
-	FDsHIDOutputBuffer HidOutput;
-	
-	void SendOut();
-	void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize);
-	
-	int ConvertTo255(float Value);
-	unsigned char ConvertTo255(unsigned char Value, unsigned char MaxInput);
+
+	// Helpers
+	static int To255(const float Value)
+	{
+		constexpr float Min = 0;
+		constexpr float Max = 1.0;
+		const float NormalizedPosition = (Value - Min) / (Max - Min);
+		const int Value255 = static_cast<int>(NormalizedPosition * 255);
+		return std::clamp(Value255, 0, 255);
+	}
+
+	static unsigned char To255(const unsigned char Value, const unsigned char MaxInput)
+	{
+		if (Value <= 0) return 0;
+		if (Value >= MaxInput) return 255;
+
+		return static_cast<unsigned char>((Value * 255) / MaxInput);
+	}
+
+	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize)
+	{
+		// FString HexString;
+		// for (int i = 0; i < BufferSize; i++)
+		// {
+		// 	// Adiciona o valor hexadecimal de cada byte ao HexString
+		// 	HexString += FString::Printf(TEXT("%02X "), Buffer[i]);
+		// }
+		//
+		// UE_LOG(LogTemp, Log, TEXT("Buffer as Hex String: %s"), *HexString);
+	}
 };

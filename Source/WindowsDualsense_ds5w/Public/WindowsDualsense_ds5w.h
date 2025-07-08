@@ -5,10 +5,9 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FDualSenseInputDevice.h"
+#include "DualSenseInputDevice.h"
 #include "IInputDeviceModule.h"
 #include "InputCoreTypes.h"
-
 
 
 class FWindowsDualsense_ds5wModule : public IInputDeviceModule
@@ -16,9 +15,10 @@ class FWindowsDualsense_ds5wModule : public IInputDeviceModule
 public:
 	virtual void StartupModule() override;
 	virtual void ShutdownModule() override;
-	virtual TSharedPtr<IInputDevice> CreateInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
-	
+	virtual TSharedPtr<IInputDevice> CreateInputDevice(
+		const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler) override;
+
 private:
-	TSharedPtr<FDualSenseInputDevice> DeviceInstance;
+	TSharedPtr<DualSenseInputDevice> DeviceInstance;
 	static void RegisterCustomKeys();
 };

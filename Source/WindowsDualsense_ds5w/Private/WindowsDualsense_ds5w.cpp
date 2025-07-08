@@ -7,8 +7,8 @@
 
 #include "InputCoreTypes.h"
 #include "Misc/Paths.h"
-#include "FDualSenseInputDevice.h"
-#include "FDualSenseLibraryManager.h"
+#include "DualSenseInputDevice.h"
+#include "DualSenseLibraryManager.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include <stdio.h>
 #define LOCTEXT_NAMESPACE "FWindowsDualsense_ds5wModule"
@@ -27,9 +27,9 @@ void FWindowsDualsense_ds5wModule::ShutdownModule()
 TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	const TSharedRef<FGenericApplicationMessageHandler>& InCustomMessageHandler)
 {
-	DeviceInstance = MakeShareable(new FDualSenseInputDevice(InCustomMessageHandler, true));
+	DeviceInstance = MakeShareable(new DualSenseInputDevice(InCustomMessageHandler, true));
 
-	const UFDualSenseLibraryManager* DualSenseLibraryManager = UFDualSenseLibraryManager::Get();
+	const UDualSenseLibraryManager* DualSenseLibraryManager = UDualSenseLibraryManager::Get();
 	if (!DualSenseLibraryManager)
 	{
 		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));
@@ -40,11 +40,11 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 	for (int32 i = 0; i < DualSenseLibraryManager->GetAllocatedDevices(); i++)
 	{
 		if (i < 1) continue;
-		
+
 		DeviceInstance->SetController(FInputDeviceId::CreateFromInternalId(i));
 	}
 
-	DeviceInstance->SetOnIsblock(false);
+	DeviceInstance->SetLazyLoading(false);
 	return DeviceInstance;
 }
 
@@ -73,7 +73,7 @@ void FWindowsDualsense_ds5wModule::RegisterCustomKeys()
 		FText::FromString("PlayStation Right Function Button"),
 		FKeyDetails::GamepadKey
 	));
-	
+
 	EKeys::AddKey(FKeyDetails(
 		PS_PaddleL,
 		FText::FromString("PlayStation Left Paddle"),

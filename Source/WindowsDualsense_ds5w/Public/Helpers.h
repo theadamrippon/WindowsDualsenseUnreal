@@ -9,11 +9,11 @@
 /**
  * 
  */
-class WINDOWSDUALSENSE_DS5W_API FValidationUtils
+class WINDOWSDUALSENSE_DS5W_API Helpers
 {
 public:
-	FValidationUtils();
-	~FValidationUtils();
+	Helpers();
+	~Helpers();
 
 	static bool ValidateMaxForce(int32 Force)
 	{

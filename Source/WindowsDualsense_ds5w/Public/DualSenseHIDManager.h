@@ -57,35 +57,35 @@ typedef struct FHIDDeviceContext
 		void* DeviceHandle;
 		wchar_t DevicePath[260];
 		unsigned char Buffer[547];
-		size_t LastOutputLength;
 
 		bool Connected;
 		EHIDDeviceConnection Connection;
 	} Internal;
-
 } FHIDDeviceContext;
 
-struct FDsHIDOutputBuffer
+struct FHIDOutput
 {
 	typedef struct FAudioConfigHid
 	{
+		unsigned char Mode = 0x05;
 		unsigned char HeadsetVolume = 0x7C;
 		unsigned char SpeakerVolume = 0x7C;
 		unsigned char MicVolume = 0x7C;
 		unsigned char MicStatus = 0x00;
-		unsigned char Mode = 0x05;
 	} FAudioConfig;
-	FAudioConfig FAudioConfigHid;
+
+	FAudioConfig AudioConfigHid;
 
 	typedef struct FFeatureConfigHid
 	{
 		unsigned char VibrationMode = 0xFC;
-		unsigned char FetureMode = 0x57;
+		unsigned char FeatureMode = 0x57;
 		int8 SoftRumbleReduce = 0x0;
 		bool SoftRumble = true;
 	} FFeatureConfig;
-	FFeatureConfig FFeatureConfigHid;
-	
+
+	FFeatureConfig FeatureConfigHid;
+
 	typedef struct FLedPlayer
 	{
 		unsigned char Brightness = 0x00;
@@ -93,12 +93,14 @@ struct FDsHIDOutputBuffer
 		unsigned char Led = PLAYER_LED_MIDDLE;
 		bool Fading = false;
 	} FLedPlayer;
+
 	FLedPlayer LedPlayerHid;
 
 	typedef struct FMicLed
 	{
 		unsigned char Mode = 0x01;
 	} FMicLed;
+
 	FMicLed MicLed;
 
 	typedef struct FLedColor
@@ -108,6 +110,7 @@ struct FDsHIDOutputBuffer
 		unsigned char B = 0xff;
 		unsigned char A = 0xff;
 	} FLedColor;
+
 	FLedColor ColorHid;
 
 	typedef struct FMotors
@@ -115,6 +118,7 @@ struct FDsHIDOutputBuffer
 		unsigned char Left = 0;
 		unsigned char Right = 0;
 	} FMotors;
+
 	FMotors MotorsHid;
 
 	typedef struct FLeftTriggerEffects
@@ -128,7 +132,7 @@ struct FDsHIDOutputBuffer
 
 		typedef struct FStrengths
 		{
-			uint8_t  Period = 0;
+			uint8_t Period = 0;
 			uint32_t ActiveZones = 0;
 			uint32_t TimeAndRatio = 0;
 			uint64_t StrengthZones = 0;
@@ -136,9 +140,10 @@ struct FDsHIDOutputBuffer
 			unsigned char Middle = 0x00;
 			unsigned char End = 0x00;
 		} FStrengths;
+
 		FStrengths Strengths;
-		
 	} FLeftTriggerEffects;
+
 	FLeftTriggerEffects LeftTrigger;
 
 	typedef struct FRightTriggerEffects
@@ -152,7 +157,7 @@ struct FDsHIDOutputBuffer
 
 		typedef struct FStrengths
 		{
-			uint8_t  Period = 0;
+			uint8_t Period = 0;
 			uint32_t ActiveZones = 0;
 			uint32_t TimeAndRatio = 0;
 			uint64_t StrengthZones = 0;
@@ -160,11 +165,12 @@ struct FDsHIDOutputBuffer
 			unsigned char Middle = 0x00;
 			unsigned char End = 0x00;
 		} FStrengths;
+
 		FStrengths Strengths;
-		
 	} FRightTriggerEffects;
+
 	FRightTriggerEffects RightTrigger;
-	
+
 	bool ResetEffects = false;
 	bool ResetLedEffects = false;
 	bool ResetEffectsLeftTrigger = false;
@@ -179,14 +185,15 @@ class WINDOWSDUALSENSE_DS5W_API DualSenseHIDManager
 {
 	const static UINT32 HashTable[256];
 	const static UINT32 CRCSeed;
+
 public:
 	DualSenseHIDManager();
 	~DualSenseHIDManager();
-	
-	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
+
 	static void FreeContext(FHIDDeviceContext* Context);
-	static void OutputBuffering(FHIDDeviceContext* DeviceContext, const FDsHIDOutputBuffer& HidOut);
+	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
+	static void OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut);
 	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState);
-	
+
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);
 };

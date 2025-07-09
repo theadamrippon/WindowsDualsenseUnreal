@@ -20,6 +20,27 @@
 # Usage via Blueprints
 ### [See the example video](https://www.youtube.com/watch?v=GrCa5s6acmo)
 
+### Controller Vibration, Audio, and Motor Force Reduction Settings
+
+### Vibration Modes
+You can easily customize the vibration mode of the DualSense controller to suit your gameplay needs. This includes switching between different rumble patterns and intensities or applying advanced trigger haptics for more immersive feedback. Both C++ and Blueprint interfaces are available for fine-grained control.
+
+### Audio Configuration
+The plugin supports audio-based vibration, allowing controller rumble to be driven by real-time audio signals from the game. This feature creates a more dynamic and immersive haptic experience, as the controller responds to in-game audio effects.
+
+Use vibration mode `EDualSenseDeviceFeatureReport::HapticSoftRumble` when connected via USB for vibration and automatic synchronization of rumble with in-game audio, with no additional setup required.
+
+If you are using Bluetooth, use `EDualSenseDeviceFeatureReport::DefaultRumble`. In this case, you will need to configure audio-based vibration manually as shown in the [Audio-Based Vibration Support](#audio-based-vibration-support) section.
+
+
+### Soft Rumble (Motor Force Reduction)
+To provide a softer, less intense vibration, you can reduce the force of the vibration motors. This setting is useful for creating subtle feedback or making long play sessions more comfortable.
+
+**Example settings in Blueprints:**
+Open the settings menu in your Blueprint graph to adjust vibration mode, toggle audio-based rumble, and configure the Soft Rumble Reduce option, as shown in the image below:
+
+![Unreal Editor](Images/Settings.png)
+
 ### Basic example to check connection, reconnect or disconnect device.
 
 ![Unreal Editor](Images/ReconnectAndDisconnectDevice.png)

@@ -162,7 +162,6 @@ void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 	Context->Internal.Connection = EHIDDeviceConnection::Unknown;
 }
 
-
 void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut)
 {
 	const size_t Padding = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
@@ -177,31 +176,41 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 
 	unsigned char* Output = &DeviceContext->Internal.Buffer[Padding];
 	Output[0] = Padding == 2 ? 0xFF : HidOut.FeatureConfigHid.VibrationMode;
-	Output[1] = Padding == 2 ? 0x7F : HidOut.FeatureConfigHid.FeatureMode;
+	Output[1] = HidOut.FeatureConfigHid.FeatureMode;
+	if (Padding == 2)
+	{
+		Output[1] |= 0xF0;
+	}
 
 	Output[2] = HidOut.MotorsHid.Left;
 	Output[3] = HidOut.MotorsHid.Right;
-
 	if (Padding == 1)
 	{
 		Output[4] = HidOut.AudioConfigHid.HeadsetVolume;
 		Output[5] = HidOut.AudioConfigHid.SpeakerVolume;
 		Output[6] = HidOut.AudioConfigHid.MicVolume;
-		Output[7] = HidOut.AudioConfigHid.Mode;	
+		Output[7] = HidOut.AudioConfigHid.Mode;
+		Output[9] = HidOut.AudioConfigHid.MicStatus;
 	}
-	
 	Output[8] = HidOut.MicLed.Mode;
-	Output[9] = HidOut.AudioConfigHid.MicStatus;
 
-	Output[36] = ((2 & 0x0F) << 4) | (HidOut.FeatureConfigHid.SoftRumbleReduce & 0x0F);
-	Output[38] = 0x53;
-	if (HidOut.FeatureConfigHid.SoftRumble)
+	if (Padding == 2) // Bluetooth
 	{
-		Output[38] |= (1 << 2); // Output[38] - 0x57
+		Output[36] = 0x03;
+		Output[38] = 0x2;
 	}
 	else
 	{
-		Output[38] &= ~(1 << 2); // Output[38] - 0x53
+		Output[36] = ((2 & 0x0F) << 4) | (HidOut.FeatureConfigHid.SoftRumbleReduce & 0x0F);
+		Output[38] = 0x53;
+		if (HidOut.FeatureConfigHid.SoftRumble)
+		{
+			Output[38] |= (1 << 2); // 0x057
+		}
+		else
+		{
+			Output[38] &= ~(0 << 2); // 0x53
+		}
 	}
 
 	Output[41] = HidOut.LedPlayerHid.Player;
@@ -285,6 +294,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
 		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
 		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
+		// TriggerL[0x7] = ((LeftTriggerStrengthZones >> 32) & 0xff);
+		// TriggerL[0x8] = ((LeftTriggerStrengthZones >> 40) & 0xff);
 		TriggerL[0x9] = HidOut.LeftTrigger.Frequency;
 	}
 
@@ -357,6 +368,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xff);
 		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
 		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
+		// TriggerR[0x7] = ((RightTriggerStrengthZones >> 32) & 0xff);
+		// TriggerR[0x8] = ((RightTriggerStrengthZones >> 40) & 0xff);
 		TriggerR[0x9] = HidOut.RightTrigger.Frequency;
 	}
 
@@ -377,6 +390,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 		TriggerL[0x4] = 0;
 		TriggerL[0x5] = 0;
 		TriggerL[0x6] = 0;
+		TriggerR[0x7] = 0;
+		TriggerR[0x8] = 0;
 		TriggerL[0x9] = 0;
 	}
 
@@ -388,6 +403,8 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 		TriggerR[0x4] = 0;
 		TriggerR[0x5] = 0;
 		TriggerR[0x6] = 0;
+		TriggerR[0x7] = 0;
+		TriggerR[0x8] = 0;
 		TriggerR[0x9] = 0;
 	}
 
@@ -407,7 +424,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 	// }
 
 	DWORD BytesWritten = 0;
-	size_t OutputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 547 : 78;
+	size_t OutputReportLength = 78;
 	if (!WriteFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, OutputReportLength,
 	               &BytesWritten, nullptr))
 	{

@@ -83,9 +83,8 @@ struct FHIDOutput
 		int8 SoftRumbleReduce = 0x0;
 		bool SoftRumble = true;
 	} FFeatureConfig;
-
 	FFeatureConfig FeatureConfigHid;
-
+	
 	typedef struct FLedPlayer
 	{
 		unsigned char Brightness = 0x00;
@@ -93,12 +92,11 @@ struct FHIDOutput
 		unsigned char Led = PLAYER_LED_MIDDLE;
 		bool Fading = false;
 	} FLedPlayer;
-
 	FLedPlayer LedPlayerHid;
 
 	typedef struct FMicLed
 	{
-		unsigned char Mode = 0x01;
+		unsigned char Mode = 0x00;
 	} FMicLed;
 
 	FMicLed MicLed;

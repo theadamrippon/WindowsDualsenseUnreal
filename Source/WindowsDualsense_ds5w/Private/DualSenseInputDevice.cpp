@@ -10,6 +10,7 @@
 #include "Windows/WindowsPlatformApplicationMisc.h"
 #include "Misc/CoreDelegates.h"
 
+
 DualSenseInputDevice::DualSenseInputDevice(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
                                            bool Lazily): MessageHandler(InMessageHandler)
 {
@@ -46,6 +47,7 @@ void DualSenseInputDevice::Tick(float DeltaTime)
 			continue;
 		}
 
+		FInputDeviceScope InputScope(this, TEXT("DualSenseInputDevice"), Device.GetId(),TEXT("DualSense"));
 		if (UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId());
 			IsValid(DsLibrary))
 		{

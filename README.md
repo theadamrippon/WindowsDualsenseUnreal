@@ -59,7 +59,7 @@ Open the settings menu in your Blueprint graph to adjust vibration mode, toggle 
 ### Audio-Based Vibration Support
 The plugin now features audio-based vibration support, enabling controller vibrations to react dynamically to in-game audio signals. This provides a more immersive and responsive user experience.
 
-![Unreal Editor](Images/AudioBasedVibration.png)
+![Unreal Editor](Images/AudioBased.png)
 
 # Example of using DualSense effects via C++
 

@@ -15,7 +15,7 @@
 
 ### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
 
-### [Links for installation](#Install-on-FAB-official-page-plugin)
+### [Links for installation](#Install-on-FAB-official-page-plugin-)
 
 # Usage via Blueprints
 ### [See the example video](https://www.youtube.com/watch?v=GrCa5s6acmo)

@@ -143,9 +143,12 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 		return nullptr;
 	}
 
-
+	if (ControllerID >= DetectedDevices.Num())
+	{
+		return nullptr;
+	}
+	
 	FHIDDeviceContext& Context = DetectedDevices[ControllerID];
-
 	if (Context.Internal.Connected)
 	{
 		UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();

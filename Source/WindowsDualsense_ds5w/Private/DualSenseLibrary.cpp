@@ -150,11 +150,12 @@ void UDualSenseLibrary::CheckButtonInput(const TSharedRef<FGenericApplicationMes
 bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
                                     const FPlatformUserId UserId, const FInputDeviceId InputDeviceId)
 {
-	unsigned char HIDInput[78];
-	if (DualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts, HIDInput))
+	if (
+			const size_t Padding = HIDDeviceContexts.Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
+			DualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts, &HIDDeviceContexts.Internal.Buffer[Padding])
+		)
 	{
-		// PrintBufferAsHex(HIDInput, 64);
-
+		const uint8_t* HIDInput = &HIDDeviceContexts.Internal.Buffer[Padding];
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));
 		const float LeftAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x01] - 127) * -1);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId,
@@ -296,7 +297,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		if (EnableTouch)
 		{
 			FTouchPoint1 Touch;
-			const UINT32 Touchpad1Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			const UINT32 Touchpad1Raw = *reinterpret_cast<const UINT32*>(&HIDInput[0x20]);
 			Touch.Y = (Touchpad1Raw & 0xFFF00000) >> 20;
 			Touch.X = (Touchpad1Raw & 0x000FFF00) >> 8;
 			Touch.Down = (Touchpad1Raw & (1 << 7)) == 0;
@@ -304,7 +305,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 			// // Evaluate touch state 2
 			FTouchPoint2 Touch2;
-			const UINT32 Touchpad2Raw = *reinterpret_cast<UINT32*>(&HIDInput[0x20]);
+			const UINT32 Touchpad2Raw = *reinterpret_cast<const UINT32*>(&HIDInput[0x20]);
 			Touch2.Y = (Touchpad2Raw & 0xFFF00000) >> 20;
 			Touch2.X = (Touchpad2Raw & 0x000FFF00) >> 8;
 			Touch2.Down = (Touchpad2Raw & (1 << 7)) == 0;

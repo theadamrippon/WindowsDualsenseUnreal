@@ -158,6 +158,14 @@ The plugin now features audio-based vibration support, enabling controller vibra
 ```
 ## Multiple players with multiple controllers
 
+### In your GameMode, add the players.
+
+![Unreal Editor](Images/MultiPlayers.png)
+
+### After that, connect the players to the controllers.
+
+![Unreal Editor](Images/PlayersConnected.png)
+
 MyGameModeBase.h
 ```
    #pragma once

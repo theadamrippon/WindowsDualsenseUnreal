@@ -93,7 +93,8 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 	TArray<FHIDDeviceContext> DetectedDevices;
 	DetectedDevices.Reset();
 
-	if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
+	UDualSenseHIDManager* HIDManager = NewObject<UDualSenseHIDManager>();
+	if (!HIDManager->FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 	{
 		UE_LOG(LogTemp, Error, TEXT("DualSense: device not found. Creating default library instance."));
 		return;
@@ -107,9 +108,12 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 	for (int32 DeviceIndex = 0; DeviceIndex < DetectedDevices.Num(); DeviceIndex++)
 	{
 		FHIDDeviceContext& Context = DetectedDevices[DeviceIndex];
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Internal.DevicePath);
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
 		if (Context.Internal.Connected)
 		{
-			UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
+			Context.Internal.DeviceHandle = UDualSenseHIDManager::CreateHandle(&Context);
+			UDualSenseLibrary* DualSense  = NewObject<UDualSenseLibrary>();
 			if (!DualSense)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), DeviceIndex);
@@ -122,6 +126,7 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 			DualSense->InitializeLibrary(Context);
 
 			LibraryInstances.Add(DeviceIndex, DualSense);
+			UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Internal.DevicePath);
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
 		}
 	}
@@ -137,7 +142,8 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 	TArray<FHIDDeviceContext> DetectedDevices;
 	DetectedDevices.Reset();
 
-	if (DualSenseHIDManager HIDManager; !HIDManager.FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
+	UDualSenseHIDManager* HIDManager = NewObject<UDualSenseHIDManager>();
+	if (!HIDManager->FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 	{
 		UE_LOG(LogTemp, Error, TEXT("DualSense: device not found. Creating default library instance."));
 		return nullptr;
@@ -151,6 +157,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 	FHIDDeviceContext& Context = DetectedDevices[ControllerID];
 	if (Context.Internal.Connected)
 	{
+		Context.Internal.DeviceHandle = UDualSenseHIDManager::CreateHandle(&Context);
 		UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
 		if (!DualSense)
 		{

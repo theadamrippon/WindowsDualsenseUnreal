@@ -5,16 +5,16 @@
 #pragma once
 
 #include "CoreMinimal.h"
-
+#include "UObject/Object.h"
+#include "ValidateHelpers.generated.h"
 /**
  * 
  */
-class WINDOWSDUALSENSE_DS5W_API Helpers
+UCLASS()
+class WINDOWSDUALSENSE_DS5W_API UValidateHelpers : public UObject
 {
+	GENERATED_BODY()
 public:
-	Helpers();
-	~Helpers();
-
 	static bool ValidateMaxForce(int32 Force)
 	{
 		return Force <= 8 && Force >= 0;

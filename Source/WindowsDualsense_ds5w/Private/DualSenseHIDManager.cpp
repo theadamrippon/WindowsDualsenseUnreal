@@ -4,6 +4,7 @@
 
 
 #include "DualSenseHIDManager.h"
+
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <windows.h>
 #include <hidsdi.h>
@@ -11,18 +12,14 @@
 
 #include "Windows/HideWindowsPlatformTypes.h"
 
-DualSenseHIDManager::DualSenseHIDManager()
+UDualSenseHIDManager::UDualSenseHIDManager()
 {
 }
 
-DualSenseHIDManager::~DualSenseHIDManager()
-{
-}
-
-bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
+bool UDualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 {
 	Devices.Empty();
-
+	
 	GUID HidGuid;
 	HidD_GetHidGuid(&HidGuid);
 
@@ -37,6 +34,8 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 	SP_DEVICE_INTERFACE_DATA DeviceInterfaceData = {};
 	DeviceInterfaceData.cbSize = sizeof(SP_DEVICE_INTERFACE_DATA);
 
+	TMap<int32, WCHAR> DevicePaths;
+	DevicePaths.Empty();
 	for (DWORD DeviceIndex = 0; SetupDiEnumDeviceInterfaces(DeviceInfoSet, nullptr, &HidGuid, DeviceIndex,
 	                                                        &DeviceInterfaceData); DeviceIndex++)
 	{
@@ -56,6 +55,7 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DetailDataBuffer, RequiredSize,
 		                                    nullptr, nullptr))
 		{
+			UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo: %s"), DetailDataBuffer->DevicePath);
 			const HANDLE TempDeviceHandle = CreateFileW(
 				DetailDataBuffer->DevicePath,
 				GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
@@ -80,8 +80,15 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 							continue;
 						}
 
-						wcscpy_s(Context.Internal.DevicePath, PathSize, DetailDataBuffer->DevicePath);
-
+						if (DevicePaths.Contains(DeviceIndex))
+						{
+							continue;
+						}
+						
+						DevicePaths.Add(DeviceIndex, *DetailDataBuffer->DevicePath);
+						wcscpy_s(Context.Internal.DevicePath, DetailDataBuffer->DevicePath);
+						
+						Context.Internal.Connected = true;
 						Context.Internal.Connection = EHIDDeviceConnection::Usb;
 						FString DevicePath(DetailDataBuffer->DevicePath);
 						if (DevicePath.Contains(TEXT("{00001124-0000-1000-8000-00805f9b34fb}")) ||
@@ -91,13 +98,15 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 							Context.Internal.Connection = EHIDDeviceConnection::Bluetooth;
 						}
 
-						Context.Internal.Connected = true;
 						Context.Internal.DeviceHandle = TempDeviceHandle;
+						CloseHandle(TempDeviceHandle);
 						Devices.Add(Context);
+						free(DetailDataBuffer);
+						continue;
 					}
 				}
 			}
-			// CloseHandle(TempDeviceHandle);
+			CloseHandle(TempDeviceHandle);
 		}
 		free(DetailDataBuffer);
 	}
@@ -106,8 +115,31 @@ bool DualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 	return Devices.Num() > 0;
 }
 
-bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState)
+HANDLE UDualSenseHIDManager::CreateHandle(FHIDDeviceContext* DeviceContext)
 {
+	const HANDLE DeviceHandle = CreateFileW(
+			DeviceContext->Internal.DevicePath,
+			GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
+		);
+
+	if (DeviceHandle == INVALID_HANDLE_VALUE)
+	{
+		FreeContext(DeviceContext);
+		UE_LOG(LogTemp, Error, TEXT("HIDManager: Failed to open device handle for the DualSense."));
+		return INVALID_HANDLE_VALUE;
+	}
+	
+	return DeviceHandle;
+}
+
+bool UDualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext)
+{
+	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+	{
+		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
+		return false;
+	}
+	
 	if (!DeviceContext->Internal.Connected)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Internal.Connected, false"));
@@ -115,20 +147,10 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 		return false;
 	}
 
-	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
-	{
-		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
-		FreeContext(DeviceContext);
-		return false;
-	}
-
 	HidD_FlushQueue(DeviceContext->Internal.DeviceHandle);
-
+	
 	DWORD BytesRead = 0;
 	const size_t InputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 64;
-	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth
-		                                    ? 0x31
-		                                    : 0x01;
 	if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, InputReportLength, &BytesRead,
 	              nullptr))
 	{
@@ -139,30 +161,20 @@ bool DualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext, 
 		FreeContext(DeviceContext);
 		return false;
 	}
-
-
-	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
-	{
-		memcpy(InputState, &DeviceContext->Internal.Buffer[2], InputReportLength);
-		return true;
-	}
-
-	memcpy(InputState, &DeviceContext->Internal.Buffer[1], InputReportLength);
 	return true;
 }
 
-void DualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
+void UDualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 {
 	ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
 	ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
 	CloseHandle(Context->Internal.DeviceHandle);
 
 	Context->Internal.Connected = false;
-	Context->Internal.Buffer[547] = NULL;
 	Context->Internal.Connection = EHIDDeviceConnection::Unknown;
 }
 
-void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut)
+void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut)
 {
 	const size_t Padding = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
 	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth
@@ -424,7 +436,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 	// }
 
 	DWORD BytesWritten = 0;
-	size_t OutputReportLength = 78;
+	size_t OutputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 74;
 	if (!WriteFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, OutputReportLength,
 	               &BytesWritten, nullptr))
 	{
@@ -439,7 +451,7 @@ void DualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, cons
 //  * Copyright (c) 2020 Ludwig Füchsl
 //  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
 //  */
-const UINT32 DualSenseHIDManager::HashTable[256] = {
+const UINT32 UDualSenseHIDManager::HashTable[256] = {
 	0xd202ef8d, 0xa505df1b, 0x3c0c8ea1, 0x4b0bbe37, 0xd56f2b94, 0xa2681b02, 0x3b614ab8, 0x4c667a2e,
 	0xdcd967bf, 0xabde5729, 0x32d70693, 0x45d03605, 0xdbb4a3a6, 0xacb39330, 0x35bac28a, 0x42bdf21c,
 	0xcfb5ffe9, 0xb8b2cf7f, 0x21bb9ec5, 0x56bcae53, 0xc8d83bf0, 0xbfdf0b66, 0x26d65adc, 0x51d16a4a,
@@ -479,9 +491,9 @@ const UINT32 DualSenseHIDManager::HashTable[256] = {
 //  * Copyright (c) 2020 Ludwig Füchsl
 //  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
 //  */
-const UINT32 DualSenseHIDManager::CRCSeed = 0xeada2d49;
+const UINT32 UDualSenseHIDManager::CRCSeed = 0xeada2d49;
 
-UINT32 DualSenseHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
+UINT32 UDualSenseHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
 {
 	UINT32 Result = CRCSeed;
 	for (size_t i = 0; i < Len; i++)

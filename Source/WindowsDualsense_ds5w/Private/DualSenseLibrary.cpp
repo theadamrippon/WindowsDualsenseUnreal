@@ -23,9 +23,10 @@ bool UDualSenseLibrary::InitializeLibrary(const FHIDDeviceContext& Context)
 	EnableTouch = false;
 	EnableAccelerometerAndGyroscope = false;
 
+	UE_LOG(LogTemp, Log, TEXT("DualSense: Connection type (0=Usb, 1=Bluetooth, 2=Unknown) = %d"), Context.Internal.Connection);
 	HIDDeviceContexts = Context;
 
-
+	StopAll();
 	return true;
 }
 
@@ -33,7 +34,8 @@ void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
 
-	DualSenseHIDManager::FreeContext(&HIDDeviceContexts);
+	CloseHandle(HIDDeviceContexts.Internal.DeviceHandle);
+	UDualSenseHIDManager::FreeContext(&HIDDeviceContexts);
 	UE_LOG(LogTemp, Log, TEXT("DualSense: Disconnected with success... ShutdownLibrary"));
 }
 
@@ -49,7 +51,7 @@ void UDualSenseLibrary::SendOut()
 		return;
 	}
 
-	DualSenseHIDManager::OutputBuffering(&HIDDeviceContexts, HidOutput);
+	UDualSenseHIDManager::OutputBuffering(&HIDDeviceContexts, HidOutput);
 }
 
 int32 UDualSenseLibrary::GetTrirggersFeedback(const EControllerHand& HandTrigger)
@@ -150,12 +152,12 @@ void UDualSenseLibrary::CheckButtonInput(const TSharedRef<FGenericApplicationMes
 bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
                                     const FPlatformUserId UserId, const FInputDeviceId InputDeviceId)
 {
+	const size_t Padding = HIDDeviceContexts.Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
 	if (
-			const size_t Padding = HIDDeviceContexts.Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
-			DualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts, &HIDDeviceContexts.Internal.Buffer[Padding])
+			UDualSenseHIDManager::GetDeviceInputState(&HIDDeviceContexts)
 		)
 	{
-		const uint8_t* HIDInput = &HIDDeviceContexts.Internal.Buffer[Padding];
+		const unsigned char* HIDInput = &HIDDeviceContexts.Internal.Buffer[Padding];
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));
 		const float LeftAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x01] - 127) * -1);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId,

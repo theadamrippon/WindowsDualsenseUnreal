@@ -4,7 +4,10 @@
 
 #pragma once
 
+#include <concrt.h>
+
 #include "CoreMinimal.h"
+#include "DualSenseHIDManager.generated.h"
 
 // Function Buttons
 #define BTN_FN1          0x10
@@ -176,22 +179,22 @@ struct FHIDOutput
 };
 
 
-/**
- * 
- */
-class WINDOWSDUALSENSE_DS5W_API DualSenseHIDManager
+UCLASS()
+class WINDOWSDUALSENSE_DS5W_API UDualSenseHIDManager : public UObject
 {
+	GENERATED_BODY()
+	
 	const static UINT32 HashTable[256];
 	const static UINT32 CRCSeed;
 
 public:
-	DualSenseHIDManager();
-	~DualSenseHIDManager();
+	UDualSenseHIDManager();
 
 	static void FreeContext(FHIDDeviceContext* Context);
 	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
+	static HANDLE CreateHandle(FHIDDeviceContext* DeviceContext);
 	static void OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut);
-	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext, unsigned char* InputState);
+	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext);
 
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);
 };

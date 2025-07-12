@@ -10,9 +10,9 @@ public class WindowsDualsense_ds5w : ModuleRules
 	public WindowsDualsense_ds5w(ReadOnlyTargetRules Target) : base(Target)
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
-
  		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "ApplicationCore", "InputCore", "InputDevice",  "AudioMixer" });
 	    PrivateDependencyModuleNames.AddRange(new string[] { "Slate", "SlateCore" });
+	    bEnableExceptions = true;
 	    
 	    if (Target.Platform == UnrealTargetPlatform.Win64)
 	    {

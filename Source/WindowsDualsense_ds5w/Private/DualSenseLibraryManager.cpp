@@ -45,7 +45,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryOrReconnect(int32 Control
 		LibraryInstances.Add(ControllerId, DSLibrary);
 	}
 
-	if (LibraryInstances[ControllerId]->Reconnect())
+	if (!LibraryInstances[ControllerId]->Reconnect())
 	{
 		return nullptr;
 	}

@@ -187,11 +187,11 @@ void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, con
 	}
 
 	unsigned char* Output = &DeviceContext->Internal.Buffer[Padding];
-	Output[0] = Padding == 2 ? 0xFF : HidOut.FeatureConfigHid.VibrationMode;
+	Output[0] = HidOut.FeatureConfigHid.VibrationMode;
 	Output[1] = HidOut.FeatureConfigHid.FeatureMode;
 	if (Padding == 2)
 	{
-		Output[1] |= 0xF0;
+		Output[1] = 0xF7;
 	}
 
 	Output[2] = HidOut.MotorsHid.Left;
@@ -206,28 +206,12 @@ void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, con
 	}
 	Output[8] = HidOut.MicLed.Mode;
 
-	if (Padding == 2) // Bluetooth
-	{
-		Output[36] = 0x03;
-		Output[38] = 0x2;
-	}
-	else
-	{
-		Output[36] = ((2 & 0x0F) << 4) | (HidOut.FeatureConfigHid.SoftRumbleReduce & 0x0F);
-		Output[38] = 0x53;
-		if (HidOut.FeatureConfigHid.SoftRumble)
-		{
-			Output[38] |= (1 << 2); // 0x057
-		}
-		else
-		{
-			Output[38] &= ~(0 << 2); // 0x53
-		}
-	}
+	Output[36] = ((2 & 0x0F) << 4) | (HidOut.FeatureConfigHid.SoftRumbleReduce & 0x0F);
+	Output[38] = 0x04;
+	// UE_LOG(LogTemp, Log, TEXT("OutputBuffering: 0x%02X, 0x%02X"), Output[36], Output[38]);
 
 	Output[41] = HidOut.LedPlayerHid.Player;
 	Output[42] = HidOut.LedPlayerHid.Brightness;
-
 	Output[43] = HidOut.LedPlayerHid.Led;
 	Output[43] |= 0x20;
 	if (HidOut.LedPlayerHid.Fading)
@@ -235,15 +219,15 @@ void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, con
 		Output[43] &= ~(0x20);
 	}
 
-	Output[44] = HidOut.ColorHid.R;
-	Output[45] = HidOut.ColorHid.G;
-	Output[46] = HidOut.ColorHid.B;
+	Output[44] = static_cast<unsigned char>(HidOut.ColorHid.R);
+	Output[45] = static_cast<unsigned char>(HidOut.ColorHid.G);
+	Output[46] = static_cast<unsigned char>(HidOut.ColorHid.B);
 
 	if (HidOut.ResetLedEffects || HidOut.ResetEffects) // Reset temp effects
 	{
 		Output[44] = 0x00;
 		Output[45] = 0x00;
-		Output[46] = 0x00;
+		Output[46] = 0xFF;
 	}
 
 	// Left Trigger

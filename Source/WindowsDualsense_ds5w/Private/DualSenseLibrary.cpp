@@ -394,6 +394,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 void UDualSenseLibrary::UpdateColorOutput(const FColor Color)
 {
+	UE_LOG(LogTemp, Warning, TEXT("UpdateColorOutput R: %d, G:%d, B:%d"), Color.R, Color.G, Color.B);
 	HidOutput.ColorHid = {Color.R, Color.G, Color.B, Color.A};
 	SendOut();
 }

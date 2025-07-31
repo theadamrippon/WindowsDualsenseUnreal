@@ -146,6 +146,7 @@ void DualSenseInputDevice::OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId,
 	{
 		if (DeviceMapper->Get().GetInputDeviceConnectionState(Device) != EInputDeviceConnectionState::Connected)
 		{
+			UE_LOG(LogTemp, Log, TEXT("DualSense: Connecting DeviceId=%d"), Device.GetId());
 			DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 		}
 	}
@@ -155,17 +156,23 @@ void DualSenseInputDevice::OnConnectionChange(EInputDeviceConnectionState Connec
                                               FInputDeviceId InputDeviceId) const
 {
 	const bool bIsConnected = (Connected == EInputDeviceConnectionState::Connected);
-
 	if (DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId) != EInputDeviceConnectionState::Connected &&
 		bIsConnected)
 	{
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Connecting bIsConnected=%d DeviceId=%d ConnectionState=%d / %d"),
+			bIsConnected,
+			InputDeviceId.GetId(),
+			DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId),
+			EInputDeviceConnectionState::Connected
+		);
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId,
 		                                                  EInputDeviceConnectionState::Connected);
 	}
 
-	if (DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId) != EInputDeviceConnectionState::Disconnected &&
+	if (DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId) == EInputDeviceConnectionState::Connected &&
 		!bIsConnected)
 	{
+		UE_LOG(LogTemp, Log, TEXT("DualSense: NOT Connecting bIsConnected=%d DeviceId=%d ConnectionState=%d"), bIsConnected, InputDeviceId.GetId(), DeviceMapper->Get().GetInputDeviceConnectionState(InputDeviceId));
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(InputDeviceId, PlatformUserId,
 		                                                  EInputDeviceConnectionState::Disconnected);
 	}

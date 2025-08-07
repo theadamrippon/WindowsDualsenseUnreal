@@ -1,7 +1,7 @@
 {
 	"FileVersion": 3,
 	"Version": 1,
-	"VersionName": "1.2.4",
+	"VersionName": "1.2.5",
 	"FriendlyName": "WindowsDualsense_ds5w",
 	"Description": "Dualsense PS5 device for Windows platforms. Zero Configs. Supports settings of triggers, force feedback, vibrations, leds, battery level, microphone",
 	"Category": "Input Devices",

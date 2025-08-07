@@ -108,6 +108,7 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 	for (int32 DeviceIndex = 0; DeviceIndex < DetectedDevices.Num(); DeviceIndex++)
 	{
 		FHIDDeviceContext& Context = DetectedDevices[DeviceIndex];
+		Context.Internal.Output = FHIDOutput();
 		UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Internal.DevicePath);
 		UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
 		if (Context.Internal.Connected)

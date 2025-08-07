@@ -168,14 +168,16 @@ void UDualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
 {
 	ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
 	ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
+	ZeroMemory(&Context->Internal.Output, sizeof(Context->Internal.Output));
 	CloseHandle(Context->Internal.DeviceHandle);
 
 	Context->Internal.Connected = false;
 	Context->Internal.Connection = EHIDDeviceConnection::Unknown;
 }
 
-void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut)
+void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext)
 {
+	FHIDOutput* HidOut = &DeviceContext->Internal.Output;
 	const size_t Padding = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
 	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth
 		                                    ? 0x31
@@ -187,198 +189,183 @@ void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, con
 	}
 
 	unsigned char* Output = &DeviceContext->Internal.Buffer[Padding];
-	Output[0] = HidOut.FeatureConfigHid.VibrationMode;
-	Output[1] = HidOut.FeatureConfigHid.FeatureMode;
-	if (Padding == 2)
-	{
-		Output[1] = 0xF7;
-	}
+	Output[0] = HidOut->FeatureConfigHid.VibrationMode;
+	Output[1] = HidOut->FeatureConfigHid.FeatureMode;
 
-	Output[2] = HidOut.MotorsHid.Left;
-	Output[3] = HidOut.MotorsHid.Right;
+	Output[2] = HidOut->MotorsHid.Left;
+	Output[3] = HidOut->MotorsHid.Right;
 	if (Padding == 1)
 	{
-		Output[4] = HidOut.AudioConfigHid.HeadsetVolume;
-		Output[5] = HidOut.AudioConfigHid.SpeakerVolume;
-		Output[6] = HidOut.AudioConfigHid.MicVolume;
-		Output[7] = HidOut.AudioConfigHid.Mode;
-		Output[9] = HidOut.AudioConfigHid.MicStatus;
+		Output[4] = HidOut->AudioConfigHid.HeadsetVolume;
+		Output[5] = HidOut->AudioConfigHid.SpeakerVolume;
+		Output[6] = HidOut->AudioConfigHid.MicVolume;
+		Output[7] = HidOut->AudioConfigHid.Mode;
+		Output[9] = HidOut->AudioConfigHid.MicStatus;
 	}
-	Output[8] = HidOut.MicLed.Mode;
+	Output[8] = HidOut->MicLed.Mode;
 
-	Output[36] = ((2 & 0x0F) << 4) | (HidOut.FeatureConfigHid.SoftRumbleReduce & 0x0F);
+	Output[36] = (HidOut->FeatureConfigHid.TriggerSoftnessLevel << 4) | (HidOut->FeatureConfigHid.SoftRumbleReduce & 0x0F);
 	Output[38] = 0x04;
-	// UE_LOG(LogTemp, Log, TEXT("OutputBuffering: 0x%02X, 0x%02X"), Output[36], Output[38]);
+	UE_LOG(LogTemp, Log, TEXT("Output 0x%02X"), Output[36]);
 
-	Output[41] = HidOut.LedPlayerHid.Player;
-	Output[42] = HidOut.LedPlayerHid.Brightness;
-	Output[43] = HidOut.LedPlayerHid.Led;
+	Output[42] = HidOut->LedPlayerHid.Brightness;
+	Output[43] = HidOut->LedPlayerHid.Led;
 	Output[43] |= 0x20;
-	if (HidOut.LedPlayerHid.Fading)
-	{
-		Output[43] &= ~(0x20);
-	}
 
-	Output[44] = static_cast<unsigned char>(HidOut.ColorHid.R);
-	Output[45] = static_cast<unsigned char>(HidOut.ColorHid.G);
-	Output[46] = static_cast<unsigned char>(HidOut.ColorHid.B);
-
-	if (HidOut.ResetLedEffects || HidOut.ResetEffects) // Reset temp effects
-	{
-		Output[44] = 0x00;
-		Output[45] = 0x00;
-		Output[46] = 0xFF;
-	}
+	Output[44] = HidOut->ColorHid.R;
+	Output[45] = HidOut->ColorHid.G;
+	Output[46] = HidOut->ColorHid.B;
 
 	// Left Trigger
 	unsigned char* TriggerL = &Output[21];
-	TriggerL[0x0] = HidOut.LeftTrigger.Mode;
+	TriggerL[0x0] = HidOut->LeftTrigger.Mode;
 
-	if (HidOut.LeftTrigger.Mode == 0x01)
+	if (HidOut->LeftTrigger.Mode == 0x01)
 	{
-		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut.LeftTrigger.Strengths.Start;
+		TriggerL[0x1] = HidOut->LeftTrigger.StartPosition;
+		TriggerL[0x2] = HidOut->LeftTrigger.Strengths.Start;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x02)
+	if (HidOut->LeftTrigger.Mode == 0x02)
 	{
-		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut.LeftTrigger.EndPosition;
-		TriggerL[0x3] = HidOut.LeftTrigger.Strengths.Start;
+		TriggerL[0x1] = HidOut->LeftTrigger.StartPosition;
+		TriggerL[0x2] = HidOut->LeftTrigger.EndPosition;
+		TriggerL[0x3] = HidOut->LeftTrigger.Strengths.Start;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x21)
+	if (HidOut->LeftTrigger.Mode == 0x21)
 	{
-		const uint64_t LeftTriggerStrengthZones = HidOut.LeftTrigger.Strengths.StrengthZones;
-		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xff);
-		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
-		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
-		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
+		const uint64_t LeftTriggerStrengthZones = HidOut->LeftTrigger.Strengths.StrengthZones;
+		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
+		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
+		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
+		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x22) // Bow
+	if (HidOut->LeftTrigger.Mode == 0x22) // Bow
 	{
-		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerL[0x3] = ((HidOut.LeftTrigger.Strengths.StrengthZones >> 0) & 0xff);
-		TriggerL[0x4] = ((HidOut.LeftTrigger.Strengths.StrengthZones >> 8) & 0xff);
+		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerL[0x3] = ((HidOut->LeftTrigger.Strengths.StrengthZones >> 0) & 0xFF);
+		TriggerL[0x4] = ((HidOut->LeftTrigger.Strengths.StrengthZones >> 8) & 0xFF);
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x23) // Gallopping
+	if (HidOut->LeftTrigger.Mode == 0x23) // Gallopping
 	{
-		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerL[0x3] = ((HidOut.LeftTrigger.Strengths.TimeAndRatio >> 0) & 0xff);
-		TriggerL[0x4] = HidOut.LeftTrigger.Frequency;
+		TriggerL[0x1] = (HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF;
+		TriggerL[0x2] = (HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF;
+		TriggerL[0x3] = (HidOut->LeftTrigger.Strengths.TimeAndRatio) & 0xFF;
+		TriggerL[0x4] = HidOut->LeftTrigger.Frequency;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x25) // Weapon
+	if (HidOut->LeftTrigger.Mode == 0x25) // Weapon
 	{
-		TriggerL[0x1] = HidOut.LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut.LeftTrigger.EndPosition;
-		TriggerL[0x3] = HidOut.LeftTrigger.Strengths.Start;
+		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		for (int i = 0; i < 8; ++i)
+			TriggerL[0x3 + i] = (HidOut->LeftTrigger.Strengths.StrengthZones >> (8 * i)) & 0xFF;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x26)
+	if (HidOut->LeftTrigger.Mode == 0x26)
 	{
-		const uint64_t LeftTriggerStrengthZones = HidOut.LeftTrigger.Strengths.StrengthZones;
-		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xff);
-		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xff);
-		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xff);
-		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xff);
-		// TriggerL[0x7] = ((LeftTriggerStrengthZones >> 32) & 0xff);
-		// TriggerL[0x8] = ((LeftTriggerStrengthZones >> 40) & 0xff);
-		TriggerL[0x9] = HidOut.LeftTrigger.Frequency;
+		const uint64_t LeftTriggerStrengthZones = HidOut->LeftTrigger.Strengths.StrengthZones;
+		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
+		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
+		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
+		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
+		TriggerL[0x9] = HidOut->LeftTrigger.Frequency;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x27) // Machine
+	if (HidOut->LeftTrigger.Mode == 0x27) // Machine
 	{
-		TriggerL[0x1] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerL[0x2] = ((HidOut.LeftTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerL[0x3] = ((HidOut.LeftTrigger.Strengths.StrengthZones >> 0) & 0xff);
-		TriggerL[0x4] = HidOut.LeftTrigger.Frequency;
-		TriggerL[0x5] = HidOut.LeftTrigger.Strengths.Period;
+		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerL[0x3] = ((HidOut->LeftTrigger.Strengths.StrengthZones) & 0xFF);
+		TriggerL[0x4] = HidOut->LeftTrigger.Frequency;
+		TriggerL[0x5] = HidOut->LeftTrigger.Strengths.Period;
 	}
 
 	// Right Trigger
 	unsigned char* TriggerR = &Output[10];
-	TriggerR[0x0] = HidOut.RightTrigger.Mode;
+	TriggerR[0x0] = HidOut->RightTrigger.Mode;
 
-	if (HidOut.RightTrigger.Mode == 0x01)
+	if (HidOut->RightTrigger.Mode == 0x01)
 	{
-		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut.RightTrigger.Strengths.Start;
+		TriggerR[0x1] = HidOut->RightTrigger.StartPosition;
+		TriggerR[0x2] = HidOut->RightTrigger.Strengths.Start;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x02)
+	if (HidOut->RightTrigger.Mode == 0x02)
 	{
-		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
-		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
+		TriggerR[0x1] = HidOut->RightTrigger.StartPosition;
+		TriggerR[0x2] = HidOut->RightTrigger.EndPosition;
+		TriggerR[0x3] = HidOut->RightTrigger.Strengths.Start;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x21)
+	if (HidOut->RightTrigger.Mode == 0x21)
 	{
-		const uint64_t RightTriggerStrengthZones = HidOut.RightTrigger.Strengths.StrengthZones;
-		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xff);
-		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xff);
-		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
-		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
+		const uint64_t RightTriggerStrengthZones = HidOut->RightTrigger.Strengths.StrengthZones;
+		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xFF);
+		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xFF);
+		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xFF);
+		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xFF);
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x22) // Bow
+	// Bow
+	if (HidOut->RightTrigger.Mode == 0x22)
 	{
-		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerR[0x3] = ((HidOut.RightTrigger.Strengths.StrengthZones >> 0) & 0xff);
-		TriggerR[0x4] = ((HidOut.RightTrigger.Strengths.StrengthZones >> 8) & 0xff);
+		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerR[0x3] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 0) & 0xFF);
+		TriggerR[0x4] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 8) & 0xFF);
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x23) // Gallopping
+	// Gallopping
+	if (HidOut->RightTrigger.Mode == 0x23)
 	{
-		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerR[0x3] = ((HidOut.RightTrigger.Strengths.TimeAndRatio >> 0) & 0xff);
-		TriggerR[0x4] = HidOut.RightTrigger.Frequency;
+		TriggerR[0x1] = (HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF;
+		TriggerR[0x2] = (HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF;
+		TriggerR[0x3] = (HidOut->RightTrigger.Strengths.TimeAndRatio) & 0xFF;
+		TriggerR[0x4] = HidOut->RightTrigger.Frequency;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x25) // Weapon
+	// Weapon
+	if (HidOut->RightTrigger.Mode == 0x25)
 	{
-		TriggerR[0x1] = HidOut.RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut.RightTrigger.EndPosition;
-		TriggerR[0x3] = HidOut.RightTrigger.Strengths.Start;
+		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		for (int i = 0; i < 8; ++i)
+			TriggerR[0x3 + i] = (HidOut->RightTrigger.Strengths.StrengthZones >> (8 * i)) & 0xFF;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x26)
+	if (HidOut->RightTrigger.Mode == 0x26)
 	{
-		const uint64_t RightTriggerStrengthZones = HidOut.RightTrigger.Strengths.StrengthZones;
-		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xff);
-		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xff);
-		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xff);
-		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xff);
-		// TriggerR[0x7] = ((RightTriggerStrengthZones >> 32) & 0xff);
-		// TriggerR[0x8] = ((RightTriggerStrengthZones >> 40) & 0xff);
-		TriggerR[0x9] = HidOut.RightTrigger.Frequency;
+		const uint64_t RightTriggerStrengthZones = HidOut->RightTrigger.Strengths.StrengthZones;
+		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xFF);
+		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xFF);
+		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xFF);
+		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xFF);
+		TriggerR[0x9] = HidOut->RightTrigger.Frequency;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x27) // Machine
+	if (HidOut->RightTrigger.Mode == 0x27) // Machine
 	{
-		TriggerR[0x1] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 0) & 0xff);
-		TriggerR[0x2] = ((HidOut.RightTrigger.Strengths.ActiveZones >> 8) & 0xff);
-		TriggerR[0x3] = ((HidOut.RightTrigger.Strengths.StrengthZones >> 0) & 0xff);
-		TriggerR[0x4] = HidOut.RightTrigger.Frequency;
-		TriggerR[0x5] = HidOut.RightTrigger.Strengths.Period;
+		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
+		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
+		TriggerR[0x3] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 0) & 0xFF);
+		TriggerR[0x4] = HidOut->RightTrigger.Frequency;
+		TriggerR[0x5] = HidOut->RightTrigger.Strengths.Period;
 	}
 
-	if (HidOut.LeftTrigger.Mode == 0x0)
+	if (HidOut->LeftTrigger.Mode == 0x0)
 	{
 		TriggerL[0x1] = 0;
 		TriggerL[0x2] = 0;
@@ -391,7 +378,7 @@ void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext, con
 		TriggerL[0x9] = 0;
 	}
 
-	if (HidOut.RightTrigger.Mode == 0x0) // Reset temp effects trigger
+	if (HidOut->RightTrigger.Mode == 0x0) // Reset temp effects trigger
 	{
 		TriggerR[0x1] = 0;
 		TriggerR[0x2] = 0;
@@ -467,7 +454,7 @@ const UINT32 UDualSenseHIDManager::HashTable[256] = {
 	0x72080df5, 0x50f3d63, 0x9c066cd9, 0xeb015c4f, 0x7565c9ec, 0x262f97a, 0x9b6ba8c0, 0xec6c9856,
 	0x7cd385c7, 0xbd4b551, 0x92dde4eb, 0xe5dad47d, 0x7bbe41de, 0xcb97148, 0x95b020f2, 0xe2b71064,
 	0x6fbf1d91, 0x18b82d07, 0x81b17cbd, 0xf6b64c2b, 0x68d2d988, 0x1fd5e91e, 0x86dcb8a4, 0xf1db8832,
-	0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xff000000
+	0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xFF000000
 };
 
 // /**

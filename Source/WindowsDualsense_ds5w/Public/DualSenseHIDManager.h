@@ -53,20 +53,7 @@ enum class EHIDDeviceConnection : uint8
 	Unknown
 };
 
-typedef struct FHIDDeviceContext
-{
-	struct
-	{
-		void* DeviceHandle;
-		wchar_t DevicePath[260];
-		unsigned char Buffer[547];
-
-		bool Connected;
-		EHIDDeviceConnection Connection;
-	} Internal;
-} FHIDDeviceContext;
-
-struct FHIDOutput
+typedef struct FHIDOutput
 {
 	typedef struct FAudioConfigHid
 	{
@@ -82,8 +69,9 @@ struct FHIDOutput
 	typedef struct FFeatureConfigHid
 	{
 		unsigned char VibrationMode = 0xFC;
-		unsigned char FeatureMode = 0x57;
-		int8 SoftRumbleReduce = 0x0;
+		unsigned char FeatureMode = 0xF7;
+		int8 SoftRumbleReduce = 0x0F;
+		int8 TriggerSoftnessLevel = 0x4;
 		bool SoftRumble = true;
 	} FFeatureConfig;
 	FFeatureConfig FeatureConfigHid;
@@ -91,7 +79,7 @@ struct FHIDOutput
 	typedef struct FLedPlayer
 	{
 		unsigned char Brightness = 0x00;
-		unsigned char Player = 0x00;
+		unsigned char Player = 0x20;
 		unsigned char Led = PLAYER_LED_MIDDLE;
 		bool Fading = false;
 	} FLedPlayer;
@@ -176,8 +164,22 @@ struct FHIDOutput
 	bool ResetLedEffects = false;
 	bool ResetEffectsLeftTrigger = false;
 	bool ResetEffectsRightTrigger = false;
-};
+} FHIDOutput;
 
+typedef struct FHIDDeviceContext
+{
+	struct
+	{
+		void* DeviceHandle;
+		wchar_t DevicePath[260];
+		unsigned char Buffer[547];
+
+		bool Connected;
+		EHIDDeviceConnection Connection;
+
+		FHIDOutput Output;
+	} Internal;
+} FHIDDeviceContext;
 
 UCLASS()
 class WINDOWSDUALSENSE_DS5W_API UDualSenseHIDManager : public UObject
@@ -193,7 +195,7 @@ public:
 	static void FreeContext(FHIDDeviceContext* Context);
 	static bool FindDevices(TArray<FHIDDeviceContext>& Devices);
 	static HANDLE CreateHandle(FHIDDeviceContext* DeviceContext);
-	static void OutputBuffering(FHIDDeviceContext* DeviceContext, const FHIDOutput& HidOut);
+	static void OutputBuffering(FHIDDeviceContext* DeviceContext);
 	static bool GetDeviceInputState(FHIDDeviceContext* DeviceContext);
 
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);

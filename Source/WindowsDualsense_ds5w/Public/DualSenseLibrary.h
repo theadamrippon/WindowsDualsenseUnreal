@@ -67,41 +67,30 @@ public:
 		UE_LOG(LogTemp, Log, TEXT("Dualsense UDualSenseLibrary Destruct"));
 	}
 
-	bool InitializeLibrary(const FHIDDeviceContext& Context);
 	void ShutdownLibrary();
-
-	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
+	bool InitializeLibrary(const FHIDDeviceContext& Context);
 
 	bool Reconnect() const;
 	bool IsConnected() const;
 
 	// Input
-	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-	                         const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
-	virtual void CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-	                              const FPlatformUserId UserId, const FInputDeviceId InputDeviceId,
-	                              const FName ButtonName, const bool IsButtonPressed);
+	virtual bool UpdateInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId);
+	virtual void CheckButtonInput(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, const FPlatformUserId UserId, const FInputDeviceId InputDeviceId, const FName ButtonName, const bool IsButtonPressed);
 
-	// Haptic Feedback and Effects
 	virtual void SetHapticFeedbackValues(int32 Hand, const FHapticFeedbackValues* Values);
-	virtual void ConfigTriggerHapticFeedbackEffect(int32 StartPosition, int32 BeginForce, int32 MiddleForce,
-	                                               int32 EndForce, const EControllerHand& Hand, bool KeepEffect);
+	virtual void SetVibrationTrigger(int32 BeginStrength, int32 MiddleStrength, int32 EndStrength, const EControllerHand& Hand, bool KeepEffect);
 
-	// Effects
-	void ContinuousResistance(int32 StartPosition, int32 Force, const EControllerHand& Hand);
-	void SectionResistance(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
-	void Feedback(int32 BeginForce, int32 MiddleForce, int32 EndForce, const EControllerHand& Hand);
-	void SetWeaponEffects(int32 StartPosition, int32 EndPosition, int32 Force, const EControllerHand& Hand);
-	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingForce, int32 EndForce,
-	                   const EControllerHand& Hand);
-	void SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd,
-	                       float Frequency, float Period, const EControllerHand& Hand);
-	void SetGallopingEffects(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency,
-	                         const EControllerHand& Hand);
+	void ContinuousResistance(int32 StartPosition, int32 Strength, const EControllerHand& Hand);
+	void SectionResistance(int32 StartPosition, int32 EndPosition, int32 Strength, const EControllerHand& Hand);
+	void Feedback(int32 BeginStrength, int32 MiddleStrength, int32 EndStrength, const EControllerHand& Hand);
+	void SetWeapon(int32 StartPosition, int32 EndPosition, int32 Strength, const EControllerHand& Hand);
+	void SetBowEffects(int32 StartPosition, int32 EndPosition, int32 BegingStrength, int32 EndStrength, const EControllerHand& Hand);
+	void SetMachineEffects(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd, float Frequency, float Period, const EControllerHand& Hand);
+	void SetGallopingEffects(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency, const EControllerHand& Hand);
 	void SetLedPlayerEffects(int32 NumberLeds, int32 BrightnessValue);
 	void SetLedMicEffects(int32 LedMic);
 
-	// Reset Effects
+	
 	void NoResistance(const EControllerHand& Hand);
 	void StopEffect(const EControllerHand& Hand);
 	void StopAllEffects();
@@ -113,11 +102,10 @@ public:
 
 	// Colors, vibration and triggers config
 	void UpdateColorOutput(FColor Color);
-	void SetVibration(const FForceFeedbackValues& Vibration);
-	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration, float Threshold, float ExponentCurve,
-	                            float BaseMultiplier);
 	void SetTriggers(const FInputDeviceProperty* Property);
-
+	void SetVibration(const FForceFeedbackValues& Vibration);
+	void SetVibrationAudioBased(const FForceFeedbackValues& Vibration, float Threshold, float ExponentCurve, float BaseMultiplier);
+	
 	void SetHasPhoneConnected(bool bHasConnected);
 	void SetLevelBattery(float Level, bool FullyCharged, bool Charging);
 	void SetLeftTriggerFeedback(float L2Feedback);
@@ -134,37 +122,36 @@ public:
 		int32 MicVolume,
 		int32 AudioVolume,
 		int32 SoftRumbleReduce,
+		int32 TriggerSoftnessLevel,
 		bool SoftRumble
 	);
 
 	int32 ControllerID;
-
 	TMap<const FName, bool> ButtonStates;
-
 protected:
 	void SendOut();
+	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
 
 private:
 	bool EnableTouch;
 	bool HasPhoneConnected;
 	bool EnableAccelerometerAndGyroscope;
-
-	// properties device
 	float LevelBattery;
 	float LeftTriggerFeedback;
 	float RightTriggerFeedback;
 
-	FHIDOutput HidOutput;
 	FHIDDeviceContext HIDDeviceContexts;
 
 	// Helpers
 	static int To255(const float Value)
 	{
+		if (Value <= 0) return 0;
+		if (Value >= 1.0f) return 255;
+		
 		constexpr float Min = 0;
 		constexpr float Max = 1.0;
 		const float NormalizedPosition = (Value - Min) / (Max - Min);
-		const int Value255 = static_cast<int>(NormalizedPosition * 255);
-		return std::clamp(Value255, 0, 255);
+		return static_cast<int>(NormalizedPosition * 255);
 	}
 
 	static unsigned char To255(const unsigned char Value, const unsigned char MaxInput)

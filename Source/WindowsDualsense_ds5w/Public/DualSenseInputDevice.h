@@ -22,7 +22,7 @@ public:
 
 	virtual void SendControllerEvents() override
 	{
-	};
+	}
 
 	virtual void SetMessageHandler(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler) override
 	{
@@ -34,7 +34,8 @@ public:
 
 	virtual void SetChannelValue(int32 ControllerId, FForceFeedbackChannelType ChannelType, float Value) override
 	{
-	};
+	}
+
 	virtual void SetLightColor(int32 ControllerId, FColor Color) override;
 	virtual void ResetLightColor(int32 ControllerId) override;
 	virtual bool Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override { return true; }

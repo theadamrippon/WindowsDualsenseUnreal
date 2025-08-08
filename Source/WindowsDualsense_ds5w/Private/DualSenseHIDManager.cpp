@@ -10,13 +10,14 @@
 #include <hidsdi.h>
 #include <setupapi.h>
 
+#include "Core/Structs/FDeviceContext.h"
 #include "Windows/HideWindowsPlatformTypes.h"
 
 UDualSenseHIDManager::UDualSenseHIDManager()
 {
 }
 
-bool UDualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
+bool UDualSenseHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 {
 	Devices.Empty();
 	
@@ -71,7 +72,7 @@ bool UDualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 					if (Attributes.VendorID == 0x054C && (Attributes.ProductID == 0x0CE6 || Attributes.ProductID ==
 						0x0DF2))
 					{
-						FHIDDeviceContext Context = {};
+						FDeviceContext Context = {};
 						size_t PathSize = 260;
 						WCHAR DeviceProductString[260];
 						if (!HidD_GetProductString(TempDeviceHandle, DeviceProductString, PathSize))
@@ -86,19 +87,19 @@ bool UDualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 						}
 						
 						DevicePaths.Add(DeviceIndex, *DetailDataBuffer->DevicePath);
-						wcscpy_s(Context.Internal.DevicePath, DetailDataBuffer->DevicePath);
+						wcscpy_s(Context.Path, DetailDataBuffer->DevicePath);
 						
-						Context.Internal.Connected = true;
-						Context.Internal.Connection = EHIDDeviceConnection::Usb;
+						Context.IsConnected = true;
+						Context.ConnectionType = Usb;
 						FString DevicePath(DetailDataBuffer->DevicePath);
 						if (DevicePath.Contains(TEXT("{00001124-0000-1000-8000-00805f9b34fb}")) ||
 							DevicePath.Contains(TEXT("bth")) ||
 							DevicePath.Contains(TEXT("BTHENUM")))
 						{
-							Context.Internal.Connection = EHIDDeviceConnection::Bluetooth;
+							Context.ConnectionType = Bluetooth;
 						}
 
-						Context.Internal.DeviceHandle = TempDeviceHandle;
+						Context.Handle = TempDeviceHandle;
 						CloseHandle(TempDeviceHandle);
 						Devices.Add(Context);
 						free(DetailDataBuffer);
@@ -115,10 +116,10 @@ bool UDualSenseHIDManager::FindDevices(TArray<FHIDDeviceContext>& Devices)
 	return Devices.Num() > 0;
 }
 
-HANDLE UDualSenseHIDManager::CreateHandle(FHIDDeviceContext* DeviceContext)
+HANDLE UDualSenseHIDManager::CreateHandle(FDeviceContext* DeviceContext)
 {
 	const HANDLE DeviceHandle = CreateFileW(
-			DeviceContext->Internal.DevicePath,
+			DeviceContext->Path,
 			GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
 		);
 
@@ -132,283 +133,183 @@ HANDLE UDualSenseHIDManager::CreateHandle(FHIDDeviceContext* DeviceContext)
 	return DeviceHandle;
 }
 
-bool UDualSenseHIDManager::GetDeviceInputState(FHIDDeviceContext* DeviceContext)
+bool UDualSenseHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 {
-	if (DeviceContext->Internal.DeviceHandle == INVALID_HANDLE_VALUE)
+	if (DeviceContext->Handle == INVALID_HANDLE_VALUE)
 	{
 		UE_LOG(LogTemp, Error, TEXT("Invalid device handle before attempting to read"));
 		return false;
 	}
 	
-	if (!DeviceContext->Internal.Connected)
+	if (!DeviceContext->IsConnected)
 	{
-		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Internal.Connected, false"));
+		UE_LOG(LogTemp, Error, TEXT("Dualsense: DeviceContext->Connected, false"));
 		FreeContext(DeviceContext);
 		return false;
 	}
 
-	HidD_FlushQueue(DeviceContext->Internal.DeviceHandle);
+	HidD_FlushQueue(DeviceContext->Handle);
 	
 	DWORD BytesRead = 0;
-	const size_t InputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 64;
-	if (!ReadFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, InputReportLength, &BytesRead,
+	const size_t InputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 64;
+	if (!ReadFile(DeviceContext->Handle, DeviceContext->Buffer, InputReportLength, &BytesRead,
 	              nullptr))
 	{
 		const DWORD Error = GetLastError();
 		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), InputReportLength, Error);
 
-		DeviceContext->Internal.DeviceHandle = INVALID_HANDLE_VALUE;
+		DeviceContext->Handle = INVALID_HANDLE_VALUE;
 		FreeContext(DeviceContext);
 		return false;
 	}
 	return true;
 }
 
-void UDualSenseHIDManager::FreeContext(FHIDDeviceContext* Context)
+void UDualSenseHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTriggers& Effect)
 {
-	ZeroMemory(&Context->Internal.Buffer, sizeof(Context->Internal.Buffer));
-	ZeroMemory(&Context->Internal.DevicePath, sizeof(Context->Internal.DevicePath));
-	ZeroMemory(&Context->Internal.Output, sizeof(Context->Internal.Output));
-	CloseHandle(Context->Internal.DeviceHandle);
+	Trigger[0x0] = Effect.Mode;
 
-	Context->Internal.Connected = false;
-	Context->Internal.Connection = EHIDDeviceConnection::Unknown;
+	if (Effect.Mode == 0x01)
+	{
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.StrengthZones >> 0) & 0xFF);
+	}
+
+	if (Effect.Mode == 0x02)
+	{
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		Trigger[0x3] = ((Effect.Strengths.StrengthZones >> 8) & 0xFF);
+	}
+
+	if (Effect.Mode == 0x21)
+	{
+		const uint64_t LeftTriggerStrengthZones = Effect.Strengths.StrengthZones;
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		Trigger[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
+		Trigger[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
+		Trigger[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
+		Trigger[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
+	}
+
+	if (Effect.Mode == 0x22) // Bow
+	{
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		Trigger[0x3] = ((Effect.Strengths.StrengthZones >> 0) & 0xFF);
+		Trigger[0x4] = ((Effect.Strengths.StrengthZones >> 8) & 0xFF);
+	}
+
+	if (Effect.Mode == 0x23) // Gallopping
+	{
+		Trigger[0x1] = (Effect.Strengths.ActiveZones >> 0) & 0xFF;
+		Trigger[0x2] = (Effect.Strengths.ActiveZones >> 8) & 0xFF;
+		Trigger[0x3] = (Effect.Strengths.TimeAndRatio) & 0xFF;
+		Trigger[0x4] = Effect.Frequency;
+	}
+
+	if (Effect.Mode == 0x25) // Weapon
+	{
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		for (int i = 0; i < 8; ++i)
+			Trigger[0x3 + i] = (Effect.Strengths.StrengthZones >> (8 * i)) & 0xFF;
+	}
+
+	if (Effect.Mode == 0x26)
+	{
+		const uint64_t LeftTriggerStrengthZones = Effect.Strengths.StrengthZones;
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		Trigger[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
+		Trigger[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
+		Trigger[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
+		Trigger[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
+		Trigger[0x9] = Effect.Frequency;
+	}
+
+	if (Effect.Mode == 0x27) // Machine
+	{
+		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
+		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
+		Trigger[0x3] = ((Effect.Strengths.StrengthZones) & 0xFF);
+		Trigger[0x4] = Effect.Frequency;
+		Trigger[0x5] = Effect.Strengths.Period;
+	}
 }
 
-void UDualSenseHIDManager::OutputBuffering(FHIDDeviceContext* DeviceContext)
+void UDualSenseHIDManager::FreeContext(FDeviceContext* Context)
 {
-	FHIDOutput* HidOut = &DeviceContext->Internal.Output;
-	const size_t Padding = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 2 : 1;
-	DeviceContext->Internal.Buffer[0] = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth
-		                                    ? 0x31
-		                                    : 0x02;
+	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
+	ZeroMemory(&Context->Path, sizeof(Context->Path));
+	ZeroMemory(&Context->Output, sizeof(Context->Output));
+	CloseHandle(Context->Handle);
 
-	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
+	Context->IsConnected = false;
+	Context->ConnectionType = Unknown;
+}
+
+void UDualSenseHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
+{
+	FOutput* HidOut = &DeviceContext->Output;
+	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
+	DeviceContext->Buffer[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
+
+	if (DeviceContext->ConnectionType == Bluetooth)
 	{
-		DeviceContext->Internal.Buffer[1] = 0x02;
+		DeviceContext->Buffer[1] = 0x02;
 	}
 
-	unsigned char* Output = &DeviceContext->Internal.Buffer[Padding];
-	Output[0] = HidOut->FeatureConfigHid.VibrationMode;
-	Output[1] = HidOut->FeatureConfigHid.FeatureMode;
+	unsigned char* Output = &DeviceContext->Buffer[Padding];
+	Output[0] = HidOut->Feature.VibrationMode;
+	Output[1] = HidOut->Feature.FeatureMode;
 
-	Output[2] = HidOut->MotorsHid.Left;
-	Output[3] = HidOut->MotorsHid.Right;
+	Output[2] = HidOut->Rumbles.Left;
+	Output[3] = HidOut->Rumbles.Right;
 	if (Padding == 1)
 	{
-		Output[4] = HidOut->AudioConfigHid.HeadsetVolume;
-		Output[5] = HidOut->AudioConfigHid.SpeakerVolume;
-		Output[6] = HidOut->AudioConfigHid.MicVolume;
-		Output[7] = HidOut->AudioConfigHid.Mode;
-		Output[9] = HidOut->AudioConfigHid.MicStatus;
+		Output[4] = HidOut->Audio.HeadsetVolume;
+		Output[5] = HidOut->Audio.SpeakerVolume;
+		Output[6] = HidOut->Audio.MicVolume;
+		Output[7] = HidOut->Audio.Mode;
+		Output[9] = HidOut->Audio.MicStatus;
 	}
-	Output[8] = HidOut->MicLed.Mode;
+	Output[8] = HidOut->MicLight.Mode;
 
-	Output[36] = (HidOut->FeatureConfigHid.TriggerSoftnessLevel << 4) | (HidOut->FeatureConfigHid.SoftRumbleReduce & 0x0F);
+	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
 	Output[38] = 0x04;
 	UE_LOG(LogTemp, Log, TEXT("Output 0x%02X"), Output[36]);
 
-	Output[42] = HidOut->LedPlayerHid.Brightness;
-	Output[43] = HidOut->LedPlayerHid.Led;
+	Output[42] = HidOut->PlayerLed.Brightness;
+	Output[43] = HidOut->PlayerLed.Led;
 	Output[43] |= 0x20;
 
-	Output[44] = HidOut->ColorHid.R;
-	Output[45] = HidOut->ColorHid.G;
-	Output[46] = HidOut->ColorHid.B;
+	Output[44] = HidOut->Lightbar.R;
+	Output[45] = HidOut->Lightbar.G;
+	Output[46] = HidOut->Lightbar.B;
+	
+	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
+	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
 
-	// Left Trigger
-	unsigned char* TriggerL = &Output[21];
-	TriggerL[0x0] = HidOut->LeftTrigger.Mode;
-
-	if (HidOut->LeftTrigger.Mode == 0x01)
+	if (DeviceContext->ConnectionType == Bluetooth)
 	{
-		TriggerL[0x1] = HidOut->LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut->LeftTrigger.Strengths.Start;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x02)
-	{
-		TriggerL[0x1] = HidOut->LeftTrigger.StartPosition;
-		TriggerL[0x2] = HidOut->LeftTrigger.EndPosition;
-		TriggerL[0x3] = HidOut->LeftTrigger.Strengths.Start;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x21)
-	{
-		const uint64_t LeftTriggerStrengthZones = HidOut->LeftTrigger.Strengths.StrengthZones;
-		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
-		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
-		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
-		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x22) // Bow
-	{
-		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerL[0x3] = ((HidOut->LeftTrigger.Strengths.StrengthZones >> 0) & 0xFF);
-		TriggerL[0x4] = ((HidOut->LeftTrigger.Strengths.StrengthZones >> 8) & 0xFF);
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x23) // Gallopping
-	{
-		TriggerL[0x1] = (HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF;
-		TriggerL[0x2] = (HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF;
-		TriggerL[0x3] = (HidOut->LeftTrigger.Strengths.TimeAndRatio) & 0xFF;
-		TriggerL[0x4] = HidOut->LeftTrigger.Frequency;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x25) // Weapon
-	{
-		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		for (int i = 0; i < 8; ++i)
-			TriggerL[0x3 + i] = (HidOut->LeftTrigger.Strengths.StrengthZones >> (8 * i)) & 0xFF;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x26)
-	{
-		const uint64_t LeftTriggerStrengthZones = HidOut->LeftTrigger.Strengths.StrengthZones;
-		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerL[0x3] = ((LeftTriggerStrengthZones >> 0) & 0xFF);
-		TriggerL[0x4] = ((LeftTriggerStrengthZones >> 8) & 0xFF);
-		TriggerL[0x5] = ((LeftTriggerStrengthZones >> 16) & 0xFF);
-		TriggerL[0x6] = ((LeftTriggerStrengthZones >> 24) & 0xFF);
-		TriggerL[0x9] = HidOut->LeftTrigger.Frequency;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x27) // Machine
-	{
-		TriggerL[0x1] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerL[0x2] = ((HidOut->LeftTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerL[0x3] = ((HidOut->LeftTrigger.Strengths.StrengthZones) & 0xFF);
-		TriggerL[0x4] = HidOut->LeftTrigger.Frequency;
-		TriggerL[0x5] = HidOut->LeftTrigger.Strengths.Period;
-	}
-
-	// Right Trigger
-	unsigned char* TriggerR = &Output[10];
-	TriggerR[0x0] = HidOut->RightTrigger.Mode;
-
-	if (HidOut->RightTrigger.Mode == 0x01)
-	{
-		TriggerR[0x1] = HidOut->RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut->RightTrigger.Strengths.Start;
-	}
-
-	if (HidOut->RightTrigger.Mode == 0x02)
-	{
-		TriggerR[0x1] = HidOut->RightTrigger.StartPosition;
-		TriggerR[0x2] = HidOut->RightTrigger.EndPosition;
-		TriggerR[0x3] = HidOut->RightTrigger.Strengths.Start;
-	}
-
-	if (HidOut->RightTrigger.Mode == 0x21)
-	{
-		const uint64_t RightTriggerStrengthZones = HidOut->RightTrigger.Strengths.StrengthZones;
-		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xFF);
-		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xFF);
-		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xFF);
-		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xFF);
-	}
-
-	// Bow
-	if (HidOut->RightTrigger.Mode == 0x22)
-	{
-		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerR[0x3] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 0) & 0xFF);
-		TriggerR[0x4] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 8) & 0xFF);
-	}
-
-	// Gallopping
-	if (HidOut->RightTrigger.Mode == 0x23)
-	{
-		TriggerR[0x1] = (HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF;
-		TriggerR[0x2] = (HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF;
-		TriggerR[0x3] = (HidOut->RightTrigger.Strengths.TimeAndRatio) & 0xFF;
-		TriggerR[0x4] = HidOut->RightTrigger.Frequency;
-	}
-
-	// Weapon
-	if (HidOut->RightTrigger.Mode == 0x25)
-	{
-		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		for (int i = 0; i < 8; ++i)
-			TriggerR[0x3 + i] = (HidOut->RightTrigger.Strengths.StrengthZones >> (8 * i)) & 0xFF;
-	}
-
-	if (HidOut->RightTrigger.Mode == 0x26)
-	{
-		const uint64_t RightTriggerStrengthZones = HidOut->RightTrigger.Strengths.StrengthZones;
-		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerR[0x3] = ((RightTriggerStrengthZones >> 0) & 0xFF);
-		TriggerR[0x4] = ((RightTriggerStrengthZones >> 8) & 0xFF);
-		TriggerR[0x5] = ((RightTriggerStrengthZones >> 16) & 0xFF);
-		TriggerR[0x6] = ((RightTriggerStrengthZones >> 24) & 0xFF);
-		TriggerR[0x9] = HidOut->RightTrigger.Frequency;
-	}
-
-	if (HidOut->RightTrigger.Mode == 0x27) // Machine
-	{
-		TriggerR[0x1] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 0) & 0xFF);
-		TriggerR[0x2] = ((HidOut->RightTrigger.Strengths.ActiveZones >> 8) & 0xFF);
-		TriggerR[0x3] = ((HidOut->RightTrigger.Strengths.StrengthZones >> 0) & 0xFF);
-		TriggerR[0x4] = HidOut->RightTrigger.Frequency;
-		TriggerR[0x5] = HidOut->RightTrigger.Strengths.Period;
-	}
-
-	if (HidOut->LeftTrigger.Mode == 0x0)
-	{
-		TriggerL[0x1] = 0;
-		TriggerL[0x2] = 0;
-		TriggerL[0x3] = 0;
-		TriggerL[0x4] = 0;
-		TriggerL[0x5] = 0;
-		TriggerL[0x6] = 0;
-		TriggerR[0x7] = 0;
-		TriggerR[0x8] = 0;
-		TriggerL[0x9] = 0;
-	}
-
-	if (HidOut->RightTrigger.Mode == 0x0) // Reset temp effects trigger
-	{
-		TriggerR[0x1] = 0;
-		TriggerR[0x2] = 0;
-		TriggerR[0x3] = 0;
-		TriggerR[0x4] = 0;
-		TriggerR[0x5] = 0;
-		TriggerR[0x6] = 0;
-		TriggerR[0x7] = 0;
-		TriggerR[0x8] = 0;
-		TriggerR[0x9] = 0;
-	}
-
-	if (DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth)
-	{
-		const UINT32 CrcChecksum = Compute(DeviceContext->Internal.Buffer, 74);
-		DeviceContext->Internal.Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
-		DeviceContext->Internal.Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
-		DeviceContext->Internal.Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
-		DeviceContext->Internal.Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+		const UINT32 CrcChecksum = Compute(DeviceContext->Buffer, 74);
+		DeviceContext->Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+		DeviceContext->Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+		DeviceContext->Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+		DeviceContext->Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
 	}
 
 	// for (size_t i = 0; i < 78; ++i)
 	// {
 	// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
-	// 	UE_LOG(LogTemp, Log, TEXT("Internal.Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Internal.Buffer[i]);
+	// 	UE_LOG(LogTemp, Log, TEXT("Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Buffer[i]);
 	// }
 
 	DWORD BytesWritten = 0;
-	size_t OutputReportLength = DeviceContext->Internal.Connection == EHIDDeviceConnection::Bluetooth ? 78 : 74;
-	if (!WriteFile(DeviceContext->Internal.DeviceHandle, DeviceContext->Internal.Buffer, OutputReportLength,
+	size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
+	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength,
 	               &BytesWritten, nullptr))
 	{
 		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"),

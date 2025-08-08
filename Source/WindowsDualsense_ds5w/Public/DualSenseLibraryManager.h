@@ -5,7 +5,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "DualSenseHIDManager.h"
 #include "DualSenseLibrary.h"
 #include "UObject/Object.h"
 #include "Misc/CoreDelegates.h"

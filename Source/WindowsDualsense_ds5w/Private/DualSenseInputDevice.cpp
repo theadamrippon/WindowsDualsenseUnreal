@@ -233,7 +233,6 @@ bool DualSenseInputDevice::SupportsForceFeedback(int32 ControllerId)
 
 void DualSenseInputDevice::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values)
 {
-	// UE_LOG(LogTemp, Log, TEXT("DualSense: %f, %f"), values.RightLarge, values.LeftLarge);
 	if (LazyLoading)
 	{
 		return;

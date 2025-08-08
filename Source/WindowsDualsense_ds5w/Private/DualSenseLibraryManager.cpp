@@ -4,6 +4,7 @@
 
 
 #include "DualSenseLibraryManager.h"
+#include "DualSenseHIDManager.h"
 
 UDualSenseLibraryManager* UDualSenseLibraryManager::Instance;
 TMap<int32, UDualSenseLibrary*> UDualSenseLibraryManager::LibraryInstances;
@@ -45,11 +46,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryOrReconnect(int32 Control
 		LibraryInstances.Add(ControllerId, DSLibrary);
 	}
 
-	if (!LibraryInstances[ControllerId]->Reconnect())
-	{
-		return nullptr;
-	}
-
+	LibraryInstances[ControllerId]->Reconnect();
 	return LibraryInstances[ControllerId];
 }
 
@@ -90,7 +87,7 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 {
 	LibraryInstances.Reset();
 
-	TArray<FHIDDeviceContext> DetectedDevices;
+	TArray<FDeviceContext> DetectedDevices;
 	DetectedDevices.Reset();
 
 	UDualSenseHIDManager* HIDManager = NewObject<UDualSenseHIDManager>();
@@ -107,13 +104,13 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 
 	for (int32 DeviceIndex = 0; DeviceIndex < DetectedDevices.Num(); DeviceIndex++)
 	{
-		FHIDDeviceContext& Context = DetectedDevices[DeviceIndex];
-		Context.Internal.Output = FHIDOutput();
-		UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Internal.DevicePath);
+		FDeviceContext& Context = DetectedDevices[DeviceIndex];
+		Context.Output = FOutput();
+		UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Path);
 		UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
-		if (Context.Internal.Connected)
+		if (Context.IsConnected)
 		{
-			Context.Internal.DeviceHandle = UDualSenseHIDManager::CreateHandle(&Context);
+			Context.Handle = UDualSenseHIDManager::CreateHandle(&Context);
 			UDualSenseLibrary* DualSense  = NewObject<UDualSenseLibrary>();
 			if (!DualSense)
 			{
@@ -127,7 +124,7 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 			DualSense->InitializeLibrary(Context);
 
 			LibraryInstances.Add(DeviceIndex, DualSense);
-			UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Internal.DevicePath);
+			UE_LOG(LogTemp, Log, TEXT("DualSense: Library path deviceId %d, %s"), DeviceIndex, Context.Path);
 			UE_LOG(LogTemp, Log, TEXT("DualSense: Library initialized deviceId %d"), DeviceIndex);
 		}
 	}
@@ -140,7 +137,7 @@ int32 UDualSenseLibraryManager::GetAllocatedDevices()
 
 UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 ControllerID)
 {
-	TArray<FHIDDeviceContext> DetectedDevices;
+	TArray<FDeviceContext> DetectedDevices;
 	DetectedDevices.Reset();
 
 	UDualSenseHIDManager* HIDManager = NewObject<UDualSenseHIDManager>();
@@ -155,10 +152,10 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 		return nullptr;
 	}
 	
-	FHIDDeviceContext& Context = DetectedDevices[ControllerID];
-	if (Context.Internal.Connected)
+	FDeviceContext& Context = DetectedDevices[ControllerID];
+	if (Context.IsConnected)
 	{
-		Context.Internal.DeviceHandle = UDualSenseHIDManager::CreateHandle(&Context);
+		Context.Handle = UDualSenseHIDManager::CreateHandle(&Context);
 		UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
 		if (!DualSense)
 		{

@@ -18,40 +18,7 @@ void UDualSenseProxy::DeviceSettings(int32 ControllerId, FDualSenseFeatureReport
 		return;
 	}
 	
-	int32 TriggerSoftnessLevel;
-	switch (Settings.TriggerSoftnessLevel)
-	{
-		case EDualSenseTriggerSoftnessLevel::VeryRigid:
-			TriggerSoftnessLevel = 1;
-			break;
-		case EDualSenseTriggerSoftnessLevel::Rigid:
-			TriggerSoftnessLevel = 2;
-			break;
-		case EDualSenseTriggerSoftnessLevel::Medium:
-			TriggerSoftnessLevel = 4;
-			break;
-		case EDualSenseTriggerSoftnessLevel::Soft:
-			TriggerSoftnessLevel = 6;
-			break;
-		case EDualSenseTriggerSoftnessLevel::VerySoft:
-			TriggerSoftnessLevel = 8;
-			break;
-		default:
-			TriggerSoftnessLevel = 2;
-	}
-
-	
-	DualSenseInstance->RegisterSettings(
-		Settings.MicStatus,
-		Settings.AudioHeadset,
-		Settings.AudioSpeaker,
-		Settings.VibrationMode,
-		Settings.MicVolume,
-		Settings.AudioVolume,
-		Settings.SoftRumbleReduce,
-		TriggerSoftnessLevel,
-		Settings.SoftRumble
-	);
+	DualSenseInstance->Settings(Settings);
 }
 
 bool UDualSenseProxy::DeviceDisconnect(int32 ControllerId)
@@ -274,38 +241,24 @@ void UDualSenseProxy::Bow(int32 ControllerId, int32 StartPosition, int32 EndPosi
 
 void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
 {
-	int32 BrightnessValue = static_cast<int32>(Brightness);
-	int32 LedValue = static_cast<int32>(Value);
-
 	UDualSenseLibrary* DualSenseInstance = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
 	{
 		return;
 	}
 
-	DualSenseInstance->SetLedPlayerEffects(LedValue, BrightnessValue);
+	DualSenseInstance->SetLedPlayerEffects(Value, Brightness);
 }
 
 void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
 {
-	int32 LedNumber = 0;
-	if (Value == ELedMicEnum::MicOn)
-	{
-		LedNumber = 1;
-	}
-
-	if (Value == ELedMicEnum::Pulse)
-	{
-		LedNumber = 2;
-	}
-
 	UDualSenseLibrary* DualSenseInstance = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
 	{
 		return;
 	}
 
-	DualSenseInstance->SetLedMicEffects(LedNumber);
+	DualSenseInstance->SetLedMicEffects(Value);
 }
 
 void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)

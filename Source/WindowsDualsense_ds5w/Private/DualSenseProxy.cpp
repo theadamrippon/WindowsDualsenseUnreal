@@ -4,9 +4,9 @@
 
 
 #include "DualSenseProxy.h"
-#include "DualSenseLibrary.h"
-#include "DualSenseLibraryManager.h"
-#include "ValidateHelpers.h"
+#include "../Public/Core/DualSense/DualSenseLibrary.h"
+#include "Core/DualSense/DualSenseLibraryManager.h"
+#include "Helpers/ValidateHelpers.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 
 
@@ -52,37 +52,12 @@ bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)
 {
 	UDualSenseLibrary* DualSenseInstance = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-
 	if (!DualSenseInstance)
 	{
 		return 0.0f;
 	}
 
-	return DualSenseInstance->GetLevelBattery();
-}
-
-int32 UDualSenseProxy::GetTriggerLeftStrengthFeedback(int32 ControllerId)
-{
-	UDualSenseLibrary* DualSenseInstance = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DualSenseInstance)
-	{
-		return 0;
-	}
-
-	EControllerHand HandToUse = EControllerHand::Left;
-	return DualSenseInstance->GetTrirggersFeedback(HandToUse);
-}
-
-int32 UDualSenseProxy::GetTriggerRightStrengthFeedback(int32 ControllerId)
-{
-	UDualSenseLibrary* DualSenseInstance = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DualSenseInstance)
-	{
-		return 0;
-	}
-
-	EControllerHand HandToUse = EControllerHand::Right;
-	return DualSenseInstance->GetTrirggersFeedback(HandToUse);
+	return DualSenseInstance->GetBattery();
 }
 
 void UDualSenseProxy::SetVibrationFromAudio(
@@ -123,7 +98,7 @@ void UDualSenseProxy::SetFeedback(int32 ControllerId, int32 BeginStrength,
 		return;
 	}
 
-	return DualSenseInstance->Feedback(BeginStrength, MiddleStrength, EndStrength, Hand);
+	return DualSenseInstance->SetResistance(BeginStrength, MiddleStrength, EndStrength, Hand);
 }
 
 void UDualSenseProxy::Resistance(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Strength,
@@ -138,7 +113,7 @@ void UDualSenseProxy::Resistance(int32 ControllerId, int32 StartPosition, int32 
 	{
 		return;
 	}
-	DualSenseInstance->SectionResistance(StartPosition, EndPosition, Strength, Hand);
+	DualSenseInstance->SetResistance(StartPosition, EndPosition, Strength, Hand);
 }
 
 void UDualSenseProxy::AutomaticGun(int32 ControllerId, int32 BeginStrength,
@@ -155,7 +130,7 @@ void UDualSenseProxy::AutomaticGun(int32 ControllerId, int32 BeginStrength,
 		return;
 	}
 
-	DualSenseInstance->SetVibrationTrigger(BeginStrength, MiddleStrength, EndStrength, Hand, KeepEffect);
+	DualSenseInstance->SetAutomaticGun(BeginStrength, MiddleStrength, EndStrength, Hand, KeepEffect);
 }
 
 void UDualSenseProxy::ContinuousResistance(int32 ControllerId, int32 StartPosition, int32 Strength, EControllerHand Hand)
@@ -168,7 +143,7 @@ void UDualSenseProxy::ContinuousResistance(int32 ControllerId, int32 StartPositi
 	{
 		return;
 	}
-	DualSenseInstance->ContinuousResistance(StartPosition, Strength, Hand);
+	DualSenseInstance->SetContinuousResistance(StartPosition, Strength, Hand);
 }
 
 void UDualSenseProxy::Galloping(
@@ -186,7 +161,7 @@ void UDualSenseProxy::Galloping(
 		return;
 	}
 
-	DualSenseInstance->SetGallopingEffects(StartPosition, EndPosition, BeginStrength, EndStrength, Frequency, Hand);
+	DualSenseInstance->SetGalloping(StartPosition, EndPosition, BeginStrength, EndStrength, Frequency, Hand);
 }
 
 void UDualSenseProxy::Machine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot,
@@ -203,7 +178,7 @@ void UDualSenseProxy::Machine(int32 ControllerId, int32 StartPosition, int32 End
 		return;
 	}
 
-	DualSenseInstance->SetMachineEffects(StartPosition, EndPosition, FirstFoot, LasFoot, Frequency, Period, Hand);
+	DualSenseInstance->SetMachine(StartPosition, EndPosition, FirstFoot, LasFoot, Frequency, Period, Hand);
 }
 
 void UDualSenseProxy::Weapon(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 Strength,
@@ -236,7 +211,7 @@ void UDualSenseProxy::Bow(int32 ControllerId, int32 StartPosition, int32 EndPosi
 		return;
 	}
 
-	DualSenseInstance->SetBowEffects(StartPosition, EndPosition, BeginStrength, EndStrength, Hand);
+	DualSenseInstance->SetBow(StartPosition, EndPosition, BeginStrength, EndStrength, Hand);
 }
 
 void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
@@ -247,7 +222,7 @@ void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value,
 		return;
 	}
 
-	DualSenseInstance->SetLedPlayerEffects(Value, Brightness);
+	DualSenseInstance->SetPlayerLed(Value, Brightness);
 }
 
 void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
@@ -258,7 +233,7 @@ void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
 		return;
 	}
 
-	DualSenseInstance->SetLedMicEffects(Value);
+	DualSenseInstance->SetMicrophoneLed(Value);
 }
 
 void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
@@ -269,7 +244,7 @@ void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
 		return;
 	}
 
-	DualSenseInstance->UpdateColorOutput(Color);
+	DualSenseInstance->SetLightbar(Color);
 }
 
 void UDualSenseProxy::EnableTouch(int32 ControllerId, bool bEnableTouch)
@@ -313,7 +288,7 @@ void UDualSenseProxy::NoResistance(int32 ControllerId, EControllerHand Hand)
 		return;
 	}
 
-	DualSenseInstance->NoResistance(Hand);
+	DualSenseInstance->StopTrigger(Hand);
 }
 
 void UDualSenseProxy::StopTriggerEffect(const int32 ControllerId, EControllerHand HandStop)
@@ -324,7 +299,7 @@ void UDualSenseProxy::StopTriggerEffect(const int32 ControllerId, EControllerHan
 		return;
 	}
 
-	DualSenseInstance->StopEffect(HandStop);
+	DualSenseInstance->StopTrigger(HandStop);
 }
 
 void UDualSenseProxy::StopAllTriggersEffects(const int32 ControllerId)
@@ -335,7 +310,7 @@ void UDualSenseProxy::StopAllTriggersEffects(const int32 ControllerId)
 		return;
 	}
 
-	DualSenseInstance->StopAllEffects();
+	DualSenseInstance->StopTrigger(EControllerHand::AnyHand);
 }
 
 void UDualSenseProxy::ResetEffects(const int32 ControllerId)

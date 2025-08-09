@@ -12,7 +12,11 @@
 #include "DualSenseProxy.generated.h"
 
 /**
- * 
+ * @brief Proxy class for PlayStation DualSense controller interactions and effects.
+ *
+ * Provides static functions to control various features and settings of a connected
+ * PlayStation DualSense controller such as LED settings, vibration, trigger effects,
+ * and connectivity status.
  */
 UCLASS(Blueprintable, BlueprintType)
 class WINDOWSDUALSENSE_DS5W_API UDualSenseProxy : public UObject
@@ -20,29 +24,70 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseProxy : public UObject
 	GENERATED_BODY()
 
 public:
+	/**
+	 * Updates the settings for a DualSense controller using its feature report.
+	 *
+	 * @param ControllerId The ID of the controller to be updated.
+	 * @param Settings The settings to be applied to the controller, encapsulated in an FDualSenseFeatureReport structure.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Settings")
 	static void DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings);
 
+	/**
+	 * Checks if the DualSense device with the specified Controller ID is connected.
+	 *
+	 * @param ControllerId The ID of the controller to check for connectivity.
+	 * @return True if the DualSense device is connected, false otherwise.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
 	static bool DeviceIsConnected(int32 ControllerId);
 
+	/**
+	 * Attempts to reconnect a DualSense controller based on the given controller ID.
+	 * If the controller is successfully reconnected, the operation returns true;
+	 * otherwise, it returns false.
+	 *
+	 * @param ControllerId The ID of the controller to reconnect.
+	 * @return Returns true if the controller was successfully reconnected, false otherwise.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
 	static bool DeviceReconnect(int32 ControllerId);
 
+	/**
+	 * Disconnects the DualSense device associated with the given Controller ID.
+	 * This method removes the library instance associated with the specified controller.
+	 *
+	 * @param ControllerId The ID of the DualSense controller to be disconnected.
+	 * @return true if the disconnection was initiated successfully.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
 	static bool DeviceDisconnect(int32 ControllerId);
 
+	/**
+	 * Retrieves the battery level of the DualSense controller for the specified controller ID.
+	 *
+	 * This method uses the DualSense library instance associated with the provided controller ID
+	 * to fetch the battery level. If the library instance is not found, the method returns 0.0f.
+	 *
+	 * @param ControllerId The ID of the DualSense controller to query.
+	 * @return The battery level of the controller as a float. Returns 0.0f if the library instance cannot be retrieved.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
 	static float LevelBatteryDevice(int32 ControllerId);
 
-	// Return feedback trigger
-	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	static int32 GetTriggerRightStrengthFeedback(int32 ControllerId);
-
-	// Return feedback trigger
-	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	static int32 GetTriggerLeftStrengthFeedback(int32 ControllerId);
-
+	/**
+	 * Sets the vibration for a DualSense controller based on audio envelopes and other parameters.
+	 *
+	 * @param ControllerId The ID of the controller to apply the vibration to.
+	 * @param AverageEnvelopeValue The average audio envelope value, used to calculate the left vibration intensity.
+	 * @param MaxEnvelopeValue The maximum audio envelope value, used to calculate the right vibration intensity.
+	 * @param NumWaveInstances The number of wave instances contributing to the audio signal, affecting the overall vibration strength.
+	 * @param EnvelopeToVibrationMultiplier Multiplier to scale the average envelope value to vibration intensity.
+	 * @param PeakToVibrationMultiplier Multiplier to scale the maximum envelope value to vibration intensity.
+	 * @param Threshold The minimum vibration level threshold for activation.
+	 * @param ExponentCurve The exponent curve used to shape the vibration scaling.
+	 * @param BaseMultiplier A base multiplier applied to vibration for additional scaling.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Audio Vibration")
 	static void SetVibrationFromAudio(
 		const int32 ControllerId,
@@ -60,6 +105,16 @@ public:
 		const float BaseMultiplier = 1.5f
 	);
 
+	/**
+	 * Triggers a haptic feedback effect for an automatic gun using the DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect on.
+	 * @param BeginStrength The starting vibration strength of the trigger effect. If invalid, a default value of 8 is used.
+	 * @param MiddleStrength The middle vibration strength of the trigger effect. If invalid, a default value of 8 is used.
+	 * @param EndStrength The ending vibration strength of the trigger effect. If invalid, a default value of 8 is used.
+	 * @param Hand The controller hand (left or right) to which the effect is applied.
+	 * @param KeepEffect Whether to keep the effect active continuously.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void AutomaticGun(
 		int32 ControllerId,
@@ -72,6 +127,15 @@ public:
 		EControllerHand Hand, bool KeepEffect
 	);
 
+	/**
+	 * Sets haptic feedback for a DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller for which feedback is to be set.
+	 * @param BeginStrength The strength of the feedback at the beginning.
+	 * @param MiddleStrength The strength of the feedback in the middle.
+	 * @param EndStrength The strength of the feedback at the end.
+	 * @param Hand The hand (left or right) associated with the controller.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void SetFeedback(
 		int32 ControllerId,
@@ -84,6 +148,19 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Applies a resistance effect to the trigger of a PlayStation DualSense controller.
+	 *
+	 * This method configures the specified trigger to provide resistance feedback based on
+	 * the given start position, end position, and strength parameters. The effect is applied
+	 * to the controller defined by the ControllerId and the trigger specified using the Hand parameter.
+	 *
+	 * @param ControllerId The identifier of the controller to apply the resistance effect.
+	 * @param StartPosition The starting position of the resistance zone within the trigger's range. Value must be between 0 and 8.
+	 * @param EndPosition The ending position of the resistance zone within the trigger's range. Value must be between 0 and 8.
+	 * @param Strength The strength of the resistance effect. Value must be between 0 and 8, with higher values indicating stronger resistance.
+	 * @param Hand The trigger to apply the effect to, specified as EControllerHand (e.g., Left or Right).
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Resistance(
 		int32 ControllerId,
@@ -96,6 +173,14 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Applies a continuous resistance effect on the adaptive trigger of a DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect to.
+	 * @param StartPosition The starting position of the resistance effect. Valid range determined by internal validation.
+	 * @param Strength The intensity of the resistance effect. Valid range determined by internal validation.
+	 * @param Hand The controller hand (e.g., left or right) to which the resistance effect applies.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void ContinuousResistance(
 		int32 ControllerId,
@@ -106,6 +191,16 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Configures the bow effect on a DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to configure the effect on.
+	 * @param StartPosition The starting position of the trigger effect.
+	 * @param EndPosition The ending position of the trigger effect.
+	 * @param BeginStrength The strength of the trigger's resistance at the starting position.
+	 * @param EndStrength The strength of the trigger's resistance at the ending position.
+	 * @param Hand The hand (left or right) where the effect will be applied.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Bow(
 		int32 ControllerId,
@@ -120,6 +215,17 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Triggers a galloping haptic effect on the DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect to.
+	 * @param StartPosition The starting actuator position for the galloping effect. Valid range is 0-8.
+	 * @param EndPosition The ending actuator position for the galloping effect. Valid range is 0-8.
+	 * @param BeginStrength The initial strength of the effect. Valid range is 0-8.
+	 * @param EndStrength The final strength of the effect. Valid range is 0-8.
+	 * @param Frequency The frequency of the galloping effect.
+	 * @param Hand Specifies which hand is being used (left or right).
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Galloping(
 		int32 ControllerId,
@@ -136,6 +242,18 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Configures and applies machine-like haptic effects to the DualSense controller.
+	 *
+	 * @param ControllerId The ID representing the target controller to which effects will be applied.
+	 * @param StartPosition The starting position where the haptic effect begins on the controller.
+	 * @param EndPosition The ending position where the haptic effect finishes on the controller.
+	 * @param FirstFoot The position of the first foot in the haptic cycling effect.
+	 * @param LasFoot The position of the last foot in the haptic cycling effect.
+	 * @param Frequency The frequency at which the haptic effect oscillates.
+	 * @param Period The period of the haptic cycle in seconds.
+	 * @param Hand Specifies which hand the effect is directed towards (left or right).
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Machine(
 		int32 ControllerId,
@@ -154,6 +272,15 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Configures a weapon effect on the DualSense controller using specified parameters.
+	 *
+	 * @param ControllerId The identifier for the target DualSense controller.
+	 * @param StartPosition The starting position of the effect in the trigger. The value should be validated and within the range of allowed positions.
+	 * @param EndPosition The ending position of the effect in the trigger. The value should be validated and within the range of allowed positions.
+	 * @param Strength The strength of the weapon effect. The value should be validated and within the range of allowed strengths.
+	 * @param Hand Specifies which controller hand (left or right) should be affected by the weapon effect.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Weapon(
 		int32 ControllerId,
@@ -166,40 +293,109 @@ public:
 		EControllerHand Hand
 	);
 
+	/**
+	 * Updates the LED color effects on a DualSense controller using the specified color.
+	 *
+	 * @param ControllerId The identifier of the controller whose LED color will be updated.
+	 * @param Color The color to set on the controller's LED.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Led Effects")
 	static void LedColorEffects(int32 ControllerId, FColor Color);
 
+	/**
+	 * Controls the LED player light effects on the DualSense controller.
+	 *
+	 * @param ControllerId The identifier for the target controller.
+	 * @param Value The LED pattern enum specifying the LED configuration for the player indicator (e.g., Off, Player One, Player Two, etc.).
+	 * @param Brightness The brightness level of the LED lights specified by an enum (e.g., Low, Medium, High).
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Led Effects")
 	static void LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness);
 
+	/**
+	 * Controls the LED and microphone visual effects on a DualSense controller.
+	 *
+	 * @param ControllerId The ID of the DualSense controller to be affected.
+	 * @param Value The desired LED and microphone effect to apply, represented as an ELedMicEnum value.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Led Effects")
 	static void LedMicEffects(int32 ControllerId, ELedMicEnum Value);
 
-	// Touch, Gyroscope and Accelerometer
+	/**
+	 * Enables or disables the touch functionality on a specified DualSense controller.
+	 *
+	 * @param ControllerId The identifier of the controller for which the touch functionality should be enabled or disabled.
+	 * @param bEnableTouch A boolean indicating whether to enable (true) or disable (false) the touch functionality.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch, Gyroscope and Accelerometer")
 	static void EnableTouch(int32 ControllerId, bool bEnableTouch);
 
+	/**
+	 * Enables or disables accelerometer values for the specified controller.
+	 *
+	 * This method allows toggling the accelerometer functionality for a given
+	 * controller ID. If the DualSense instance for the specified controller ID
+	 * is not available, the function will return without performing any actions.
+	 *
+	 * @param ControllerId The ID of the controller for which the accelerometer values will be enabled or disabled.
+	 * @param bEnableAccelerometer A boolean value that determines whether to enable or disable accelerometer values.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch, Gyroscope and Accelerometer")
 	static void EnableAccelerometerValues(int32 ControllerId, bool bEnableAccelerometer);
 
+	/**
+	 * Enables or disables the gyroscope functionality for a specified DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller for which the gyroscope functionality is to be modified.
+	 * @param bEnableGyroscope Set to true to enable the gyroscope, or false to disable it.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Touch, Gyroscope and Accelerometer")
 	static void EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope);
 
-	// Reset Effects
+	/**
+	 * Disables the resistance effect for the specified controller and hand.
+	 *
+	 * @param ControllerId The unique identifier for the DualSense controller.
+	 * @param Hand The hand (left or right) associated with the effect to disable resistance for.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Reset Effects")
 	static void NoResistance(int32 ControllerId, EControllerHand Hand);
 
+	/**
+	 * Stops the trigger effect on a specific controller for the specified hand.
+	 *
+	 * @param ControllerId The unique identifier of the controller for which the trigger effect should be stopped.
+	 * @param HandStop Specifies which hand's trigger effect (left or right) should be stopped.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Reset Effects")
 	static void StopTriggerEffect(int32 ControllerId, EControllerHand HandStop);
 
+	/**
+	 * Stops all trigger effects currently active for the specified DualSense controller.
+	 *
+	 * @param ControllerId The ID of the DualSense controller for which to stop all trigger effects.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Reset Effects")
 	static void StopAllTriggersEffects(int32 ControllerId);
 
+	/**
+	 * Resets all haptic feedback effects for the specified DualSense controller.
+	 *
+	 * This method stops all active effects currently running on the specified DualSense controller.
+	 *
+	 * @param ControllerId The identifier of the controller whose effects are to be reset.
+	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Reset Effects")
 	static void ResetEffects(int32 ControllerId);
 
 
-	// DEPRECATED
+	/**
+	 * Deprecated method for enabling or disabling touch functionality on a DualSense controller.
+	 * This method has been replaced by EnableTouch and is retained for backward compatibility.
+	 *
+	 * @param ControllerId The ID of the controller on which the touch functionality is to be enabled or disabled.
+	 * @param bEnableTouch A boolean value indicating whether to enable (true) or disable (false) the touch functionality.
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use EnableTouch instead of EnableTouch1.")
 	UFUNCTION(BlueprintCallable, Category="DualSense Touch Pad",
@@ -209,6 +405,17 @@ public:
 		EnableTouch(ControllerId, bEnableTouch);
 	}
 
+	/**
+	 * Sets a trigger haptic feedback effect for the DualSense controller. Deprecated as of plugin version v1.2.1. Use AutomaticGun instead.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect to.
+	 * @param StartPosition The starting position of the trigger effect (deprecated, not utilized in the replacement method AutomaticGun).
+	 * @param BeginStrength The strength of the feedback at the beginning of the trigger press.
+	 * @param MiddleStrength The strength of the feedback at the middle of the trigger press.
+	 * @param EndStrength The strength of the feedback at the end of the trigger press.
+	 * @param Hand The hand (left or right) of the controller to which the effect will be applied.
+	 * @param KeepEffect Whether the effect should persist after the initial application.
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use AutomaticGun instead of SetTriggerHapticFeedbackEffect.")
 	UFUNCTION(BlueprintCallable, Category="DualSense Effects",
@@ -225,6 +432,13 @@ public:
 		AutomaticGun(ControllerId, BeginStrength, MiddleStrength, EndStrength, Hand, KeepEffect);
 	}
 
+	/**
+	 * Deprecated method for enabling or disabling the touch pad functionality on a DualSense controller.
+	 * Use EnableTouch instead of this method for future implementations.
+	 *
+	 * @param ControllerId The ID of the controller to enable or disable the touch pad for.
+	 * @param bEnableTouch A boolean value indicating whether to enable (true) or disable (false) the touch pad.
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use EnableTouch instead of EnableTouch2.")
 	UFUNCTION(BlueprintCallable, Category="DualSense Touch Pad",
@@ -234,6 +448,19 @@ public:
 		EnableTouch(ControllerId, bEnableTouch);
 	}
 
+	/**
+	 * Deprecated method for applying effects to the DualSense controller. Use the `Machine` method instead.
+	 *
+	 * @deprecated 5.1 Methods refactored and deprecated as of plugin version v1.2.1. Use Machine instead of EffectMachine.
+	 * @param ControllerId The ID of the controller to apply the effect on.
+	 * @param StartPosition The starting position for the effect, clamped between 0 and 8.
+	 * @param EndPosition The ending position for the effect, clamped between 0 and 8.
+	 * @param FirstFoot The first foot position of the effect, clamped between 0 and 8.
+	 * @param LasFoot The last foot position of the effect, clamped between 0 and 8.
+	 * @param Frequency The frequency of the effect, clamped between 0.015 and 1.0.
+	 * @param Period The period of the effect, clamped between 0.015 and 1.0.
+	 * @param Hand The hand (left or right) associated with the controller.
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use Machine instead of EffectMachine.")
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects",
@@ -244,6 +471,18 @@ public:
 		Machine(ControllerId, StartPosition, EndPosition, FirstFoot, LasFoot, Frequency, Period, Hand);
 	}
 
+	/**
+	 * A deprecated method for triggering a bow effect on the DualSense controller.
+	 * This method has been refactored and deprecated as of plugin version v1.2.1.
+	 * Use the `Bow` method instead.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect on.
+	 * @param StartPosition The starting position of the bow effect (range: 0-8).
+	 * @param EndPosition The ending position of the bow effect (range: 0-8).
+	 * @param BeginStrength The initial strength of the bow effect (range: 0-8).
+	 * @param EndStrength The final strength of the bow effect (range: 0-8).
+	 * @param Hand The hand (left or right) associated with the controller for the effect.
+	 */
 	UE_DEPRECATED(5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use Bow instead of EffectBow.")
 	UFUNCTION(BlueprintCallable, Category="DualSense Effects", meta=(DeprecatedFunction, DeprecationMessage="Use Bow"))
 	static void EffectBow(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginStrength, int32 EndStrength,
@@ -252,6 +491,13 @@ public:
 		Bow(ControllerId, StartPosition, EndPosition, BeginStrength, EndStrength, Hand);
 	}
 
+	/**
+	 * Deprecated method to apply the "No Resistance" effect on a DualSense controller.
+	 * This method has been deprecated as of plugin version v1.2.1. Use NoResistance instead.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect to.
+	 * @param Hand The hand (left or right) associated with the controller.
+	 */
 	UE_DEPRECATED(
 		5.1,
 		"Methods refactored and deprecated as of plugin version v1.2.1. Use EffectNoResistance instead of EffectNoResitance.")
@@ -262,6 +508,18 @@ public:
 		NoResistance(ControllerId, Hand);
 	}
 
+	/**
+	 * Applies section resistance feedback to the DualSense controller.
+	 * This method has been deprecated and replaced by the Resistance method.
+	 *
+	 * @param ControllerId The ID of the controller.
+	 * @param StartPosition The starting position of the resistance effect on the trigger (range: 0-8).
+	 * @param EndPosition The ending position of the resistance effect on the trigger (range: 0-8).
+	 * @param Strength The strength of the resistance (range: 0-8).
+	 * @param ResistanceHand The hand (left or right) the resistance effect should be applied to.
+	 *
+	 * @deprecated Use Resistance instead.
+	 */
 	UE_DEPRECATED(
 		5.1,
 		"Methods refactored and deprecated as of plugin version v1.2.1. Use Resistance instead of EffectSectionResitance.")
@@ -273,6 +531,15 @@ public:
 		Resistance(ControllerId, StartPosition, EndPosition, Strength, ResistanceHand);
 	}
 
+	/**
+	 * Deprecated as of plugin version v1.2.1. Use ContinuousResistance instead of EffectContinuousResitance.
+	 * This method applies continuous resistance to the DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to which the effect should be applied.
+	 * @param StartPosition The starting position of the resistance effect (range: 0-8).
+	 * @param Strength The strength of the resistance effect (range: 0-8).
+	 * @param ContinuousHand The hand (left or right) for which the continuous resistance effect is applied.
+	 */
 	UE_DEPRECATED(
 		5.1,
 		"Methods refactored and deprecated as of plugin version v1.2.1. Use ContinuousResistance instead of EffectContinuousResitance.")
@@ -284,6 +551,16 @@ public:
 		ContinuousResistance(ControllerId, StartPosition, Strength, ContinuousHand);
 	}
 
+	/**
+	 * A deprecated function that applies a weapon effect on a DualSense controller. This method has been refactored
+	 * and deprecated as of plugin version v1.2.1. Use the `Weapon` method instead.
+	 *
+	 * @param ControllerId The ID of the controller on which to apply the effect.
+	 * @param StartPosition The starting position of the effect on the controller's trigger, in the range [0, 8].
+	 * @param EndPosition The ending position of the effect on the controller's trigger, in the range [0, 8].
+	 * @param Strength The intensity of the effect, in the range [0, 8].
+	 * @param Hand The hand (left or right) to which the effect should be applied on the controller.
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use Weapon instead of EffectWeapon.")
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects",
@@ -294,6 +571,19 @@ public:
 		Weapon(ControllerId, StartPosition, EndPosition, Strength, Hand);
 	}
 
+	/**
+	 * Deprecated method for triggering the "Galloping" effect on a DualSense controller.
+	 * As of version 1.2.1 of the plugin, this method has been refactored and is deprecated.
+	 * Use the `Galloping` method instead.
+	 *
+	 * @param ControllerId The ID of the DualSense controller.
+	 * @param StartPosition The initial position of the effect (0-8).
+	 * @param EndPosition The final position of the effect (0-8).
+	 * @param BeginStrength The strength of the effect at the start position (0-8).
+	 * @param EndStrength The strength of the effect at the end position (0-8).
+	 * @param Frequency The frequency of the effect (0.01-1.0).
+	 * @param Hand The controller hand (left or right).
+	 */
 	UE_DEPRECATED(
 		5.1, "Methods refactored and deprecated as of plugin version v1.2.1. Use Galloping instead of EffectGalloping.")
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects",
@@ -302,5 +592,29 @@ public:
 	                            int32 EndStrength, float Frequency, EControllerHand Hand)
 	{
 		Galloping(ControllerId, StartPosition, EndPosition, BeginStrength, EndStrength, Frequency, Hand);
+	}
+
+	/**
+	 * Retrieves the strength of the right trigger feedback for the specified controller.
+	 *
+	 * @param ControllerId The unique identifier for the controller whose right trigger feedback strength is to be retrieved.
+	 * @return The strength value of the right trigger feedback. Returns 0 if the controller instance is not found.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
+	static int32 GetTriggerRightStrengthFeedback(int32 ControllerId)
+	{
+		return 0;
+	}
+
+	/**
+	 * Retrieves the strength of the left trigger feedback for the specified DualSense controller.
+	 *
+	 * @param ControllerId The ID of the controller to retrieve the feedback strength for.
+	 * @return The strength of the left trigger feedback as an integer. Returns 0 if the controller instance is not found.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "DualSense Status")
+	int32 GetTriggerLeftStrengthFeedback(int32 ControllerId)
+	{
+		return 0;
 	}
 };

@@ -3,8 +3,8 @@
 // Planned Release Year: 2025
 
 
-#include "DualSenseLibraryManager.h"
-#include "DualSenseHIDManager.h"
+#include "Core/DualSense/DualSenseLibraryManager.h"
+#include "Core/DualSenseHIDManager.h"
 
 UDualSenseLibraryManager* UDualSenseLibraryManager::Instance;
 TMap<int32, UDualSenseLibrary*> UDualSenseLibraryManager::LibraryInstances;

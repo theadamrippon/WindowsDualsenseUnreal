@@ -3,7 +3,7 @@
 // Planned Release Year: 2025
 
 
-#include "DualSenseHIDManager.h"
+#include "Core/DualSenseHIDManager.h"
 
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <windows.h>
@@ -12,6 +12,8 @@
 
 #include "Core/Structs/FDeviceContext.h"
 #include "Windows/HideWindowsPlatformTypes.h"
+
+const UINT32 UDualSenseHIDManager::CRCSeed = 0xeada2d49;
 
 UDualSenseHIDManager::UDualSenseHIDManager()
 {
@@ -47,7 +49,7 @@ bool UDualSenseHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 		const auto DetailDataBuffer = static_cast<PSP_DEVICE_INTERFACE_DETAIL_DATA>(malloc(RequiredSize));
 		if (!DetailDataBuffer)
 		{
-			UE_LOG(LogTemp, Error, TEXT("HIDManager: Falha ao alocar memória para os detalhes do dispositivo."));
+			UE_LOG(LogTemp, Error, TEXT("HIDManager: Failed to allocate memory for device details."));
 			continue;
 		}
 		DetailDataBuffer->cbSize = sizeof(SP_DEVICE_INTERFACE_DETAIL_DATA);
@@ -56,7 +58,6 @@ bool UDualSenseHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 		if (SetupDiGetDeviceInterfaceDetail(DeviceInfoSet, &DeviceInterfaceData, DetailDataBuffer, RequiredSize,
 		                                    nullptr, nullptr))
 		{
-			UE_LOG(LogTemp, Log, TEXT("HIDManager: Detalhes do dispositivo: %s"), DetailDataBuffer->DevicePath);
 			const HANDLE TempDeviceHandle = CreateFileW(
 				DetailDataBuffer->DevicePath,
 				GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
@@ -165,6 +166,84 @@ bool UDualSenseHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 	return true;
 }
 
+void UDualSenseHIDManager::FreeContext(FDeviceContext* Context)
+{
+	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
+	ZeroMemory(&Context->Path, sizeof(Context->Path));
+	ZeroMemory(&Context->Output, sizeof(Context->Output));
+	CloseHandle(Context->Handle);
+
+	Context->IsConnected = false;
+	Context->ConnectionType = Unrecognized;
+}
+
+void UDualSenseHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
+{
+	FOutput* HidOut = &DeviceContext->Output;
+	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
+	DeviceContext->Buffer[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
+
+	if (DeviceContext->ConnectionType == Bluetooth)
+	{
+		DeviceContext->Buffer[1] = 0x02;
+	}
+
+	unsigned char* Output = &DeviceContext->Buffer[Padding];
+	Output[0] = HidOut->Feature.VibrationMode;
+	Output[1] = HidOut->Feature.FeatureMode;
+
+	Output[2] = HidOut->Rumbles.Left;
+	Output[3] = HidOut->Rumbles.Right;
+	if (Padding == 1)
+	{
+		Output[4] = HidOut->Audio.HeadsetVolume;
+		Output[5] = HidOut->Audio.SpeakerVolume;
+		Output[6] = HidOut->Audio.MicVolume;
+		Output[7] = HidOut->Audio.Mode;
+		Output[9] = HidOut->Audio.MicStatus;
+	}
+	Output[8] = HidOut->MicLight.Mode;
+
+	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
+	Output[38] = 0x04;
+
+	Output[42] = HidOut->PlayerLed.Brightness;
+	Output[43] = HidOut->PlayerLed.Led;
+	Output[43] |= 0x20;
+
+	Output[44] = HidOut->Lightbar.R;
+	Output[45] = HidOut->Lightbar.G;
+	Output[46] = HidOut->Lightbar.B;
+	
+	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
+	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
+
+	if (DeviceContext->ConnectionType == Bluetooth)
+	{
+		const UINT32 CrcChecksum = Compute(DeviceContext->Buffer, 74);
+		DeviceContext->Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+		DeviceContext->Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+		DeviceContext->Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+		DeviceContext->Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+	}
+
+	// for (size_t i = 0; i < 78; ++i)
+	// {
+	// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
+	// 	UE_LOG(LogTemp, Log, TEXT("Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Buffer[i]);
+	// }
+
+	DWORD BytesWritten = 0;
+	size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
+	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength,
+	               &BytesWritten, nullptr))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"),
+		       OutputReportLength, GetLastError());
+		FreeContext(DeviceContext);
+	}
+}
+
 void UDualSenseHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTriggers& Effect)
 {
 	Trigger[0x0] = Effect.Mode;
@@ -237,92 +316,21 @@ void UDualSenseHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTrig
 		Trigger[0x4] = Effect.Frequency;
 		Trigger[0x5] = Effect.Strengths.Period;
 	}
-}
 
-void UDualSenseHIDManager::FreeContext(FDeviceContext* Context)
-{
-	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
-	ZeroMemory(&Context->Path, sizeof(Context->Path));
-	ZeroMemory(&Context->Output, sizeof(Context->Output));
-	CloseHandle(Context->Handle);
-
-	Context->IsConnected = false;
-	Context->ConnectionType = Unknown;
-}
-
-void UDualSenseHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
-{
-	FOutput* HidOut = &DeviceContext->Output;
-	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
-	DeviceContext->Buffer[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
-
-	if (DeviceContext->ConnectionType == Bluetooth)
+	if (Effect.Mode == 0x0) // Machine
 	{
-		DeviceContext->Buffer[1] = 0x02;
-	}
-
-	unsigned char* Output = &DeviceContext->Buffer[Padding];
-	Output[0] = HidOut->Feature.VibrationMode;
-	Output[1] = HidOut->Feature.FeatureMode;
-
-	Output[2] = HidOut->Rumbles.Left;
-	Output[3] = HidOut->Rumbles.Right;
-	if (Padding == 1)
-	{
-		Output[4] = HidOut->Audio.HeadsetVolume;
-		Output[5] = HidOut->Audio.SpeakerVolume;
-		Output[6] = HidOut->Audio.MicVolume;
-		Output[7] = HidOut->Audio.Mode;
-		Output[9] = HidOut->Audio.MicStatus;
-	}
-	Output[8] = HidOut->MicLight.Mode;
-
-	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
-	Output[38] = 0x04;
-	UE_LOG(LogTemp, Log, TEXT("Output 0x%02X"), Output[36]);
-
-	Output[42] = HidOut->PlayerLed.Brightness;
-	Output[43] = HidOut->PlayerLed.Led;
-	Output[43] |= 0x20;
-
-	Output[44] = HidOut->Lightbar.R;
-	Output[45] = HidOut->Lightbar.G;
-	Output[46] = HidOut->Lightbar.B;
-	
-	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
-	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
-
-	if (DeviceContext->ConnectionType == Bluetooth)
-	{
-		const UINT32 CrcChecksum = Compute(DeviceContext->Buffer, 74);
-		DeviceContext->Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
-		DeviceContext->Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
-		DeviceContext->Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
-		DeviceContext->Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
-	}
-
-	// for (size_t i = 0; i < 78; ++i)
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
-	// 	UE_LOG(LogTemp, Log, TEXT("Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Buffer[i]);
-	// }
-
-	DWORD BytesWritten = 0;
-	size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
-	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength,
-	               &BytesWritten, nullptr))
-	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"),
-		       OutputReportLength, GetLastError());
-		FreeContext(DeviceContext);
+		Trigger[0x1] = 0x0;
+		Trigger[0x2] = 0x0;
+		Trigger[0x3] = 0x0;
+		Trigger[0x4] = 0x0;
+		Trigger[0x5] = 0x0;
+		Trigger[0x6] = 0x0;
+		Trigger[0x7] = 0x0;
+		Trigger[0x8] = 0x0;
+		Trigger[0x9] = 0x0;
 	}
 }
 
-// /**
-//  *
-//  * Copyright (c) 2020 Ludwig Füchsl
-//  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
-//  */
 const UINT32 UDualSenseHIDManager::HashTable[256] = {
 	0xd202ef8d, 0xa505df1b, 0x3c0c8ea1, 0x4b0bbe37, 0xd56f2b94, 0xa2681b02, 0x3b614ab8, 0x4c667a2e,
 	0xdcd967bf, 0xabde5729, 0x32d70693, 0x45d03605, 0xdbb4a3a6, 0xacb39330, 0x35bac28a, 0x42bdf21c,
@@ -357,13 +365,6 @@ const UINT32 UDualSenseHIDManager::HashTable[256] = {
 	0x6fbf1d91, 0x18b82d07, 0x81b17cbd, 0xf6b64c2b, 0x68d2d988, 0x1fd5e91e, 0x86dcb8a4, 0xf1db8832,
 	0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xFF000000
 };
-
-// /**
-//  *
-//  * Copyright (c) 2020 Ludwig Füchsl
-//  * Code reference https://github.com/Ohjurot/DualSense-Windows/blob/main/VS19_Solution/DualSenseWindows/src/DualSenseWindows/DS_CRC32.cpp
-//  */
-const UINT32 UDualSenseHIDManager::CRCSeed = 0xeada2d49;
 
 UINT32 UDualSenseHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
 {

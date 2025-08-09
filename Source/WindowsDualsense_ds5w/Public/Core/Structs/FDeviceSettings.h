@@ -4,9 +4,6 @@
 
 #pragma once
 
-#include "CoreMinimal.h"
-#include "FDeviceSettings.generated.h"
-
 template<typename T>
 /**
  * @brief Represents device settings for configuration purposes.

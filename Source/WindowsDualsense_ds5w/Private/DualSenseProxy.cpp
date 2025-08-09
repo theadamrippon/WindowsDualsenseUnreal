@@ -5,12 +5,12 @@
 #include "DualSenseProxy.h"
 
 #include "Core/DeviceContainerManager.h"
+#include "Core/Interfaces/SonyGamepadInterface.h"
 #include "Core/Interfaces/SonyGamepadTriggerInterface.h"
 #include "Helpers/ValidateHelpers.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 
-
-void UDualSenseProxy::DeviceSettings(int32 ControllerId, TSharedPtr<FDualSenseFeatureReport> Settings)
+void UDualSenseProxy::DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings)
 {
 	ISonyGamepadInterface* DualSenseInstance = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
 	if (!DualSenseInstance)
@@ -18,13 +18,8 @@ void UDualSenseProxy::DeviceSettings(int32 ControllerId, TSharedPtr<FDualSenseFe
 		return;
 	}
 
-	FSettings<TSharedPtr<IFeatureReport>> SettingsReport;
-	SettingsReport.Settings = Settings;
-	if (!SettingsReport.Settings.IsValid())
-	{
-		return;
-	}
-	
+	FSettings<FFeatureReport> SettingsReport;
+	SettingsReport.Settings = static_cast<FFeatureReport>(Settings);
 	DualSenseInstance->Settings(SettingsReport);
 }
 

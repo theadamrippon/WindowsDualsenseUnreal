@@ -11,7 +11,11 @@
 #include "Core/Structs/FDeviceSettings.h"
 #include "SonyGamepadInterface.generated.h"
 
-struct IFeatureReport { virtual ~IFeatureReport() = default; };
+USTRUCT()
+struct FFeatureReport
+{
+	GENERATED_BODY()
+};
 
 /**
  * Interface for interacting with a Sony gamepad in a system.
@@ -56,7 +60,7 @@ public:
 	 *
 	 * @param Settings Reference to an FDeviceSettings struct containing the desired configuration parameters for the device.
 	 */
-	virtual void Settings(const FSettings<TSharedPtr<IFeatureReport>>& Settings) = 0;
+	virtual void Settings(const FSettings<FFeatureReport>& Settings) = 0;
 
 	/**
 	 * Initializes the gamepad library using the specified device context.

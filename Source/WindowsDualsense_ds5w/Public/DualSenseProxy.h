@@ -5,6 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Templates/SharedPointer.h"
 #include "UObject/Object.h"
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
@@ -32,7 +33,7 @@ public:
 	 * @param Settings The settings to be applied to the controller, encapsulated in an FDualSenseFeatureReport structure.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Settings")
-	static void DeviceSettings(int32 ControllerId, TSharedPtr<FDualSenseFeatureReport> Settings);
+	static void DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings);
 
 	/**
 	 * Checks if the DualSense device with the specified Controller ID is connected.

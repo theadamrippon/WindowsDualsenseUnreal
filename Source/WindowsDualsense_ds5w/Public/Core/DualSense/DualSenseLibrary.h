@@ -292,7 +292,7 @@ public:
 	 * @param Settings A reference to a FDeviceSettings object that holds
 	 * the device's configuration options to be adjusted or updated.
 	 */
-	virtual void Settings(const FSettings<TSharedPtr<IFeatureReport>>& Settings) override;
+	virtual void Settings(const FSettings<FFeatureReport>& Settings) override;
 
 	/**
 	 * @brief Initializes the DualSense library with the specified device context.

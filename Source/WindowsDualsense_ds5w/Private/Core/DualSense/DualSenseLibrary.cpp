@@ -51,7 +51,7 @@ void UDualSenseLibrary::SendOut()
 	UDeviceHIDManager::OutputBuffering(&HIDDeviceContexts);
 }
 
-void UDualSenseLibrary::Settings(const FSettings<TSharedPtr<IFeatureReport>>& Settings)
+void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
 {
 	const auto* SensePtr = dynamic_cast<FDualSenseFeatureReport*>(Settings);
 	if (!SensePtr) return;

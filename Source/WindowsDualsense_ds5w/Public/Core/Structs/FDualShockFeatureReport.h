@@ -21,7 +21,7 @@
  * integration with Blueprint scripting environments.
  */
 USTRUCT(BlueprintType)
-struct FDualShockFeatureReport : public IFeatureReport
+struct FDualShockFeatureReport : public FFeatureReport
 {
 	GENERATED_BODY()
 };

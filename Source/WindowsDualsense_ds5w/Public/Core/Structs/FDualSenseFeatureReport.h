@@ -29,7 +29,7 @@
  * Category: DualSense Settings
  */
 USTRUCT(BlueprintType)
-struct FDualSenseFeatureReport : public IFeatureReport
+struct FDualSenseFeatureReport : public FFeatureReport
 {
 	GENERATED_BODY()
 

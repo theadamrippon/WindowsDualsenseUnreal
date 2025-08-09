@@ -9,6 +9,7 @@
 #include "InputCoreTypes.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Core/Enums/EDeviceCommons.h"
+#include "Core/Structs/FDualSenseFeatureReport.h"
 #include "DualSenseProxy.generated.h"
 
 /**
@@ -31,7 +32,7 @@ public:
 	 * @param Settings The settings to be applied to the controller, encapsulated in an FDualSenseFeatureReport structure.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Settings")
-	static void DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings);
+	static void DeviceSettings(int32 ControllerId, TSharedPtr<FDualSenseFeatureReport> Settings);
 
 	/**
 	 * Checks if the DualSense device with the specified Controller ID is connected.

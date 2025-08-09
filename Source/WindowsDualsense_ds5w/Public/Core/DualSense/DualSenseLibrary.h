@@ -9,7 +9,9 @@
 #include "InputCoreTypes.h"
 #include "Core/Enums/EDeviceCommons.h"
 #include "Core/Interfaces/SonyGamepadInterface.h"
+#include "Core/Interfaces/SonyGamepadTriggerInterface.h"
 #include "Core/Structs/FDeviceContext.h"
+#include "Core/Structs/FDualSenseFeatureReport.h"
 #include "Misc/CoreDelegates.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
@@ -264,7 +266,7 @@ struct FGyro
  * the DualSense controller programmatically within an application.
  */
 UCLASS()
-class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject, public ISonyGamepadInterface
+class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject, public ISonyGamepadInterface, public ISonyGamepadTriggerInterface
 {
 	GENERATED_BODY()
 	
@@ -290,20 +292,8 @@ public:
 	 * @param Settings A reference to a FDeviceSettings object that holds
 	 * the device's configuration options to be adjusted or updated.
 	 */
-	virtual void Settings(FDeviceSettings& Settings) override {};
-	/**
-	 * @brief Configures DualSense device settings based on the provided feature report.
-	 *
-	 * This method updates the internal HID (Human Interface Device) output structure
-	 * with the specified settings from the input FDualSenseFeatureReport and applies
-	 * changes to features such as vibration, audio, and trigger mechanics of the
-	 * DualSense controller.
-	 *
-	 * @param Settings A struct containing the desired DualSense configuration settings.
-	 *                 Specifies parameters for vibration modes, audio configurations,
-	 *                 and trigger adjustments.
-	 */
-	virtual void Settings(FDualSenseFeatureReport& Settings);
+	virtual void Settings(const FSettings<TSharedPtr<IFeatureReport>>& Settings) override;
+
 	/**
 	 * @brief Initializes the DualSense library with the specified device context.
 	 *
@@ -545,26 +535,22 @@ public:
 	 *
 	 * @param Color The color to apply to the light bar, represented as an FColor structure.
 	 */
-	void SetLightbar(FColor Color);
+	virtual void SetLightbar(FColor Color) override;
 	/**
-	 * @brief Configures the trigger properties of the DualSense controller.
+	 * @brief Configures trigger properties for a DualSense controller.
 	 *
-	 * This method applies specific properties, such as resistance and active zones,
-	 * to the triggers of the DualSense controller. It customizes the input device's
-	 * response, such as start position, end position, strength levels, and active zones,
-	 * based on the provided property details.
+	 * This method adjusts the input trigger resistance or behavior based on the
+	 * properties provided in the `Values` parameter. It specifically processes
+	 * configurations for left and right triggers, setting their resistance zones,
+	 * activation strength, and associated levels.
 	 *
-	 * The method handles specific input properties to implement dynamic trigger behaviors,
-	 * such as resistance and customizable force feedback for left and/or right triggers.
-	 * It applies these properties through internal data mappings and ensures they are sent
-	 * to the HID device.
-	 *
-	 * @param Property A pointer to a FInputDeviceProperty object which specifies the
-	 * trigger behavior and resistance settings to be applied to the DualSense controller.
-	 * This parameter determines the configuration for the affected trigger(s), including
-	 * settings such as start strength, end strength, and affected trigger zones.
+	 * @param Values A pointer to an `FInputDeviceProperty` structure that defines
+	 *        the desired properties to configure the triggers. It may include
+	 *        attributes such as the start and end positions of resistance zones,
+	 *        strength levels, and the specific triggers to be affected (e.g., left,
+	 *        right, or both triggers).
 	 */
-	void SetTriggers(const FInputDeviceProperty& Property);
+	virtual void SetTriggers(const FInputDeviceProperty* Values) override;
 	/**
 	 * @brief Updates the vibration feedback for a DualSense controller using force feedback values.
 	 *
@@ -577,7 +563,7 @@ public:
 	 * left and right motors. These values determine how strong the vibrations will be for the
 	 * respective motors.
 	 */
-	void SetVibration(const FForceFeedbackValues& Vibration);
+	virtual void SetVibration(const FForceFeedbackValues& Vibration) override;
 	/**
 	 * @brief Configures controller vibration intensity based on audio feedback values.
 	 *

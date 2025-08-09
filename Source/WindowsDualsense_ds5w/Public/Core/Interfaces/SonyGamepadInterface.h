@@ -8,8 +8,10 @@
 #include "UObject/Interface.h"
 #include "Core/Enums/EDeviceCommons.h"
 #include "Core/Structs/FDeviceContext.h"
+#include "Core/Structs/FDeviceSettings.h"
 #include "SonyGamepadInterface.generated.h"
 
+struct IFeatureReport { virtual ~IFeatureReport() = default; };
 
 /**
  * Interface for interacting with a Sony gamepad in a system.
@@ -54,7 +56,8 @@ public:
 	 *
 	 * @param Settings Reference to an FDeviceSettings struct containing the desired configuration parameters for the device.
 	 */
-	virtual void Settings(FDeviceSettings& Settings) = 0;
+	virtual void Settings(const FSettings<TSharedPtr<IFeatureReport>>& Settings) = 0;
+
 	/**
 	 * Initializes the gamepad library using the specified device context.
 	 *
@@ -85,6 +88,37 @@ public:
 	 * ISonyGamepadInterface interface.
 	 */
 	virtual void ShutdownLibrary() = 0;
+	
+	/**
+	 * Sets the identifier for the controller to associate it with a specific device or context.
+	 *
+	 * @param ControllerId An integer representing the unique identifier for the controller.
+	 */
+	virtual void SetControllerId(int32 ControllerId) = 0;
+
+	/**
+	 * Sets the color of the lightbar on the Sony gamepad.
+	 *
+	 * @param Color The desired color for the lightbar, represented as an FColor object.
+	 */
+	virtual void SetLightbar(FColor Color) = 0;
+
+	/**
+	 * Retrieves the current battery level of the Sony gamepad.
+	 *
+	 * @return The battery level as a floating-point value, where the exact range
+	 *         and representation are dependent on the implementation. Typically,
+	 *         values may range between 0.0 (empty) and 1.0 (full).
+	 */
+	virtual float GetBattery() = 0;
+	
+	/**
+	 * Sets the vibration effect for the Sony gamepad.
+	 *
+	 * @param Values A reference to an FForceFeedbackValues struct containing the force feedback
+	 *               intensity and duration for the vibration effect.
+	 */
+	virtual void SetVibration(const FForceFeedbackValues& Values) = 0;
 
 	/**
 	 * Pure virtual function that sends data or commands to the connected gamepad.

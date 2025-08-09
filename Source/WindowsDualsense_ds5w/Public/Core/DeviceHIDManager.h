@@ -8,17 +8,17 @@
 
 #include "CoreMinimal.h"
 #include "Core/Structs/FDeviceContext.h"
-#include "DualSenseHIDManager.generated.h"
+#include "DeviceHIDManager.generated.h"
 
 /**
- * @class UDualSenseHIDManager
+ * @class UDeviceHIDManager
  *
  * Manages HID (Human Interface Device) interactions for DualSense devices on Windows.
  * Provides functionality to discover devices, manage device contexts, handle input and output operations,
  * compute hash values, and configure haptic feedback.
  */
 UCLASS()
-class WINDOWSDUALSENSE_DS5W_API UDualSenseHIDManager : public UObject
+class WINDOWSDUALSENSE_DS5W_API UDeviceHIDManager : public UObject
 {
 	GENERATED_BODY()
 	
@@ -33,7 +33,7 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseHIDManager : public UObject
 	 * @return A newly constructed UDualSenseHIDManager object.
 	 */
 public:
-	UDualSenseHIDManager();
+	UDeviceHIDManager();
 
 	/**
 	 * Frees and resets the memory and resources associated with the given device context.

@@ -10,7 +10,7 @@
 #include "Misc/CoreDelegates.h"
 #include "DualSenseLibraryManager.generated.h"
 
-#define MAX_DEVICES 16
+#define MAX_DEVICES 8
 
 
 /**

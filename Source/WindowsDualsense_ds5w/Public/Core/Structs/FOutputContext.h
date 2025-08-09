@@ -5,8 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FOutput.generated.h"
-
+#include "FOutputContext.generated.h"
 
 /**
  * @class FAudioConfig
@@ -490,7 +489,7 @@ struct FMicLight
  * - Maintain compatibility with different output data formats if applicable.
  */
 USTRUCT()
-struct FOutput
+struct FOutputContext
 {
 	GENERATED_BODY()
 

@@ -1,30 +1,24 @@
-﻿// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
+// Copyright (c) 2025 Rafael Valoto/Publisher. All rights reserved.
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-
-#include "Core/DualSense/DualSenseLibraryManager.h"
+#include "Core/DeviceContainerManager.h"
 #include "Core/DeviceHIDManager.h"
 
-UDualSenseLibraryManager* UDualSenseLibraryManager::Instance;
-TMap<int32, UDualSenseLibrary*> UDualSenseLibraryManager::LibraryInstances;
+UDeviceContainerManager* UDeviceContainerManager::Instance;
+TMap<int32, ISonyGamepadInterface*> UDeviceContainerManager::LibraryInstances;
 
-UDualSenseLibraryManager::~UDualSenseLibraryManager()
-{
-	UE_LOG(LogTemp, Log, TEXT("DualSense: Destruct UFDualSenseLibraryManager"));
-}
-
-UDualSenseLibraryManager* UDualSenseLibraryManager::Get()
+UDeviceContainerManager* UDeviceContainerManager::Get()
 {
 	if (!Instance)
 	{
-		Instance = NewObject<UDualSenseLibraryManager>();
+		Instance = NewObject<UDeviceContainerManager>();
 		Instance->AddToRoot();
 	}
 	return Instance;
 }
 
-UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryOrReconnect(int32 ControllerId)
+ISonyGamepadInterface* UDeviceContainerManager::GetLibraryOrReconnect(int32 ControllerId)
 {
 	if (LibraryInstances.Contains(ControllerId))
 	{
@@ -38,7 +32,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryOrReconnect(int32 Control
 
 	if (!LibraryInstances.Contains(ControllerId))
 	{
-		UDualSenseLibrary* DSLibrary = CreateLibraryInstance(ControllerId);
+		ISonyGamepadInterface* DSLibrary = CreateLibraryInstance(ControllerId);
 		if (!DSLibrary)
 		{
 			return nullptr;
@@ -50,7 +44,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryOrReconnect(int32 Control
 	return LibraryInstances[ControllerId];
 }
 
-UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryInstance(int32 ControllerId)
+ISonyGamepadInterface* UDeviceContainerManager::GetLibraryInstance(int32 ControllerId)
 {
 	if (!LibraryInstances.Contains(ControllerId))
 	{
@@ -65,7 +59,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::GetLibraryInstance(int32 Controller
 	return LibraryInstances[ControllerId];
 }
 
-void UDualSenseLibraryManager::RemoveLibraryInstance(int32 ControllerId)
+void UDeviceContainerManager::RemoveLibraryInstance(int32 ControllerId)
 {
 	if (LibraryInstances.Contains(ControllerId))
 	{
@@ -74,7 +68,7 @@ void UDualSenseLibraryManager::RemoveLibraryInstance(int32 ControllerId)
 	}
 }
 
-void UDualSenseLibraryManager::RemoveAllLibraryInstance()
+void UDeviceContainerManager::RemoveAllLibraryInstance()
 {
 	for (const auto& LibraryInstance : LibraryInstances)
 	{
@@ -83,7 +77,7 @@ void UDualSenseLibraryManager::RemoveAllLibraryInstance()
 	LibraryInstances.Reset();
 }
 
-void UDualSenseLibraryManager::CreateLibraryInstances()
+void UDeviceContainerManager::CreateLibraryInstances()
 {
 	LibraryInstances.Reset();
 
@@ -93,11 +87,11 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 	UDeviceHIDManager* HIDManager = NewObject<UDeviceHIDManager>();
 	if (!HIDManager->FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("DualSense: device not found. Creating default library instance."));
+		UE_LOG(LogTemp, Error, TEXT("SonyGamepad: device not found. Creating default library instance."));
 		return;
 	}
 
-	if (DetectedDevices.Num() > MAX_DEVICES)
+	if (DetectedDevices.Num() > 8)
 	{
 		return;
 	}
@@ -109,29 +103,29 @@ void UDualSenseLibraryManager::CreateLibraryInstances()
 		if (Context.IsConnected)
 		{
 			Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-			UDualSenseLibrary* DualSense  = NewObject<UDualSenseLibrary>();
-			if (!DualSense)
+			ISonyGamepadInterface* SonyGamepad  = NewObject<ISonyGamepadInterface>();
+			if (!SonyGamepad)
 			{
-				UE_LOG(LogTemp, Warning, TEXT("DualSense: not found device shutdown library... %d"), DeviceIndex);
-				DualSense->ShutdownLibrary();
+				UE_LOG(LogTemp, Warning, TEXT("SonyGamepad: not found device shutdown library... %d"), DeviceIndex);
+				SonyGamepad->ShutdownLibrary();
 				continue;
 			}
 
-			DualSense->AddToRoot();
-			DualSense->ControllerID = DeviceIndex;
-			DualSense->InitializeLibrary(Context);
-			
-			LibraryInstances.Add(DeviceIndex, DualSense);
+			SonyGamepad->_getUObject()->AddToRoot();
+			SonyGamepad->SetControllerId(DeviceIndex);
+			SonyGamepad->InitializeLibrary(Context);
+
+			LibraryInstances.Add(DeviceIndex, SonyGamepad);
 		}
 	}
 }
 
-int32 UDualSenseLibraryManager::GetAllocatedDevices()
+int32 UDeviceContainerManager::GetAllocatedDevices()
 {
 	return LibraryInstances.Num();
 }
 
-UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 ControllerID)
+ISonyGamepadInterface* UDeviceContainerManager::CreateLibraryInstance(int32 ControllerID)
 {
 	TArray<FDeviceContext> DetectedDevices;
 	DetectedDevices.Reset();
@@ -139,7 +133,7 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 	UDeviceHIDManager* HIDManager = NewObject<UDeviceHIDManager>();
 	if (!HIDManager->FindDevices(DetectedDevices) || DetectedDevices.Num() == 0)
 	{
-		UE_LOG(LogTemp, Error, TEXT("DualSense: device not found. Creating default library instance."));
+		UE_LOG(LogTemp, Error, TEXT("SonyGamepad: device not found. Creating default library instance."));
 		return nullptr;
 	}
 
@@ -152,16 +146,16 @@ UDualSenseLibrary* UDualSenseLibraryManager::CreateLibraryInstance(int32 Control
 	if (Context.IsConnected)
 	{
 		Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-		UDualSenseLibrary* DualSense = NewObject<UDualSenseLibrary>();
-		if (!DualSense)
+		ISonyGamepadInterface* SonyGamepad = NewObject<ISonyGamepadInterface>();
+		if (!SonyGamepad)
 		{
 			return nullptr;
 		}
 
-		DualSense->AddToRoot();
-		DualSense->ControllerID = ControllerID;
-		DualSense->InitializeLibrary(Context);
-		return DualSense;
+		SonyGamepad->_getUObject()->AddToRoot();
+		SonyGamepad->SetControllerId(ControllerID);
+		SonyGamepad->InitializeLibrary(Context);
+		return SonyGamepad;
 	}
 	return nullptr;
 }

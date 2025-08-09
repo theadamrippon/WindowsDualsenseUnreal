@@ -5,7 +5,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FOutput.h"
+#include "FOutputContext.h"
 #include "Core/Enums/EDeviceConnection.h"
 #include "FDeviceContext.generated.h"
 
@@ -84,7 +84,7 @@ struct FDeviceContext
 	 * This variable is initialized within a device context and used in conjunction
 	 * with runtime operations to apply desired settings to the connected controller.
 	 */
-	FOutput Output;
+	FOutputContext Output;
 	/**
 	 * Specifies the type of connection used by a device.
 	 *

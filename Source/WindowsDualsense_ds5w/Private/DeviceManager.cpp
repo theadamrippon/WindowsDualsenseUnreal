@@ -2,16 +2,17 @@
 // Created for: WindowsDualsense_ds5w - Plugin to support DualSense controller on Windows.
 // Planned Release Year: 2025
 
-
 #include "DeviceManager.h"
-#include "../Public/Core/DualSense/DualSenseLibrary.h"
-#include "Core/DualSense/DualSenseLibraryManager.h"
+#include "Core/DeviceContainerManager.h"
+#include "Core/Interfaces/SonyGamepadTriggerInterface.h"
 #include "Windows/WindowsApplication.h"
 #include "Windows/WindowsPlatformApplicationMisc.h"
 #include "Misc/CoreDelegates.h"
 
+class UDualSenseLibrary;
+
 DeviceManager::DeviceManager(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler,
-                                           bool Lazily): MessageHandler(InMessageHandler)
+                             bool Lazily): MessageHandler(InMessageHandler)
 {
 	LazyLoading = Lazily;
 	
@@ -44,13 +45,21 @@ void DeviceManager::Tick(float DeltaTime)
 			continue;
 		}
 
-		FInputDeviceScope InputScope(this, TEXT("DeviceManager"), Device.GetId(),TEXT("DualSense"));
-		if (UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(DeviceId.GetId()); IsValid(DsLibrary))
+		ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(DeviceId.GetId());
+
+		FString ContextDrive = TEXT("DualShock");
+		if (Cast<ISonyGamepadTriggerInterface*>(Gamepad->_getUObject()))
 		{
-			if (!DsLibrary->UpdateInput(MessageHandler, UserId, Device))
+			ContextDrive = TEXT("DualSense");
+		}
+		
+		FInputDeviceScope InputScope(this, TEXT("DeviceManager"), Device.GetId(), ContextDrive);
+		if (IsValid(Gamepad->_getUObject()))
+		{
+			if (!Gamepad->UpdateInput(MessageHandler, UserId, Device))
 			{
 				Disconnect(DeviceId);
-				UDualSenseLibraryManager::Get()->RemoveLibraryInstance(DeviceId.GetId());
+				UDeviceContainerManager::Get()->RemoveLibraryInstance(DeviceId.GetId());
 			}
 		} else
 		{
@@ -71,64 +80,66 @@ void DeviceManager::SetDeviceProperty(int32 ControllerId, const FInputDeviceProp
 
 	if (Property->Name == FName("InputDeviceTriggerResistance"))
 	{
-		UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-		if (!DsLibrary) return;
-		
-		DsLibrary->SetTriggers(*Property);
+		ISonyGamepadTriggerInterface* GamepadTrigger = Cast<ISonyGamepadTriggerInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+		if (!IsValid(GamepadTrigger->_getUObject()))
+		{
+			return;
+		}
+	
+		GamepadTrigger->SetTriggers(Property);
 	}
 }
 
-void DeviceManager::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand,
-                                                   const FHapticFeedbackValues& Values)
+void DeviceManager::SetHapticFeedbackValues(const int32 ControllerId, const int32 Hand, const FHapticFeedbackValues& Values)
 {
 	if (LazyLoading) return;
 
-	UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DsLibrary)
+	ISonyGamepadTriggerInterface* GamepadTrigger = Cast<ISonyGamepadTriggerInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(GamepadTrigger->_getUObject()))
 	{
 		return;
 	}
 	
-	DsLibrary->SetHapticFeedback(Hand, &Values);
+	GamepadTrigger->SetHapticFeedback(Hand, &Values);
 }
 
 void DeviceManager::SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values)
 {
 	if (LazyLoading) return;
 
-	UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DsLibrary)
+	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
+	if (!Gamepad)
 	{
 		return;
 	}
 
-	DsLibrary->SetVibration(Values);
+	Gamepad->SetVibration(Values);
 }
 
 void DeviceManager::SetLightColor(const int32 ControllerId, const FColor Color)
 {
 	if (LazyLoading) return;
 
-	UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DsLibrary)
+	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
+	if (!Gamepad)
 	{
 		return;
 	}
 
-	DsLibrary->SetLightbar(Color);
+	Gamepad->SetLightbar(Color);
 }
 
 void DeviceManager::ResetLightColor(const int32 ControllerId)
 {
 	if (LazyLoading) return;
 
-	UDualSenseLibrary* DsLibrary = UDualSenseLibraryManager::Get()->GetLibraryInstance(ControllerId);
-	if (!DsLibrary)
+	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
+	if (!Gamepad)
 	{
 		return;
 	}
 	
-	DsLibrary->SetLightbar(FColor::Blue);
+	Gamepad->SetLightbar(FColor::Blue);
 }
 
 void DeviceManager::Reconnect(const FInputDeviceId& Device) const

@@ -3,7 +3,7 @@
 // Planned Release Year: 2025
 
 
-#include "Core/DualSenseHIDManager.h"
+#include "Core/DeviceHIDManager.h"
 
 #include "Windows/AllowWindowsPlatformTypes.h"
 #include <windows.h>
@@ -13,13 +13,13 @@
 #include "Core/Structs/FDeviceContext.h"
 #include "Windows/HideWindowsPlatformTypes.h"
 
-const UINT32 UDualSenseHIDManager::CRCSeed = 0xeada2d49;
+const UINT32 UDeviceHIDManager::CRCSeed = 0xeada2d49;
 
-UDualSenseHIDManager::UDualSenseHIDManager()
+UDeviceHIDManager::UDeviceHIDManager()
 {
 }
 
-bool UDualSenseHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
+bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 {
 	Devices.Empty();
 	
@@ -117,7 +117,7 @@ bool UDualSenseHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 	return Devices.Num() > 0;
 }
 
-HANDLE UDualSenseHIDManager::CreateHandle(FDeviceContext* DeviceContext)
+HANDLE UDeviceHIDManager::CreateHandle(FDeviceContext* DeviceContext)
 {
 	const HANDLE DeviceHandle = CreateFileW(
 			DeviceContext->Path,
@@ -134,7 +134,7 @@ HANDLE UDualSenseHIDManager::CreateHandle(FDeviceContext* DeviceContext)
 	return DeviceHandle;
 }
 
-bool UDualSenseHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
+bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 {
 	if (DeviceContext->Handle == INVALID_HANDLE_VALUE)
 	{
@@ -166,7 +166,7 @@ bool UDualSenseHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 	return true;
 }
 
-void UDualSenseHIDManager::FreeContext(FDeviceContext* Context)
+void UDeviceHIDManager::FreeContext(FDeviceContext* Context)
 {
 	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
 	ZeroMemory(&Context->Path, sizeof(Context->Path));
@@ -177,9 +177,9 @@ void UDualSenseHIDManager::FreeContext(FDeviceContext* Context)
 	Context->ConnectionType = Unrecognized;
 }
 
-void UDualSenseHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
+void UDeviceHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
 {
-	FOutput* HidOut = &DeviceContext->Output;
+	FOutputContext* HidOut = &DeviceContext->Output;
 	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
 	DeviceContext->Buffer[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
 
@@ -244,7 +244,7 @@ void UDualSenseHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
 	}
 }
 
-void UDualSenseHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTriggers& Effect)
+void UDeviceHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTriggers& Effect)
 {
 	Trigger[0x0] = Effect.Mode;
 
@@ -331,7 +331,7 @@ void UDualSenseHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTrig
 	}
 }
 
-const UINT32 UDualSenseHIDManager::HashTable[256] = {
+const UINT32 UDeviceHIDManager::HashTable[256] = {
 	0xd202ef8d, 0xa505df1b, 0x3c0c8ea1, 0x4b0bbe37, 0xd56f2b94, 0xa2681b02, 0x3b614ab8, 0x4c667a2e,
 	0xdcd967bf, 0xabde5729, 0x32d70693, 0x45d03605, 0xdbb4a3a6, 0xacb39330, 0x35bac28a, 0x42bdf21c,
 	0xcfb5ffe9, 0xb8b2cf7f, 0x21bb9ec5, 0x56bcae53, 0xc8d83bf0, 0xbfdf0b66, 0x26d65adc, 0x51d16a4a,
@@ -366,7 +366,7 @@ const UINT32 UDualSenseHIDManager::HashTable[256] = {
 	0x616495a3, 0x1663a535, 0x8f6af48f, 0xf86dc419, 0x660951ba, 0x110e612c, 0x88073096, 0xFF000000
 };
 
-UINT32 UDualSenseHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
+UINT32 UDeviceHIDManager::Compute(const unsigned char* Buffer, const size_t Len)
 {
 	UINT32 Result = CRCSeed;
 	for (size_t i = 0; i < Len; i++)

@@ -4,6 +4,8 @@
 
 #include "Core/DeviceContainerManager.h"
 #include "Core/DeviceHIDManager.h"
+#include "Core/DualSense/DualSenseLibrary.h"
+#include "Core/Interfaces/SonyGamepadTriggerInterface.h"
 
 UDeviceContainerManager* UDeviceContainerManager::Instance;
 TMap<int32, ISonyGamepadInterface*> UDeviceContainerManager::LibraryInstances;
@@ -102,8 +104,14 @@ void UDeviceContainerManager::CreateLibraryInstances()
 		Context.Output = FOutputContext();
 		if (Context.IsConnected)
 		{
+			ISonyGamepadInterface* SonyGamepad = nullptr;
+
 			Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-			ISonyGamepadInterface* SonyGamepad  = NewObject<ISonyGamepadInterface>();
+			if (Context.DeviceType == Default)
+			{
+				SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualSenseLibrary>(UDualSenseLibrary::StaticClass()));
+			}
+			
 			if (!SonyGamepad)
 			{
 				UE_LOG(LogTemp, Warning, TEXT("SonyGamepad: not found device shutdown library... %d"), DeviceIndex);
@@ -145,8 +153,13 @@ ISonyGamepadInterface* UDeviceContainerManager::CreateLibraryInstance(int32 Cont
 	FDeviceContext& Context = DetectedDevices[ControllerID];
 	if (Context.IsConnected)
 	{
+		ISonyGamepadInterface*  SonyGamepad = nullptr;
+
 		Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-		ISonyGamepadInterface* SonyGamepad = NewObject<ISonyGamepadInterface>();
+		if (Context.DeviceType == EDeviceType::Default)
+		{
+			SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualSenseLibrary>(UDualSenseLibrary::StaticClass()));
+		}
 		if (!SonyGamepad)
 		{
 			return nullptr;

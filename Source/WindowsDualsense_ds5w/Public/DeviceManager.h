@@ -10,28 +10,25 @@
 
 
 /**
- * Class responsible for handling DualSense controller input and haptic feedback on Windows platform.
- * Implements both input device and haptic feedback interfaces to provide full controller support.
+ * Manages DualSense controllers, providing input and haptic feedback functionality.
+ * This class interacts with platform-specific input device frameworks to handle
+ * controllers, manage connections, update states, and process haptic feedback.
  */
 class WINDOWSDUALSENSE_DS5W_API DeviceManager final : public IInputDevice, public IHapticDevice
 {
 public:
+	virtual ~DeviceManager() override;
 	/** 
 	 * Creates a new DualSense input device instance
 	 * @param InMessageHandler Message handler for input events
 	 * @param Lazily Whether to initialize the device in lazy loading mode
 	 */
 	explicit DeviceManager(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler, bool Lazily);
-
-	/** Destructor */
-	virtual ~DeviceManager() override;
-
 	/**
 	 * Called every frame to update controller state
 	 * @param DeltaTime Time elapsed since last tick
 	 */
 	virtual void Tick(float DeltaTime) override;
-
 	/**
 	 * Determines whether the specified controller supports force feedback functionality.
 	 *
@@ -42,7 +39,6 @@ public:
 	{
 		return true;
 	}
-	
 	/**
 	 * Sets the force feedback values for a specific controller.
 	 * Updates the intensity of vibration or other force effects on the specified DualSense controller.
@@ -51,7 +47,6 @@ public:
 	 * @param Values The force feedback values, including intensity and other parameters.
 	 */
 	virtual void SetChannelValues(int32 ControllerId, const FForceFeedbackValues& Values) override;
-	
 	/**
 	 * Sets a specific property of the DualSense input device for the given controller.
 	 * Allows configuration of properties such as light color and trigger resistance.
@@ -60,7 +55,6 @@ public:
 	 * @param Property A pointer to the input device property to set. This includes details like property name and value.
 	 */
 	virtual void SetDeviceProperty(int32 ControllerId, const FInputDeviceProperty* Property) override;
-	
 	/**
 	 * Sets the light bar color on the specified DualSense controller.
 	 * This method updates the LED output to match the given color.
@@ -69,7 +63,6 @@ public:
 	 * @param Color The desired color to be applied to the controller's light bar.
 	 */
 	virtual void SetLightColor(int32 ControllerId, FColor Color) override;
-	
 	/**
 	 * Resets the light color of the specified DualSense controller to its default state.
 	 * This function is a no-op if lazy loading mode is enabled or if the controller
@@ -78,7 +71,6 @@ public:
 	 * @param ControllerId The ID of the controller whose light color is to be reset.
 	 */
 	virtual void ResetLightColor(int32 ControllerId) override;
-	
 	/**
 	 * Executes a command in the context of the provided world.
 	 * This function is typically used for handling console commands.
@@ -89,7 +81,6 @@ public:
 	 * @return True if the command was successfully executed, otherwise false.
 	 */
 	virtual bool Exec(UWorld* InWorld, const TCHAR* Cmd, FOutputDevice& Ar) override { return true; }
-	
 	/**
 	 * Sets the haptic feedback values for a specific controller and hand.
 	 * This function updates the haptic feedback values for the specified controller using the supplied values structure.
@@ -100,7 +91,6 @@ public:
 	 * @param Values The structure containing the haptic feedback values to apply.
 	 */
 	virtual void SetHapticFeedbackValues(int32 ControllerId, int32 Hand, const FHapticFeedbackValues& Values) override;
-	
 	/**
 	 * Retrieves the range of haptic frequency supported by the DualSense controller.
 	 *
@@ -108,7 +98,6 @@ public:
 	 * @param MaxFrequency Reference to a float where the maximum frequency will be stored.
 	 */
 	virtual void GetHapticFrequencyRange(float& MinFrequency, float& MaxFrequency) const override {}
-	
 	/**
 	 * Retrieves the scale factor applied to haptic amplitude for the device.
 	 * Used to control the intensity of haptic feedback.
@@ -116,7 +105,6 @@ public:
 	 * @return The scale factor for haptic amplitude, with a default value of 1.0f.
 	 */
 	virtual float GetHapticAmplitudeScale() const override { return 1.0f; }
-	
 	/**
 	 * Retrieves the haptic device interface implementation.
 	 * This method allows access to the haptic device functionality provided by the DualSense controller.
@@ -124,7 +112,6 @@ public:
 	 * @return Pointer to the current instance as an IHapticDevice interface.
 	 */
 	virtual IHapticDevice* GetHapticDevice() override { return this; }
-	
 	/**
 	 * Determines whether a gamepad is currently attached.
 	 * This method always indicates that a DualSense gamepad is attached.
@@ -132,7 +119,6 @@ public:
 	 * @return True if a gamepad is attached; false otherwise.
 	 */
 	virtual bool IsGamepadAttached() const override { return true; }
-
 	/**
 	 * Sets lazy loading mode for the device
 	 * @param IsLazy Whether to enable lazy loading
@@ -141,7 +127,6 @@ public:
 	{
 		LazyLoading = IsLazy;
 	}
-
 	/**
 	 * Handles user login state changes
 	 * @param bLoggedIn Whether user is logged in
@@ -149,7 +134,6 @@ public:
 	 * @param UserIndex Index of the user
 	 */
 	void OnUserLoginChangedEvent(bool bLoggedIn, int32 UserId, int32 UserIndex) const;
-
 	/**
 	 * Handles controller connection state changes
 	 * @param Connected New connection state
@@ -169,7 +153,6 @@ public:
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}
-
 	/**
 	 * Unmaps the specified input device from its associated user and marks its connection state as disconnected.
 	 *
@@ -180,7 +163,6 @@ public:
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Disconnected);
 	}
-
 	/**
 	 * Sends controller input events to the appropriate systems for processing.
 	 * This method is overridden to handle specific input events from the DualSense controller,
@@ -189,7 +171,6 @@ public:
 	virtual void SendControllerEvents() override
 	{
 	}
-
 	/**
 	 * Sets the message handler for the application to process input events.
 	 *
@@ -198,7 +179,6 @@ public:
 	virtual void SetMessageHandler(const TSharedRef<FGenericApplicationMessageHandler>& InMessageHandler) override
 	{
 	}
-
 	/**
 	 * Sets the force feedback intensity for a specific channel on a particular controller.
 	 * Used to deliver haptic feedback through the given channel.
@@ -217,7 +197,6 @@ protected:
 	 * @param Device Identifier of device to reconnect
 	 */
 	void Reconnect(const FInputDeviceId& Device) const;
-
 	/**
 	 * Disconnects a controller
 	 * @param Device Identifier of device to disconnect
@@ -225,15 +204,42 @@ protected:
 	void Disconnect(const FInputDeviceId& Device) const;
 
 private:
-	/** Whether the device is in lazy loading mode */
+	/**
+	 * Determines whether resources or data are loaded on demand rather than
+	 * during the initial application startup or initialization phase.
+	 * When enabled, this feature can improve application performance by
+	 * deferring resource loading until required.
+	 */
 	bool LazyLoading;
-
-	/** Platform-specific device mapper for input routing */
+	/**
+	 * Tracks the accumulated time or events between periodic polling operations.
+	 * This variable is typically used to manage timing or frequency of polling processes.
+	 */
+	float PollAccumulator = 0.0f;
+	/**
+	 * Defines the interval, in seconds, between periodic polling operations.
+	 * This variable determines how often certain tasks, such as device state checks
+	 * or updates, are performed within the system.
+	 */
+	float PollInterval = 0.033f;
+	/**
+	 * Interface pointer to platform-specific input device mapper.
+	 * This variable facilitates the mapping of input devices to platform-specific functionalities,
+	 * enabling consistent handling of input devices across different operating systems.
+	 */
 	IPlatformInputDeviceMapper* DeviceMapper;
-
-	/** Tracks connection state changes for controllers */
+	/**
+	 * Stores a mapping of connection states for devices, where the key represents
+	 * a device ID (int32) and the value indicates whether a connection change
+	 * has occurred (true or false).
+	 * This data structure is used to track and update connection status dynamically.
+	 */
 	TMap<int32, bool> IsConnectionChange = TMap<int32, bool>();
-
-	/** Handler for input-related messages */
+	/**
+	 * Handles application-level messages and events, facilitating communication
+	 * between the application framework and platform-specific input systems.
+	 * This variable is used to process input events, updates, and interactions
+	 * within the application.
+	 */
 	const TSharedRef<FGenericApplicationMessageHandler>& MessageHandler;
 };

@@ -41,7 +41,7 @@ struct FAudioConfig
 	 * Usage of this variable may influence the overall behavior, decision-making,
 	 * or output of the system it is a part of.
 	 */
-	uint8_t Mode = 0x5;
+	uint8_t Mode = 0x31;
 	/**
 	 * Represents the audio volume level for the connected headset.
 	 *

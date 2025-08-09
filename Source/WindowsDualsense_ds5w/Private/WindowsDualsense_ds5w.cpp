@@ -8,9 +8,10 @@
 #include "InputCoreTypes.h"
 #include "Misc/Paths.h"
 #include "DeviceManager.h"
-#include "Core/DualSense/DualSenseLibraryManager.h"
 #include "Microsoft/AllowMicrosoftPlatformTypes.h"
 #include <stdio.h>
+
+#include "Core/DeviceContainerManager.h"
 #define LOCTEXT_NAMESPACE "FWindowsDualsense_ds5wModule"
 
 void FWindowsDualsense_ds5wModule::StartupModule()
@@ -28,7 +29,7 @@ TSharedPtr<IInputDevice> FWindowsDualsense_ds5wModule::CreateInputDevice(
 {
 	DeviceInstance = MakeShareable(new DeviceManager(InCustomMessageHandler, true));
 
-	const UDualSenseLibraryManager* DualSenseLibraryManager = UDualSenseLibraryManager::Get();
+	const UDeviceContainerManager* DualSenseLibraryManager = UDeviceContainerManager::Get();
 	if (!DualSenseLibraryManager)
 	{
 		UE_LOG(LogTemp, Error, TEXT("DualSense: Failed to create DualSense Library Manager"));

@@ -32,7 +32,7 @@ USTRUCT(BlueprintType)
 struct FDualSenseFeatureReport : public FFeatureReport
 {
 	GENERATED_BODY()
-
+	
 	/**
 	 * Represents the microphone status of the DualSense controller audio settings.
 	 * This variable utilizes the EDualSenseAudioFeatureReport enum to toggle the microphone feature.

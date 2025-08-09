@@ -50,35 +50,35 @@ void UDualSenseLibrary::SendOut()
 
 	UDeviceHIDManager::OutputBuffering(&HIDDeviceContexts);
 }
-
 void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
 {
-	const auto* SensePtr = dynamic_cast<FDualSenseFeatureReport*>(Settings);
-	if (!SensePtr) return;
+}
 
+void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
+{
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->Feature.VibrationMode = static_cast<uint8_t>(SensePtr->VibrationMode);
-	HidOutput->Feature.SoftRumbleReduce = static_cast<uint8_t>(SensePtr->SoftRumbleReduce);
-	HidOutput->Feature.TriggerSoftnessLevel = static_cast<uint8_t>(SensePtr->TriggerSoftnessLevel);
+	HidOutput->Feature.VibrationMode = static_cast<uint8_t>(Settings.VibrationMode);
+	HidOutput->Feature.SoftRumbleReduce = static_cast<uint8_t>(Settings.SoftRumbleReduce);
+	HidOutput->Feature.TriggerSoftnessLevel = static_cast<uint8_t>(Settings.TriggerSoftnessLevel);
 
-	HidOutput->Audio.MicStatus = static_cast<uint8_t>(SensePtr->MicStatus);
-	HidOutput->Audio.MicVolume = static_cast<uint8_t>(SensePtr->MicVolume);
-	HidOutput->Audio.HeadsetVolume = static_cast<uint8_t>(SensePtr->AudioVolume);
-	HidOutput->Audio.SpeakerVolume = static_cast<uint8_t>(SensePtr->AudioVolume);
+	HidOutput->Audio.MicStatus = static_cast<uint8_t>(Settings.MicStatus);
+	HidOutput->Audio.MicVolume = static_cast<uint8_t>(Settings.MicVolume);
+	HidOutput->Audio.HeadsetVolume = static_cast<uint8_t>(Settings.AudioVolume);
+	HidOutput->Audio.SpeakerVolume = static_cast<uint8_t>(Settings.AudioVolume);
 
-	if (SensePtr->AudioHeadset == EDualSenseAudioFeatureReport::On && SensePtr->AudioSpeaker == EDualSenseAudioFeatureReport::Off)
+	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::Off)
 	{
-		HidOutput->Audio.Mode = 0x05;
+		HidOutput->Audio.Mode = 0x31;
 	}
 	
-	if (SensePtr->AudioHeadset == EDualSenseAudioFeatureReport::On && SensePtr->AudioSpeaker == EDualSenseAudioFeatureReport::On)
+	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
 	{
 		HidOutput->Audio.Mode = 0x21;
 	}
 	
-	if (SensePtr->AudioHeadset == EDualSenseAudioFeatureReport::Off && SensePtr->AudioSpeaker == EDualSenseAudioFeatureReport::On)
+	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::Off && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
 	{
-		HidOutput->Audio.Mode = 0x31;
+		HidOutput->Audio.Mode = 0x05;
 	}
 	
 	SendOut();
@@ -340,8 +340,11 @@ void UDualSenseLibrary::SetVibration(const FForceFeedbackValues& Vibration)
 
 	const unsigned char OutputLeft = static_cast<unsigned char>(UValidateHelpers::To255(LeftRumble));
 	const unsigned char OutputRight = static_cast<unsigned char>(UValidateHelpers::To255(RightRumble));
-	HidOutput->Rumbles = {OutputLeft, OutputRight};
-	SendOut();
+	if (HidOutput->Rumbles.Left != OutputLeft || HidOutput->Rumbles.Right != OutputRight)
+	{
+		HidOutput->Rumbles = {OutputLeft, OutputRight};
+		SendOut();
+	}
 }
 
 void UDualSenseLibrary::SetVibrationAudioBased(
@@ -372,6 +375,7 @@ void UDualSenseLibrary::SetVibrationAudioBased(
 	const unsigned char OutputLeft = static_cast<unsigned char>(UValidateHelpers::To255(IntensityLeftRumble));
 	const unsigned char OutputRight = static_cast<unsigned char>(UValidateHelpers::To255(IntensityRightRumble));
 	HidOutput->Rumbles = {OutputLeft, OutputRight};
+
 	SendOut();
 }
 

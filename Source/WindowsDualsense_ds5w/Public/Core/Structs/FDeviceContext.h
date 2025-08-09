@@ -104,4 +104,15 @@ struct FDeviceContext
 	 * influences logic such as input report length, output buffering, and connection state updates.
 	 */
 	EDeviceConnection ConnectionType;
+	/**
+	 * @brief Represents the type of device in the context of DualSense HID management.
+	 *
+	 * DeviceType specifies the category or model of the connected device, enabling
+	 * the system to adjust its behavior or configurations accordingly. Examples include
+	 * default DualSense controllers, the Edge variation, and older DualShock models.
+	 *
+	 * It plays a pivotal role in distinguishing devices for operations such as feature
+	 * initialization, compatibility checks, and tailored input/output processing.
+	 */
+	EDeviceType DeviceType;
 };

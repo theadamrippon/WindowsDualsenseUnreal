@@ -31,6 +31,13 @@ void DeviceManager::Tick(float DeltaTime)
 {
 	if (LazyLoading) return;
 
+	PollAccumulator += DeltaTime;
+	if (PollAccumulator < PollInterval)
+	{
+		return;
+	}
+	
+	PollAccumulator = 0.0f;
 	TArray<FInputDeviceId> OutInputDevices;
 	OutInputDevices.Reset();
 
@@ -46,24 +53,23 @@ void DeviceManager::Tick(float DeltaTime)
 		}
 
 		ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(DeviceId.GetId());
+		if (!Gamepad)
+		{
+			Disconnect(DeviceId);
+			continue;
+		}
 
 		FString ContextDrive = TEXT("DualShock");
-		if (Cast<ISonyGamepadTriggerInterface*>(Gamepad->_getUObject()))
+		if (Cast<ISonyGamepadTriggerInterface>(Gamepad->Get())->_getUObject())
 		{
 			ContextDrive = TEXT("DualSense");
 		}
 		
 		FInputDeviceScope InputScope(this, TEXT("DeviceManager"), Device.GetId(), ContextDrive);
-		if (IsValid(Gamepad->_getUObject()))
-		{
-			if (!Gamepad->UpdateInput(MessageHandler, UserId, Device))
-			{
-				Disconnect(DeviceId);
-				UDeviceContainerManager::Get()->RemoveLibraryInstance(DeviceId.GetId());
-			}
-		} else
+		if (!Gamepad->UpdateInput(MessageHandler, UserId, Device))
 		{
 			Disconnect(DeviceId);
+			UDeviceContainerManager::Get()->RemoveLibraryInstance(DeviceId.GetId());
 		}
 	}
 }
@@ -85,7 +91,6 @@ void DeviceManager::SetDeviceProperty(int32 ControllerId, const FInputDeviceProp
 		{
 			return;
 		}
-	
 		GamepadTrigger->SetTriggers(Property);
 	}
 }
@@ -112,7 +117,7 @@ void DeviceManager::SetChannelValues(int32 ControllerId, const FForceFeedbackVal
 	{
 		return;
 	}
-
+	
 	Gamepad->SetVibration(Values);
 }
 

@@ -80,6 +80,44 @@ public:
 	 * @param Hand The controller hand (e.g., left or right) where the effect will be applied.
 	 */
 	virtual void SetGalloping(int32 StartPosition, int32 EndPosition, int32 FirstFoot, int32 SecondFoot, float Frequency, const EControllerHand& Hand) = 0;
+	/**
+	 * Configures a custom machine effect on the gamepad triggers by defining start and end positions,
+	 * amplitude levels, frequency, and duration specifics for a given controller hand.
+	 *
+	 * @param StartPosition The starting position of the trigger effect.
+	 * @param EndPosition The ending position of the trigger effect.
+	 * @param AmplitudeBegin The initial amplitude level for the trigger effect.
+	 * @param AmplitudeEnd The final amplitude level for the trigger effect.
+	 * @param Frequency The frequency of the effect to control its repetition rate.
+	 * @param Period The duration of one cycle of the effect.
+	 * @param Hand The controller hand (e.g., left or right) where the effect will be applied.
+	 */
+	virtual void SetMachine(int32 StartPosition, int32 EndPosition, int32 AmplitudeBegin, int32 AmplitudeEnd, float Frequency, float Period, const EControllerHand& Hand) = 0;
+	/**
+	 * Configures the weapon effect on a gamepad's adaptive triggers based on specified parameters.
+	 *
+	 * @param StartPosition The starting position for the trigger effect as an integer value.
+	 * @param EndPosition The ending position for the trigger effect as an integer value.
+	 * @param Strength The intensity of the trigger effect as an integer value.
+	 * @param Hand A reference to the hand (left or right) where the effect should be applied, represented by EControllerHand.
+	 */
+	virtual void SetWeapon(int32 StartPosition, int32 EndPosition, int32 Strength, const EControllerHand& Hand) = 0;
+	/**
+	 * Configures the bow tension effects on a gamepad trigger for a specified hand.
+	 *
+	 * @param StartPosition The starting position of the bow tension effect on the trigger.
+	 * @param EndPosition The ending position of the bow tension effect on the trigger.
+	 * @param BegingStrength The intensity of the bow tension effect at the starting position.
+	 * @param EndStrength The intensity of the bow tension effect at the ending position.
+	 * @param Hand The controller hand to which the bow effect will be applied.
+	 */
+	virtual void SetBow(int32 StartPosition, int32 EndPosition, int32 BegingStrength, int32 EndStrength, const EControllerHand& Hand) = 0;
+	/**
+	 * Disables the trigger effects on a gamepad for the specified controller hand.
+	 *
+	 * @param Hand An enum indicating which controller hand's trigger effects should be stopped.
+	 */
+	virtual void StopTrigger(const EControllerHand& Hand) = 0;
 
 	/**
 	 * Configures the gamepad vibration based on audio feedback parameters.

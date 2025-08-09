@@ -293,6 +293,7 @@ public:
 	 * the device's configuration options to be adjusted or updated.
 	 */
 	virtual void Settings(const FSettings<FFeatureReport>& Settings) override;
+	virtual void Settings(const FDualSenseFeatureReport& Settings);
 
 	/**
 	 * @brief Initializes the DualSense library with the specified device context.
@@ -395,11 +396,28 @@ public:
 	 *
 	 * @return The battery level as a floating-point value, representing the charge percentage or level.
 	 */
-	float GetBattery() const
+	virtual float GetBattery() const override
 	{
 		return LevelBattery;
 	}
-	
+	/**
+	 * @brief Sets the controller ID for the instance.
+	 *
+	 * This method is used to assign a specific identifier to the controller, which
+	 * can be utilized to differentiate between multiple controllers or devices in use.
+	 * The method overrides an existing function in the parent class, ensuring consistent
+	 * behavior across derived implementations.
+	 *
+	 * @param Id The unique identifier to assign to the controller.
+	 */
+	virtual void SetControllerId(int32 Id) override
+	{
+		ControllerID = Id;
+	}
+	virtual ISonyGamepadInterface* Get() override
+	{
+		return this;
+	}
 	/**
 	 * @brief Sets the haptic feedback values for the specified hand of the DualSense controller.
 	 *

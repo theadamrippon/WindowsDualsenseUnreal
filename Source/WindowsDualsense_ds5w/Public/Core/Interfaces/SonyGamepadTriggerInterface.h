@@ -6,6 +6,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "Templates/SharedPointer.h"
 #include "SonyGamepadTriggerInterface.generated.h"
 
 // This class does not need to be modified.

@@ -83,12 +83,6 @@ public:
 	 * @return The number of allocated device library instances.
 	 */
 	static int32 GetAllocatedDevices();
-	/**
-	 * A static instance of FGenericPlatformInputDeviceMapper used to handle mapping of input devices
-	 * across different platforms. This variable helps manage the relationship between controllers
-	 * and their respective input configurations, ensuring seamless integration and functionality.
-	 */
-	static FGenericPlatformInputDeviceMapper PlatformInputDeviceMapper;
 	
 private:
 	/**

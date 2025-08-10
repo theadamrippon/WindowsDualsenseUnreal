@@ -18,8 +18,8 @@
 UENUM()
 enum EDeviceType: uint8
 {
-	Default UMETA(DisplayName = "Default"),
-	Edge UMETA(DisplayName = "Edge"),
+	Default UMETA(DisplayName = "DualSense Default"),
+	Edge UMETA(DisplayName = "DualSense Edge"),
 	DualShock UMETA(DisplayName = "DualShock")
 };
 

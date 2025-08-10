@@ -6,7 +6,6 @@
 
 #include <Windows.h>
 #include "Core/DeviceHIDManager.h"
-#include "DualSenseProxy.h"
 #include "InputCoreTypes.h"
 #include "Core/Structs/FOutputContext.h"
 #include "Helpers/ValidateHelpers.h"
@@ -15,17 +14,13 @@
 bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
+	StopAll();
 	return true;
 }
 
 void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
-
-	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	memset(&HidOutput, 0, sizeof(HidOutput));
-
-	CloseHandle(HIDDeviceContexts.Handle);
 	UDeviceHIDManager::FreeContext(&HIDDeviceContexts);
 }
 
@@ -48,6 +43,8 @@ void UDualSenseLibrary::SendOut()
 		return;
 	}
 
+	
+	UE_LOG(LogTemp, Warning, TEXT("Output Sending HID report, ControllerId: %d, Color: %d, %d, %d"), ControllerID, HIDDeviceContexts.Output.Lightbar.R, HIDDeviceContexts.Output.Lightbar.G, HIDDeviceContexts.Output.Lightbar.B);
 	UDeviceHIDManager::OutputBuffering(&HIDDeviceContexts);
 }
 void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
@@ -57,7 +54,7 @@ void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
 void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->Feature.VibrationMode = static_cast<uint8_t>(Settings.VibrationMode);
+	HidOutput->Feature.VibrationMode = Settings.VibrationMode == EDualSenseDeviceFeatureReport::Off ? 0xFF : static_cast<uint8_t>(Settings.VibrationMode);
 	HidOutput->Feature.SoftRumbleReduce = static_cast<uint8_t>(Settings.SoftRumbleReduce);
 	HidOutput->Feature.TriggerSoftnessLevel = static_cast<uint8_t>(Settings.TriggerSoftnessLevel);
 
@@ -696,7 +693,7 @@ void UDualSenseLibrary::StopTrigger(const EControllerHand& Hand)
 void UDualSenseLibrary::StopAll()
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->PlayerLed.Brightness = 0;
+	HidOutput->PlayerLed.Brightness = 0x02;
 	if (ControllerID == 0)
 	{
 		HidOutput->Lightbar = {0, 0, 255, 255};
@@ -718,18 +715,17 @@ void UDualSenseLibrary::StopAll()
 	if (ControllerID == 3)
 	{
 		HidOutput->Lightbar = {255, 255, 255, 255};
-		HidOutput->PlayerLed.Led = static_cast<unsigned char>(ELedPlayerEnum::Four);
+		HidOutput->PlayerLed.Led = static_cast<unsigned char>(ELedPlayerEnum::All);
 	}
-
-	HidOutput->LeftTrigger.Mode = 0x0;
-	HidOutput->RightTrigger.Mode = 0x0;
 	SendOut();
 }
 
 void UDualSenseLibrary::SetLightbar(const FColor Color)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->Lightbar = {Color.R, Color.G, Color.B, Color.A};
+	HidOutput->Lightbar.R = Color.R;
+	HidOutput->Lightbar.G = Color.G;
+	HidOutput->Lightbar.B = Color.B;
 	SendOut();
 }
 

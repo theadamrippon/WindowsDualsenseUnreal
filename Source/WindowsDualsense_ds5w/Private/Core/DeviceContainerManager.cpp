@@ -3,8 +3,11 @@
 // Planned Release Year: 2025
 
 #include "Core/DeviceContainerManager.h"
+
+#include "SonyGamepadProxy.h"
 #include "Core/DeviceHIDManager.h"
 #include "Core/DualSense/DualSenseLibrary.h"
+#include "Core/DualShock/DualShockLibrary.h"
 #include "Core/Interfaces/SonyGamepadTriggerInterface.h"
 
 UDeviceContainerManager* UDeviceContainerManager::Instance;
@@ -102,14 +105,16 @@ void UDeviceContainerManager::CreateLibraryInstances()
 	{
 		FDeviceContext& Context = DetectedDevices[DeviceIndex];
 		Context.Output = FOutputContext();
+		Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
 		if (Context.IsConnected)
 		{
 			ISonyGamepadInterface* SonyGamepad = nullptr;
-
-			Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-			if (Context.DeviceType == Default)
+			if (Context.DeviceType == Default || Context.DeviceType == Edge)
 			{
 				SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualSenseLibrary>(UDualSenseLibrary::StaticClass()));
+			} else
+			{
+				SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualShockLibrary>(UDualShockLibrary::StaticClass()));
 			}
 			
 			if (!SonyGamepad)

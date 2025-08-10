@@ -6,15 +6,16 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
-#include "InputCoreTypes.h"
-#include "Core/Enums/EDeviceCommons.h"
 #include "Core/Interfaces/SonyGamepadInterface.h"
 #include "Core/Interfaces/SonyGamepadTriggerInterface.h"
-#include "Core/Structs/FDeviceContext.h"
-#include "Core/Structs/FDualSenseFeatureReport.h"
+#include "InputCoreTypes.h"
 #include "Misc/CoreDelegates.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
 #include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
+#include "Core/Enums/EDeviceCommons.h"
+#include "Core/Structs/FDeviceContext.h"
+#include "Core/Structs/FDeviceSettings.h"
+#include "Core/Structs/FDualSenseFeatureReport.h"
 #include "DualSenseLibrary.generated.h"
 
 /**

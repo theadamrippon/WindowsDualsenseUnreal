@@ -9,6 +9,10 @@
 #include "Core/Enums/EDeviceCommons.h"
 #include "Core/Structs/FDeviceContext.h"
 #include "Core/Structs/FDeviceSettings.h"
+#include "InputCoreTypes.h"
+#include "Misc/CoreDelegates.h"
+#include "Runtime/ApplicationCore/Public/GenericPlatform/IInputInterface.h"
+#include "Runtime/ApplicationCore/Public/GenericPlatform/GenericApplicationMessageHandler.h"
 #include "SonyGamepadInterface.generated.h"
 
 USTRUCT(BlueprintType)

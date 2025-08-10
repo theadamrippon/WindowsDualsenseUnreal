@@ -94,7 +94,7 @@ struct FDualSenseFeatureReport : public FFeatureReport
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense Settings",
 		meta=(DisplayName = "Soft haptic feedback, adivanced vibrate"))
 	EDualSenseDeviceFeatureReport VibrationMode;
-
+	
 	/**
 	 * The microphone volume level for the DualSense device.
 	 *

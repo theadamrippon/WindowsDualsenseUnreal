@@ -168,8 +168,8 @@ bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 
 void UDeviceHIDManager::FreeContext(FDeviceContext* Context)
 {
-	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
 	ZeroMemory(&Context->Path, sizeof(Context->Path));
+	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
 	ZeroMemory(&Context->Output, sizeof(Context->Output));
 	CloseHandle(Context->Handle);
 
@@ -205,16 +205,15 @@ void UDeviceHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
 	Output[8] = HidOut->MicLight.Mode;
 
 	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
-	Output[38] = 0x04;
-
+	Output[38] = (1 << 2);
+	
 	Output[42] = HidOut->PlayerLed.Brightness;
 	Output[43] = HidOut->PlayerLed.Led;
-	Output[43] |= 0x20;
 
 	Output[44] = HidOut->Lightbar.R;
 	Output[45] = HidOut->Lightbar.G;
 	Output[46] = HidOut->Lightbar.B;
-	
+
 	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
 	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
 
@@ -235,11 +234,9 @@ void UDeviceHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
 
 	DWORD BytesWritten = 0;
 	size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
-	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength,
-	               &BytesWritten, nullptr))
+	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength, &BytesWritten, nullptr))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"),
-		       OutputReportLength, GetLastError());
+		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"), OutputReportLength, GetLastError());
 		FreeContext(DeviceContext);
 	}
 }

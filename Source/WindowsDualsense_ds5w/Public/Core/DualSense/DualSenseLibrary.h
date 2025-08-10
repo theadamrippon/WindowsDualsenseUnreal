@@ -272,16 +272,6 @@ class WINDOWSDUALSENSE_DS5W_API UDualSenseLibrary : public UObject, public ISony
 	
 public:
 	/**
-	 * Destructor for the UDualSenseLibrary class.
-	 *
-	 * Logs a message indicating that the UDualSenseLibrary instance has been destroyed.
-	 */
-	virtual ~UDualSenseLibrary() override
-	{
-		UE_LOG(LogTemp, Log, TEXT("Dualsense UDualSenseLibrary Destruct"));
-	}
-	
-	/**
 	 * @brief Configures device settings for a connected device.
 	 *
 	 * This method allows customization and application of configuration
@@ -414,6 +404,16 @@ public:
 	{
 		ControllerID = Id;
 	}
+	/**
+	 * @brief Provides access to the implementation of the Sony gamepad interface.
+	 *
+	 * This method retrieves the current instance as an implementation of the
+	 * ISonyGamepadInterface, ensuring that the object adheres to the interface's
+	 * expected functionality. It is typically used to expose the interface implementation
+	 * for interaction with other components or systems that rely on the ISonyGamepadInterface.
+	 *
+	 * @return A pointer to the current instance as an ISonyGamepadInterface.
+	 */
 	virtual ISonyGamepadInterface* Get() override
 	{
 		return this;

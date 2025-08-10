@@ -21,10 +21,10 @@ UCLASS()
 class WINDOWSDUALSENSE_DS5W_API UDeviceHIDManager : public UObject
 {
 	GENERATED_BODY()
-	
-	const static UINT32 HashTable[256];
-	const static UINT32 CRCSeed;
 
+	const static UINT32 CRCSeed;
+	const static UINT32 HashTable[256];
+public:
 	/**
 	 * Default constructor for the UDualSenseHIDManager class.
 	 *
@@ -32,9 +32,7 @@ class WINDOWSDUALSENSE_DS5W_API UDeviceHIDManager : public UObject
 	 *
 	 * @return A newly constructed UDualSenseHIDManager object.
 	 */
-public:
 	UDeviceHIDManager();
-
 	/**
 	 * Frees and resets the memory and resources associated with the given device context.
 	 * This includes clearing buffers, resetting connection parameters, and closing the device handle.

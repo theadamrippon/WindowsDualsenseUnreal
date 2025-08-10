@@ -72,7 +72,6 @@ struct FDeviceContext
 	 * of operations such as detection, initialization, and communication.
 	 */
 	bool IsConnected;
-
 	/**
 	 * Represents the output configuration for a device context, typically used
 	 * to control advanced features of a connected DualSense controller.

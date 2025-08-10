@@ -70,13 +70,11 @@ enum class ELedMicEnum : uint8
 UENUM(BlueprintType)
 enum class ELedPlayerEnum : uint8
 {
-	Off = 0x0 UMETA(DisplayName = "Led Player Off"),
+	Off = 0 UMETA(DisplayName = "Led Player Off"),
 	One = PLAYER_LED_MIDDLE UMETA(DisplayName = "Player One"),
 	Two = PLAYER_LED_MIDDLE_RIGHT | PLAYER_LED_MIDDLE_LEFT UMETA(DisplayName = "Player Two"),
 	Three = PLAYER_LED_RIGHT | PLAYER_LED_MIDDLE | PLAYER_LED_LEFT UMETA(DisplayName = "Player Three"),
-	Four = PLAYER_LED_RIGHT | PLAYER_LED_MIDDLE_RIGHT | PLAYER_LED_MIDDLE_LEFT | PLAYER_LED_LEFT UMETA(
-		DisplayName = "Player Four"),
-	All = 31 UMETA(DisplayName = "All")
+	All  = PLAYER_LED_RIGHT | PLAYER_LED_MIDDLE_RIGHT | PLAYER_LED_MIDDLE_LEFT | PLAYER_LED_LEFT UMETA(DisplayName = "Player all led")
 };
 
 /**
@@ -88,8 +86,8 @@ enum class ELedPlayerEnum : uint8
 UENUM(BlueprintType)
 enum class ELedBrightnessEnum : uint8
 {
-	Low = 0x02 UMETA(DisplayName = "Brightness Low"),
-	Medium = 0x01 UMETA(DisplayName = "Brightness Medium"),
+	Low = 0x03 UMETA(DisplayName = "Brightness Low"),
+	Medium = 0x02 UMETA(DisplayName = "Brightness Medium"),
 	High = 0x00 UMETA(DisplayName = "Brightness High")
 };
 
@@ -106,8 +104,8 @@ enum class ELedBrightnessEnum : uint8
 UENUM(BlueprintType)
 enum class EDualSenseAudioFeatureReport : uint8
 {
-	On = 0x00 UMETA(DisplayName = "Audio On"),
-	Off = 0x10 UMETA(DisplayName = "Audio Off")
+	On UMETA(DisplayName = "Audio On"),
+	Off UMETA(DisplayName = "Audio Off")
 };
 
 /**

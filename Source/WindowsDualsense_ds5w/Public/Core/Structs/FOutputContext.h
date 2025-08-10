@@ -166,7 +166,7 @@ struct FFeatureConfig
 	 * This variable can be part of configurations to promote user
 	 * comfort, power consumption management, or sensitivity adjustments.
 	 */
-	uint8_t SoftRumbleReduce = 0x0F;
+	uint8_t SoftRumbleReduce = 0x00;
 	/**
 	 * Represents the softness level for the trigger component of a game controller.
 	 *
@@ -180,7 +180,7 @@ struct FFeatureConfig
 	 *   of the controller's trigger mechanism.
 	 * - Often combined with other features such as vibration or rumble effects.
 	 */
-	uint8_t TriggerSoftnessLevel = 0x4;
+	uint8_t TriggerSoftnessLevel = 0x00;
 };
 
 /**
@@ -264,7 +264,7 @@ struct FPlayerLed
 	 * The exact behavior and attributes of the LED are dependent on the context in which the
 	 * variable is implemented.
 	 */
-	unsigned char Led = 0x4;
+	unsigned char Led = 0x0;
 	/**
 	 * Represents the brightness level of the player's LED indicator on the controller.
 	 *
@@ -277,7 +277,7 @@ struct FPlayerLed
 	 *
 	 * Modifications to this variable impact the LED brightness visible on the device.
 	 */
-	unsigned char Brightness = 0x0;
+	unsigned char Brightness = 0x02;
 };
 
 /**

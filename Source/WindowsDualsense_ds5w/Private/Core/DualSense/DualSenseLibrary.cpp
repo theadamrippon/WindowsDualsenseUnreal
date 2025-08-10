@@ -15,6 +15,8 @@ bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
 	StopAll();
+	
+	UE_LOG(LogTemp, Log, TEXT("Initializing device model (%s)"), Context.DeviceType == Edge ? TEXT("DualSense Edge") : TEXT("DualSense Default"));
 	return true;
 }
 
@@ -42,9 +44,7 @@ void UDualSenseLibrary::SendOut()
 	{
 		return;
 	}
-
 	
-	UE_LOG(LogTemp, Warning, TEXT("Output Sending HID report, ControllerId: %d, Color: %d, %d, %d"), ControllerID, HIDDeviceContexts.Output.Lightbar.R, HIDDeviceContexts.Output.Lightbar.G, HIDDeviceContexts.Output.Lightbar.B);
 	UDeviceHIDManager::OutputBuffering(&HIDDeviceContexts);
 }
 void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
@@ -108,6 +108,11 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		)
 	{
 		const unsigned char* HIDInput = &HIDDeviceContexts.Buffer[Padding];
+
+		/**
+		 * TODO: Implement a conditional that checks if `Context.DeviceType` is set to `Edge`.
+		 * If true, execute the logic specific to the DualSense Edge controller.
+		 */
 
 		// Analogs
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));

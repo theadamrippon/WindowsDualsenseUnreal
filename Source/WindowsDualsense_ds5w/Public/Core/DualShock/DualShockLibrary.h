@@ -263,6 +263,27 @@ private:
 	 */
 	float LevelBattery;
 	/**
+	 * @brief A variable that indicates whether touch functionality is enabled or disabled.
+	 *
+	 * This variable is used to toggle the touch input capability of the system or application.
+	 * When set to true, touch input is enabled, allowing the system to respond to touch events.
+	 * When set to false, touch input is disabled, and touch interactions are ignored.
+	 */
+	bool EnableTouch;
+	/**
+	 * @variable EnableAccelerometerAndGyroscope
+	 * @brief Flags the activation of accelerometer and gyroscope sensors in the system.
+	 *
+	 * This variable determines whether the accelerometer and gyroscope functionalities
+	 * are enabled for the system. When set to true, data from these sensors will be collected
+	 * and utilized, typically for motion detection or orientation tracking.
+	 *
+	 * @details This flag is often used in systems that require motion input for functionality,
+	 * such as gaming controllers, virtual reality devices, or motion-sensing applications.
+	 * Disabling this may reduce resource usage but will disable motion-based features.
+	 */
+	bool EnableAccelerometerAndGyroscope;
+	/**
 	 * @brief Represents the context of a Human Interface Device (HID) used by DualSense controllers.
 	 *
 	 * This variable holds the FDeviceContext structure, which encapsulates the necessary state and

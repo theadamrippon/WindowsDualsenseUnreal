@@ -5,6 +5,7 @@
 #include <Windows.h>
 #include "Core/DeviceHIDManager.h"
 #include "InputCoreTypes.h"
+#include "VREditorMode.h"
 #include "Core/Structs/FOutputContext.h"
 #include "Helpers/ValidateHelpers.h"
 
@@ -19,6 +20,8 @@ void UDualShockLibrary::Settings(const FDualShockFeatureReport& Settings)
 bool UDualShockLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
+
+	UE_LOG(LogTemp, Log, TEXT("Initializing device model (DualShock 4)"));
 	return true;
 }
 
@@ -82,33 +85,45 @@ bool UDualShockLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 
 void UDualShockLibrary::SetLightbar(FColor Color)
 {
+	// TODO: Implement the logic for the DualShock Lightbar buffer
+	SendOut();
 }
 
 void UDualShockLibrary::SetPlayerLed(ELedPlayerEnum Led, ELedBrightnessEnum Brightness)
 {
+	// TODO: Implement the logic for the DualShock PlayerLed buffer
+	SendOut();
 }
 
 void UDualShockLibrary::SetMicrophoneLed(ELedMicEnum Led)
 {
+	// TODO: Implement the logic for the DualShock MicrophoneLed buffer
+	SendOut();
 }
 
 void UDualShockLibrary::SetTouch(const bool bIsTouch)
 {
+	EnableTouch = bIsTouch;
 }
 
 void UDualShockLibrary::SetAcceleration(bool bIsAccelerometer)
 {
+	EnableAccelerometerAndGyroscope = bIsAccelerometer;
 }
 
 void UDualShockLibrary::SetGyroscope(bool bIsGyroscope)
 {
+	EnableAccelerometerAndGyroscope = bIsGyroscope;
 }
 
 void UDualShockLibrary::StopAll()
 {
+	// TODO: Implement the logic for the DualShock Reset buffer
+	SendOut();
 }
 
 void UDualShockLibrary::SetVibration(const FForceFeedbackValues& Values)
 {
 	// TODO: Implement the logic for output the DualShock Vibrations
+	SendOut();
 }

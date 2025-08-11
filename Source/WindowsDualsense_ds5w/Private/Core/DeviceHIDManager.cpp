@@ -70,8 +70,15 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 
 				if (HidD_GetAttributes(TempDeviceHandle, &Attributes))
 				{
-					if (Attributes.VendorID == 0x054C && (Attributes.ProductID == 0x0CE6 || Attributes.ProductID ==
-						0x0DF2))
+					if (
+						Attributes.VendorID == 0x054C &&
+						(
+							Attributes.ProductID == 0x0CE6 ||
+							Attributes.ProductID == 0x0DF2 ||
+							Attributes.ProductID == 0x05C4 ||
+							Attributes.ProductID == 0x09CC
+						)
+					)
 					{
 						FDeviceContext Context = {};
 						size_t PathSize = 260;
@@ -89,9 +96,21 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 						
 						DevicePaths.Add(DeviceIndex, *DetailDataBuffer->DevicePath);
 						wcscpy_s(Context.Path, DetailDataBuffer->DevicePath);
-						
+
+						switch (Attributes.ProductID)
+						{
+							case 0x05C4:
+							case 0x09CC:
+								Context.DeviceType = DualShock;
+								break;
+							case 0x0DF2:
+								Context.DeviceType = Edge;
+								break;
+							default: Context.DeviceType = Default;
+						}
 						Context.IsConnected = true;
 						Context.ConnectionType = Usb;
+						
 						FString DevicePath(DetailDataBuffer->DevicePath);
 						if (DevicePath.Contains(TEXT("{00001124-0000-1000-8000-00805f9b34fb}")) ||
 							DevicePath.Contains(TEXT("bth")) ||

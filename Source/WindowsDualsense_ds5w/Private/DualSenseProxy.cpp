@@ -27,12 +27,23 @@ void UDualSenseProxy::DeviceSettings(int32 ControllerId, FDualSenseFeatureReport
 	DualSenseInstance->Settings(Settings);
 }
 
+/**
+ * TODO:
+ * Deprecate this function DeviceDisconnect.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
 bool UDualSenseProxy::DeviceDisconnect(int32 ControllerId)
 {
 	UDeviceContainerManager::Get()->RemoveLibraryInstance(ControllerId);
 	return true;
 }
-
+/**
+ * TODO:
+ * Deprecate this function DeviceReconnect.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
 bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 {
 	if (const ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryOrReconnect(ControllerId); !Gamepad)
@@ -42,7 +53,12 @@ bool UDualSenseProxy::DeviceReconnect(int32 ControllerId)
 
 	return true;
 }
-
+/**
+ * TODO:
+ * Deprecate this function DeviceIsConnected.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
 bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 {
 	if (const ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryOrReconnect(ControllerId); !Gamepad)
@@ -52,7 +68,12 @@ bool UDualSenseProxy::DeviceIsConnected(int32 ControllerId)
 
 	return true;
 }
-
+/**
+ * TODO:
+ * Deprecate this function LevelBatteryDevice.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
 float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)
 {
 	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
@@ -62,6 +83,102 @@ float UDualSenseProxy::LevelBatteryDevice(int32 ControllerId)
 	}
 
 	return Gamepad->GetBattery();
+}
+/**
+ * TODO:
+ * Deprecate this function LedPlayerEffects.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetPlayerLed(Value, Brightness);
+}
+/**
+ * TODO:
+ * Deprecate this function LedMicEffects.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetMicrophoneLed(Value);
+}
+/**
+ * TODO:
+ * Deprecate this function LedColorEffects.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetLightbar(Color);
+}
+/**
+ * TODO:
+ * Deprecate this function EnableTouch.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::EnableTouch(int32 ControllerId, bool bEnableTouch)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetTouch(bEnableTouch);
+}
+/**
+ * TODO:
+ * Deprecate this function EnableAccelerometerValues.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::EnableAccelerometerValues(int32 ControllerId, bool bEnableAccelerometer)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetAcceleration(bEnableAccelerometer);
+}
+/**
+ * TODO:
+ * Deprecate this function EnableGyroscopeValues.
+ * It is already being used by the USonyGamepadProxy class, which handles the common functions for DualSense and DualShock.
+ * 
+ */
+void UDualSenseProxy::EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope)
+{
+	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
+	if (!IsValid(Gamepad->_getUObject()))
+	{
+		return;
+	}
+
+	Gamepad->SetGyroscope(bEnableGyroscope);
 }
 
 void UDualSenseProxy::SetVibrationFromAudio(
@@ -148,13 +265,13 @@ void UDualSenseProxy::ContinuousResistance(int32 ControllerId, int32 StartPositi
 }
 
 void UDualSenseProxy::Galloping(
-	int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 BeginStrength,
-                                int32 EndStrength, float Frequency, EControllerHand Hand)
+	int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot,
+                                int32 SecondFoot, float Frequency, EControllerHand Hand)
 {
 	if (!UValidateHelpers::ValidateMaxPosition(StartPosition)) StartPosition = 0;
 	if (!UValidateHelpers::ValidateMaxPosition(EndPosition)) EndPosition = 8;
-	if (!UValidateHelpers::ValidateMaxPosition(BeginStrength)) BeginStrength = 0;
-	if (!UValidateHelpers::ValidateMaxPosition(EndStrength)) EndStrength = 8;
+	if (!UValidateHelpers::ValidateMaxPosition(FirstFoot)) FirstFoot = 2;
+	if (!UValidateHelpers::ValidateMaxPosition(SecondFoot)) SecondFoot = 7;
 
 	ISonyGamepadTriggerInterface* Gamepad = Cast<ISonyGamepadTriggerInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
 	if (!IsValid(Gamepad->_getUObject()))
@@ -162,7 +279,7 @@ void UDualSenseProxy::Galloping(
 		return;
 	}
 	
-	Gamepad->SetGalloping(StartPosition, EndPosition, BeginStrength, EndStrength, Frequency, Hand);
+	Gamepad->SetGalloping(StartPosition, EndPosition, FirstFoot, SecondFoot, Frequency, Hand);
 }
 
 void UDualSenseProxy::Machine(int32 ControllerId, int32 StartPosition, int32 EndPosition, int32 FirstFoot,
@@ -213,72 +330,6 @@ void UDualSenseProxy::Bow(int32 ControllerId, int32 StartPosition, int32 EndPosi
 	}
 
 	Gamepad->SetBow(StartPosition, EndPosition, BeginStrength, EndStrength, Hand);
-}
-
-void UDualSenseProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetPlayerLed(Value, Brightness);
-}
-
-void UDualSenseProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetMicrophoneLed(Value);
-}
-
-void UDualSenseProxy::LedColorEffects(int32 ControllerId, FColor Color)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetLightbar(Color);
-}
-
-void UDualSenseProxy::EnableTouch(int32 ControllerId, bool bEnableTouch)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetTouch(bEnableTouch);
-}
-
-void UDualSenseProxy::EnableAccelerometerValues(int32 ControllerId, bool bEnableAccelerometer)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetAcceleration(bEnableAccelerometer);
-}
-
-void UDualSenseProxy::EnableGyroscopeValues(int32 ControllerId, bool bEnableGyroscope)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetGyroscope(bEnableGyroscope);
 }
 
 void UDualSenseProxy::NoResistance(int32 ControllerId, EControllerHand Hand)

@@ -217,16 +217,21 @@ public:
 		EControllerHand Hand
 	);
 
+
 	/**
-	 * Triggers a galloping haptic effect on the DualSense controller.
+	 * @brief Triggers a galloping vibration effect on a DualSense controller.
 	 *
-	 * @param ControllerId The ID of the controller to apply the effect to.
-	 * @param StartPosition The starting actuator position for the galloping effect. Valid range is 0-8.
-	 * @param EndPosition The ending actuator position for the galloping effect. Valid range is 0-8.
-	 * @param BeginStrength The initial strength of the effect. Valid range is 0-8.
-	 * @param EndStrength The final strength of the effect. Valid range is 0-8.
-	 * @param Frequency The frequency of the galloping effect.
-	 * @param Hand Specifies which hand is being used (left or right).
+	 * This function sets up and activates a galloping vibration pattern by defining
+	 * the movement positions, associated vibration intensity, frequency, and the hand
+	 * where the effect plays.
+	 *
+	 * @param ControllerId The ID of the controller to apply the effect.
+	 * @param StartPosition The initial position of the galloping effect.
+	 * @param EndPosition The final position of the galloping effect.
+	 * @param FirstFoot The intensity for the first "foot" step in the galloping effect.
+	 * @param SecondFoot The intensity for the second "foot" step in the galloping effect.
+	 * @param Frequency The frequency at which the galloping effect repeats.
+	 * @param Hand Specifies whether the effect is applied to the left or right hand.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Galloping(
@@ -236,9 +241,9 @@ public:
 		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndPosition,
 		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
-		int32 BeginStrength,
+		int32 FirstFoot,
 		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
-		int32 EndStrength,
+		int32 SecondFoot,
 		UPARAM(meta = (ClampMin = "0.01", ClampMax = "1.0", UIMin = "0.01", UIMax = "1.0"))
 		float Frequency,
 		EControllerHand Hand

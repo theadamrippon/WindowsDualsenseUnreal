@@ -425,9 +425,6 @@ If you want to make the plugin available for all Unreal Engine projects, follow 
 ## Contributions
 Thanks to,
 
-
-[Nondebug Dualsense](https://github.com/nondebug/dualsense/blob/main/report-descriptor-bluetooth.txt) instructions, which facilitated the development of this plugin.
-
 [DualSense on Windows API](https://github.com/Ohjurot/DualSense-Windows) library, which facilitated the development of this plugin.
 
 [Nielk1 on GIST](https://gist.github.com/Nielk1/6d54cc2c00d2201ccb8c2720ad7538db) code, which facilitated the development of this plugin.
@@ -435,14 +432,3 @@ Thanks to,
 [DualSenseAPI](https://github.com/BadMagic100/DualSenseAPI/tree/master) library, which facilitated the development of this plugin.
 
 [flok pydualsense](https://github.com/flok/pydualsense) library, which facilitated the development of this plugin.
-
-***
-
-> **UPDATED NOTE (2025-06-04)**
-> 
->This update replaces the previous implementation, which relied on a third-party DLL located in the `ThirdParty` directory, with a direct integration using the native Windows HIDAPI.
->
->If you have cloned the project and still use the older version with the third-party DLL, please update to this latest version to benefit from the native HIDAPI integration.
->
-> This eliminates the dependency on external DLLs and provides a more streamlined setup.
-> For convenience, you can also download the latest version as a ZIP file from the repository or documentation links provided.

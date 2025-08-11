@@ -5,6 +5,8 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
 
+
+
 ## Important Note (since v1.2.7)
 
 Starting from version **1.2.7**, it is recommended to use the following functions from the `USonyGamepadProxy` class for device status and common effect operations.  
@@ -19,7 +21,19 @@ These functions provide unified handling for both DualSense and DualShock (in de
 - `LedMicEffects`
 
 Please prefer these functions for checking device status or applying common LED and vibration effects across supported controllers.
+Certainly! Here’s a suggested **README section** for linking to your public roadmap:
 
+---
+
+## 📍 Roadmap
+
+To follow ongoing development and planned features for DualShock and DualSense support, please check our project roadmap:
+
+[🔗 View the Roadmap on GitHub Projects](https://github.com/users/rafaelvaloto/projects/2)
+
+Here you’ll find detailed information about upcoming milestones, in-progress work, and future enhancements for the Windows DualSense Unreal plugin.
+
+---
 
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 

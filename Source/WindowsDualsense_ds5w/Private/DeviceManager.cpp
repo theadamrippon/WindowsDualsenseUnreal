@@ -38,6 +38,7 @@ void DeviceManager::Tick(float DeltaTime)
 	}
 	
 	PollAccumulator = 0.0f;
+	
 	TArray<FInputDeviceId> OutInputDevices;
 	OutInputDevices.Reset();
 
@@ -60,7 +61,7 @@ void DeviceManager::Tick(float DeltaTime)
 		}
 
 		FString ContextDrive = TEXT("DualShock");
-		if (Cast<ISonyGamepadTriggerInterface>(Gamepad->Get())->_getUObject())
+		if (ISonyGamepadTriggerInterface* IsDualSense = Cast<ISonyGamepadTriggerInterface>(Gamepad->Get()); IsDualSense)
 		{
 			ContextDrive = TEXT("DualSense");
 		}

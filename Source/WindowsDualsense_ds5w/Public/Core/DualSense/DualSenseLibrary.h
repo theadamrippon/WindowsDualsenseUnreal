@@ -546,15 +546,17 @@ public:
 	 */
 	void SetMicrophoneLed(ELedMicEnum Led);
 	/**
-	 * @brief Updates the color output of the DualSense controller.
+	 * @brief Sets the lightbar color and behavior on the device.
 	 *
-	 * This method sets the light bar color of the DualSense controller
-	 * to the specified color value. The color parameters include red, green,
-	 * blue, and alpha components, which define the final appearance of the light bar.
+	 * This method allows customizing the lightbar by specifying its color,
+	 * brightness transition duration, and toggle interval. It is used
+	 * to control the visual feedback on devices that have a lightbar feature.
 	 *
-	 * @param Color The color to apply to the light bar, represented as an FColor structure.
+	 * @param Color The desired color of the lightbar, represented as an FColor.
+	 * @param BrithnessTime The duration for transitioning the brightness, in seconds.
+	 * @param ToggleTime The duration for toggling the lightbar on and off, in seconds.
 	 */
-	virtual void SetLightbar(FColor Color) override;
+	virtual void SetLightbar(FColor Color, float BrithnessTime = 0.0f, float ToggleTime = 0.0f) override;
 	/**
 	 * @brief Configures trigger properties for a DualSense controller.
 	 *

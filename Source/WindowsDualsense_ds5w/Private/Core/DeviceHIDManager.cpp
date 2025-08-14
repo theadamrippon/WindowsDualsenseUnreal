@@ -9,16 +9,10 @@
 #include <windows.h>
 #include <hidsdi.h>
 #include <setupapi.h>
-
 #include "Core/Structs/FDeviceContext.h"
 #include "Windows/HideWindowsPlatformTypes.h"
 
 const UINT32 UDeviceHIDManager::CRCSeed = 0xeada2d49;
-
-UDeviceHIDManager::UDeviceHIDManager()
-{
-}
-
 bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 {
 	Devices.Empty();
@@ -81,9 +75,8 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 					)
 					{
 						FDeviceContext Context = {};
-						size_t PathSize = 260;
 						WCHAR DeviceProductString[260];
-						if (!HidD_GetProductString(TempDeviceHandle, DeviceProductString, PathSize))
+						if (!HidD_GetProductString(TempDeviceHandle, DeviceProductString, 260))
 						{
 							UE_LOG(LogTemp, Error, TEXT("HIDManager: Failed to obtain device path for the DualSense."));
 							continue;
@@ -94,9 +87,8 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 							continue;
 						}
 						
-						DevicePaths.Add(DeviceIndex, *DetailDataBuffer->DevicePath);
-						wcscpy_s(Context.Path, DetailDataBuffer->DevicePath);
-
+						memcpy_s(Context.Path, 260, DetailDataBuffer->DevicePath, 260);
+						DevicePaths.Add(DeviceIndex, *Context.Path);
 						switch (Attributes.ProductID)
 						{
 							case 0x05C4:
@@ -106,24 +98,31 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 							case 0x0DF2:
 								Context.DeviceType = Edge;
 								break;
+							case 0x0ce6:
+								Context.DeviceType = Default;
+							break;
 							default: Context.DeviceType = Default;
 						}
+						
 						Context.IsConnected = true;
 						Context.ConnectionType = Usb;
 						
-						FString DevicePath(DetailDataBuffer->DevicePath);
+						FString DevicePath(Context.Path);
 						if (DevicePath.Contains(TEXT("{00001124-0000-1000-8000-00805f9b34fb}")) ||
 							DevicePath.Contains(TEXT("bth")) ||
 							DevicePath.Contains(TEXT("BTHENUM")))
 						{
+							unsigned char FeatureBuffer[78];
+							FeatureBuffer[0] = 0x05;
+							if (!HidD_GetFeature(TempDeviceHandle, FeatureBuffer, 78)) {
+								UE_LOG(LogTemp, Error, TEXT("HIDManager: Failed to obtain device path for the DualSense."));
+								continue;
+							}
 							Context.ConnectionType = Bluetooth;
 						}
-
-						Context.Handle = TempDeviceHandle;
-						CloseHandle(TempDeviceHandle);
+						
 						Devices.Add(Context);
-						free(DetailDataBuffer);
-						continue;
+						UE_LOG(LogTemp, Log, TEXT("HIDManager: Found at %s"), Context.Path);
 					}
 				}
 			}
@@ -138,6 +137,7 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 
 HANDLE UDeviceHIDManager::CreateHandle(FDeviceContext* DeviceContext)
 {
+	UE_LOG(LogTemp, Warning, TEXT("Path: %s"), DeviceContext->Path);
 	const HANDLE DeviceHandle = CreateFileW(
 			DeviceContext->Path,
 			GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, nullptr, OPEN_EXISTING, NULL, nullptr
@@ -169,14 +169,15 @@ bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 	}
 
 	HidD_FlushQueue(DeviceContext->Handle);
-	
-	DWORD BytesRead = 0;
+
 	const size_t InputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 64;
+	DWORD BytesRead = 0;
 	if (!ReadFile(DeviceContext->Handle, DeviceContext->Buffer, InputReportLength, &BytesRead,
-	              nullptr))
+				  nullptr))
 	{
 		const DWORD Error = GetLastError();
-		UE_LOG(LogTemp, Error, TEXT("Erro read DualSense: size buffer %llu, Erro: %d"), InputReportLength, Error);
+		FString Device = DeviceContext->DeviceType == DualShock ? TEXT("DualShock") : TEXT("DualSense");
+		UE_LOG(LogTemp, Warning, TEXT("Erro read %s: size buffer %llu, Erro: %d"), *Device, sizeof(DeviceContext->Buffer), Error);
 
 		DeviceContext->Handle = INVALID_HANDLE_VALUE;
 		FreeContext(DeviceContext);
@@ -187,30 +188,53 @@ bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 
 void UDeviceHIDManager::FreeContext(FDeviceContext* Context)
 {
+	CloseHandle(Context->Handle);
 	ZeroMemory(&Context->Path, sizeof(Context->Path));
 	ZeroMemory(&Context->Buffer, sizeof(Context->Buffer));
 	ZeroMemory(&Context->Output, sizeof(Context->Output));
-	CloseHandle(Context->Handle);
-
 	Context->IsConnected = false;
 	Context->ConnectionType = Unrecognized;
 }
 
-void UDeviceHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
+void UDeviceHIDManager::OutputDualShock(FDeviceContext* DeviceContext)
 {
-	FOutputContext* HidOut = &DeviceContext->Output;
-	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
-	DeviceContext->Buffer[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
+	const FOutputContext* HidOut = &DeviceContext->Output;
 
+	size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
+	DeviceContext->BufferOutput[0] = DeviceContext->ConnectionType == Bluetooth ? 0x11 : 0x05;
+
+	unsigned char* Output = &DeviceContext->BufferOutput[Padding];
+	Output[0] = 0xff;
+	Output[3] = HidOut->Rumbles.Left;
+	Output[4] = HidOut->Rumbles.Right;
+	Output[5] = HidOut->Lightbar.R;
+	Output[6] = HidOut->Lightbar.G;
+	Output[7] = HidOut->Lightbar.B;
+	Output[8] = HidOut->FlashLigthbar.Bright_Time;
+	Output[9] = HidOut->FlashLigthbar.Toggle_Time;
+	
+	DWORD BytesWritten = 0;
+	if (!WriteFile(DeviceContext->Handle, DeviceContext->BufferOutput, 32, &BytesWritten, nullptr))
+	{
+		UE_LOG(LogTemp, Error, TEXT("Failed DualShock to write output data to device. report 32 Error Code: %d"), GetLastError());
+		FreeContext(DeviceContext);
+	}
+}
+
+void UDeviceHIDManager::OutputDualSense(FDeviceContext* DeviceContext)
+{
+	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
+	
+	DeviceContext->BufferOutput[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
 	if (DeviceContext->ConnectionType == Bluetooth)
 	{
-		DeviceContext->Buffer[1] = 0x02;
+		DeviceContext->BufferOutput[1] = 0x02;
 	}
 
-	unsigned char* Output = &DeviceContext->Buffer[Padding];
+	FOutputContext* HidOut = &DeviceContext->Output;
+	unsigned char*  Output = &DeviceContext->BufferOutput[Padding];
 	Output[0] = HidOut->Feature.VibrationMode;
 	Output[1] = HidOut->Feature.FeatureMode;
-
 	Output[2] = HidOut->Rumbles.Left;
 	Output[3] = HidOut->Rumbles.Right;
 	if (Padding == 1)
@@ -222,43 +246,40 @@ void UDeviceHIDManager::OutputBuffering(FDeviceContext* DeviceContext)
 		Output[9] = HidOut->Audio.MicStatus;
 	}
 	Output[8] = HidOut->MicLight.Mode;
-
 	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
 	Output[38] = (1 << 2);
-	
 	Output[42] = HidOut->PlayerLed.Brightness;
 	Output[43] = HidOut->PlayerLed.Led;
-
 	Output[44] = HidOut->Lightbar.R;
 	Output[45] = HidOut->Lightbar.G;
 	Output[46] = HidOut->Lightbar.B;
-
+	
 	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
 	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
-
+	
 	if (DeviceContext->ConnectionType == Bluetooth)
 	{
-		const UINT32 CrcChecksum = Compute(DeviceContext->Buffer, 74);
-		DeviceContext->Buffer[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
-		DeviceContext->Buffer[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
-		DeviceContext->Buffer[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
-		DeviceContext->Buffer[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
+		const UINT32 CrcChecksum = Compute(DeviceContext->BufferOutput, 74);
+		DeviceContext->BufferOutput[0x4A] = static_cast<unsigned char>((CrcChecksum & 0x000000FF) >> 0UL);
+		DeviceContext->BufferOutput[0x4B] = static_cast<unsigned char>((CrcChecksum & 0x0000FF00) >> 8UL);
+		DeviceContext->BufferOutput[0x4C] = static_cast<unsigned char>((CrcChecksum & 0x00FF0000) >> 16UL);
+		DeviceContext->BufferOutput[0x4D] = static_cast<unsigned char>((CrcChecksum & 0xFF000000) >> 24UL);
 	}
 
-	// for (size_t i = 0; i < 78; ++i)
-	// {
-	// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
-	// 	UE_LOG(LogTemp, Log, TEXT("Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Buffer[i]);
-	// }
-
+	const size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
 	DWORD BytesWritten = 0;
-	size_t OutputReportLength = DeviceContext->ConnectionType == Bluetooth ? 78 : 74;
-	if (!WriteFile(DeviceContext->Handle, DeviceContext->Buffer, OutputReportLength, &BytesWritten, nullptr))
+	if (!WriteFile(DeviceContext->Handle, DeviceContext->BufferOutput, OutputReportLength, &BytesWritten, nullptr))
 	{
-		UE_LOG(LogTemp, Error, TEXT("Failed to write output data to device. report %llu Error Code: %d"), OutputReportLength, GetLastError());
+		UE_LOG(LogTemp, Error, TEXT("Failed DualSense to write output data to device. report %llu Error Code: %d"), OutputReportLength, GetLastError());
 		FreeContext(DeviceContext);
 	}
 }
+
+// for (size_t i = 0; i < 78; ++i)
+// {
+// 	UE_LOG(LogTemp, Log, TEXT("Output Byte[%02d]: 0x%02X"), i, Output[i]);
+// 	UE_LOG(LogTemp, Log, TEXT("Buffer Byte[%02d]: 0x%02X"), i, DeviceContext->Buffer[i]);
+// }
 
 void UDeviceHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTriggers& Effect)
 {

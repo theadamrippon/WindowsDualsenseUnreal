@@ -104,12 +104,15 @@ public:
 	 * @param ControllerId An integer representing the unique identifier for the controller.
 	 */
 	virtual void SetControllerId(int32 ControllerId) = 0;
+
 	/**
-	 * Sets the color of the lightbar on the Sony gamepad.
+	 * Sets the lightbar color and associated timing parameters on the gamepad.
 	 *
-	 * @param Color The desired color for the lightbar, represented as an FColor object.
+	 * @param Color The color to set the lightbar to, represented as an FColor.
+	 * @param BrithnessTime The time duration for setting the brightness effect. Defaults to 0.0f.
+	 * @param ToggleTime The time interval for toggling the lightbar. Defaults to 0.0f.
 	 */
-	virtual void SetLightbar(FColor Color) = 0;
+	virtual void SetLightbar(FColor Color, float BrithnessTime = 0.0f, float ToggleTime = 0.0f) = 0;
 	/**
 	 * Sets the LED associated with the player on the Sony gamepad to a specified brightness level.
 	 *

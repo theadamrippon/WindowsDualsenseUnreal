@@ -152,7 +152,7 @@ public:
 	 *
 	 * @param Color The desired color for the lightbar, represented as an FColor object.
 	 */
-	virtual void SetLightbar(FColor Color) override;
+	virtual void SetLightbar(FColor Color, float BrithnessTime = 0.0f, float ToggleTime = 0.0f) override;
 	/**
 	 * Sets the LED associated with the player on the Sony gamepad to a specified brightness level.
 	 *

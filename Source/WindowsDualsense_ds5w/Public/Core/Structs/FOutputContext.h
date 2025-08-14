@@ -250,6 +250,17 @@ struct FLightbar
  * Represents the player LED configuration for a device.
  */
 USTRUCT()
+struct FDualShockFlashLigthbar
+{
+	GENERATED_BODY()
+	unsigned char Bright_Time = 0x0;
+	unsigned char Toggle_Time = 0x0;
+};
+
+/**
+ * Represents the player LED configuration for a device.
+ */
+USTRUCT()
 struct FPlayerLed
 {
 	GENERATED_BODY()
@@ -501,6 +512,23 @@ struct FOutputContext
 	 * The R, G, B, and A components of the light color can be adjusted for customization.
 	 */
 	FLightbar Lightbar;
+	/**
+	 * @class FDualShockFlashLigthbar
+	 *
+	 * @brief Manages the lightbar functionality for a DualShock controller.
+	 *
+	 * The FDualShockFlashLigthbar class is designed to handle the control and
+	 * customization of the lightbar on a DualShock controller. It provides
+	 * functionality to define and implement light patterns, colors, and flashing
+	 * behaviors suitable for various gaming or application scenarios.
+	 *
+	 * This class is intended to interact with the DualShock controller hardware,
+	 * allowing dynamic updates to the lightbar as required by the application logic.
+	 *
+	 * @note Proper integration and hardware compatibility are required to ensure
+	 *       the expected behavior of the lightbar.
+	 */
+	FDualShockFlashLigthbar FlashLigthbar;
 	/**
 	 * Represents the microphone light's configuration or mode
 	 * used by the associated device. This structure is a component

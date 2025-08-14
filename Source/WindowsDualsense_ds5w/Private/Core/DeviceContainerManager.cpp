@@ -109,10 +109,12 @@ void UDeviceContainerManager::CreateLibraryInstances()
 		if (Context.IsConnected)
 		{
 			ISonyGamepadInterface* SonyGamepad = nullptr;
-			if (Context.DeviceType == Default || Context.DeviceType == Edge)
+			if (Context.DeviceType == EDeviceType::Default || Context.DeviceType == EDeviceType::Edge)
 			{
 				SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualSenseLibrary>(UDualSenseLibrary::StaticClass()));
-			} else
+			}
+			
+			if (Context.DeviceType == EDeviceType::DualShock)
 			{
 				SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualShockLibrary>(UDualShockLibrary::StaticClass()));
 			}
@@ -123,11 +125,11 @@ void UDeviceContainerManager::CreateLibraryInstances()
 				SonyGamepad->ShutdownLibrary();
 				continue;
 			}
-
+			
 			SonyGamepad->_getUObject()->AddToRoot();
 			SonyGamepad->SetControllerId(DeviceIndex);
 			SonyGamepad->InitializeLibrary(Context);
-
+			
 			LibraryInstances.Add(DeviceIndex, SonyGamepad);
 		}
 	}
@@ -159,12 +161,18 @@ ISonyGamepadInterface* UDeviceContainerManager::CreateLibraryInstance(int32 Cont
 	if (Context.IsConnected)
 	{
 		ISonyGamepadInterface*  SonyGamepad = nullptr;
-
+		Context.Output = FOutputContext();
 		Context.Handle = UDeviceHIDManager::CreateHandle(&Context);
-		if (Context.DeviceType == EDeviceType::Default)
+		if (Context.DeviceType == EDeviceType::Default || Context.DeviceType == EDeviceType::Edge)
 		{
 			SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualSenseLibrary>(UDualSenseLibrary::StaticClass()));
 		}
+
+		if (Context.DeviceType == EDeviceType::DualShock)
+		{
+			SonyGamepad = Cast<ISonyGamepadInterface>(NewObject<UDualShockLibrary>(UDualShockLibrary::StaticClass()));
+		}
+		
 		if (!SonyGamepad)
 		{
 			return nullptr;

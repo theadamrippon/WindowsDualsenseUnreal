@@ -72,7 +72,7 @@ public:
 	 * @param Buffer Pointer to the buffer containing the data to be converted to hexadecimal format.
 	 * @param BufferSize The size of the buffer, in bytes.
 	 */
-	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize)
+	static void PrintBufferAsHex(const unsigned char* Buffer, int BufferSize, const FString& Device = TEXT("Unknow"))
 	{
 		FString HexString;
 		for (int i = 0; i < BufferSize; i++)
@@ -80,6 +80,6 @@ public:
 			HexString += FString::Printf(TEXT("%02X "), Buffer[i]);
 		}
 		
-		UE_LOG(LogTemp, Log, TEXT("Buffer as Hex String: %s"), *HexString);
+		UE_LOG(LogTemp, Log, TEXT("Buffer Device: %s String: %s"), *Device, *HexString);
 	}
 };

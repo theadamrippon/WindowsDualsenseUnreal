@@ -19,6 +19,7 @@ void UDualShockLibrary::Settings(const FDualShockFeatureReport& Settings)
 bool UDualShockLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
+	SetLightbar(FColor::Green, 0.0f, 0.0f);
 	UE_LOG(LogTemp, Log, TEXT("Initializing device model (DualShock 4)"));
 	return true;
 }
@@ -74,7 +75,15 @@ bool UDualShockLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 {
 	if (UDeviceHIDManager::GetDeviceInputState(&HIDDeviceContexts))
 	{
-		const unsigned char* HIDInput = &HIDDeviceContexts.Buffer[1];
+		const unsigned char* HIDInput;
+		if (HIDDeviceContexts.ConnectionType == Bluetooth)
+		{
+			HIDInput = &HIDDeviceContexts.BufferDS4[3];
+		}
+		else
+		{
+			HIDInput = &HIDDeviceContexts.Buffer[1];
+		}
 		
 		// Triggers
 		const bool bLeftTriggerThreshold = HIDInput[0x05] & BTN_LEFT_TRIGGER;

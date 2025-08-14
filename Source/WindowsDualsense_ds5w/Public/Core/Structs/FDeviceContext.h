@@ -59,6 +59,22 @@ struct FDeviceContext
 	 */
 	unsigned char Buffer[78];
 	/**
+	 * @brief Internal data buffer for DualShock 4 Bluetooth communication.
+	 *
+	 * This buffer is specifically allocated for handling input and output data
+	 * when communicating with DualShock 4 controllers connected via Bluetooth.
+	 * It is used in the context of parsing and building device reports during
+	 * Bluetooth transfers, ensuring compliance with the expected report format
+	 * and size required by the DualShock 4 HID protocol.
+	 *
+	 * The buffer size of 547 bytes matches the standard payload requirements
+	 * for DualShock 4 devices in Bluetooth communication scenarios.
+	 *
+	 * @note This buffer is not intended for DualSense controllers or USB connections;
+	 *       for those, use Buffer[78] instead.
+	 */
+	unsigned char BufferDS4[547];
+	/**
 	 * A fixed-size buffer for storing input or output data associated with a device context.
 	 * This buffer is utilized for reading device input reports or for other data
 	 * management tasks. Its size is defined as 78 bytes to accommodate device

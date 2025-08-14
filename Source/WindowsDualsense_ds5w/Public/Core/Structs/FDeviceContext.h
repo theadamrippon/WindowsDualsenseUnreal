@@ -48,6 +48,17 @@ struct FDeviceContext
 	 */
 	wchar_t Path[260];
 	/**
+	 * @brief Internal data buffer for device communication.
+	 *
+	 * This buffer serves as a temporary storage space for handling input and output
+	 * data during device interactions. It is specifically used in processing data
+	 * exchange within the DualSense HID management framework.
+	 *
+	 * The size of the buffer is designed to accommodate the expected data payload
+	 * during these communications, ensuring efficient handling of device protocols.
+	 */
+	unsigned char Buffer[78];
+	/**
 	 * A fixed-size buffer for storing input or output data associated with a device context.
 	 * This buffer is utilized for reading device input reports or for other data
 	 * management tasks. Its size is defined as 78 bytes to accommodate device
@@ -60,7 +71,7 @@ struct FDeviceContext
 	 *       type or input requirements, ensuring compatibility and sufficient
 	 *       data handling capabilities.
 	 */
-	unsigned char Buffer[78];
+	unsigned char BufferOutput[78];
 	/**
 	 * Indicates whether the device is connected.
 	 *

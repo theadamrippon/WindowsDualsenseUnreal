@@ -66,17 +66,14 @@ public:
 	 * @param Color The color to set on the controller's LED.
 	 */
 	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Led Effects")
-	static void LedColorEffects(int32 ControllerId, FColor Color);
-
-	/**
-	 * Controls the LED player light effects on the DualSense controller.
-	 *
-	 * @param ControllerId The identifier for the target controller.
-	 * @param Value The LED pattern enum specifying the LED configuration for the player indicator (e.g., Off, Player One, Player Two, etc.).
-	 * @param Brightness The brightness level of the LED lights specified by an enum (e.g., Low, Medium, High).
-	 */
-	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Led Effects")
-	static void LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness);
+	static void LedColorEffects(
+		int32 ControllerId,
+		FColor Color,
+		UPARAM(meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) LED brightness transition time, in seconds."))
+		const float BrightnessTime = 0.0f,
+		UPARAM(meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) Toggle transition time, in seconds."))
+		const float ToogleTime = 0.0f
+	);
 
 	/**
 	 * Controls the LED and microphone visual effects on a DualSense controller.

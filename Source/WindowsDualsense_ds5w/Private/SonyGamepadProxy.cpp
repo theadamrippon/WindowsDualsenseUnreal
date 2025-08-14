@@ -42,7 +42,7 @@ float USonyGamepadProxy::LevelBatteryDevice(int32 ControllerId)
 	return Gamepad->GetBattery();
 }
 
-void USonyGamepadProxy::LedColorEffects(int32 ControllerId, FColor Color)
+void USonyGamepadProxy::LedColorEffects(int32 ControllerId, FColor Color, float BrightnessTime, float ToogleTime)
 {
 	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
 	if (!Gamepad)
@@ -50,18 +50,7 @@ void USonyGamepadProxy::LedColorEffects(int32 ControllerId, FColor Color)
 		return;
 	}
 
-	Gamepad->Get()->SetLightbar(Color);
-}
-
-void USonyGamepadProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness)
-{
-	ISonyGamepadInterface* Gamepad = Cast<ISonyGamepadInterface>(UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId));
-	if (!IsValid(Gamepad->_getUObject()))
-	{
-		return;
-	}
-
-	Gamepad->SetPlayerLed(Value, Brightness);
+	Gamepad->Get()->SetLightbar(Color, BrightnessTime, ToogleTime);
 }
 
 void USonyGamepadProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value)

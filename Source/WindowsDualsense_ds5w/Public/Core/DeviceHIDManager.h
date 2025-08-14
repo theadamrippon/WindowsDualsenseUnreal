@@ -32,7 +32,7 @@ public:
 	 *
 	 * @return A newly constructed UDualSenseHIDManager object.
 	 */
-	UDeviceHIDManager();
+	UDeviceHIDManager(){};
 	/**
 	 * Frees and resets the memory and resources associated with the given device context.
 	 * This includes clearing buffers, resetting connection parameters, and closing the device handle.
@@ -63,15 +63,30 @@ public:
 	 */
 	static HANDLE CreateHandle(FDeviceContext* DeviceContext);
 	/**
-	 * Handles the output buffering process for a specified DualSense device context.
-	 * Prepares and structures the HID output buffer with data such as vibration, lightbar colors, rumbles,
-	 * trigger effects, and other features, depending on the connection type (Bluetooth or wired).
-	 * The method ensures the proper arrangement of the output data for communication with the device.
+	 * Outputs current DualSense device states to the HID (Human Interface Device).
 	 *
-	 * @param DeviceContext A pointer to the FDeviceContext representing the target DualSense device.
-	 *                      The context must be fully initialized and linked to a valid device.
+	 * This method prepares and transmits an output report representing the current state
+	 * of the DualSense device, including feedback effects such as vibration, adaptive triggers,
+	 * lightbar colors, microphone light settings, and player LED configurations.
+	 *
+	 * Based on the device context, it determines the appropriate output buffer layout,
+	 * handles Bluetooth-specific padding, and adjusts output feature structures.
+	 * The method writes the prepared buffer to the device via HID protocols using the
+	 * appropriate connection type (wired or Bluetooth).
+	 *
+	 * @param DeviceContext A pointer to the FDeviceContext structure, containing information
+	 *                      about the device configuration, state, and connection details.
 	 */
-	static void OutputBuffering(FDeviceContext* DeviceContext);
+	static void OutputDualSense(FDeviceContext* DeviceContext);
+	/**
+	 * Sends output instructions to a DualShock-compatible device through the provided device context.
+	 *
+	 * Ensures the device is in a valid state before performing operations by checking the handle validity
+	 * and connection status. Logs errors if the device handle is invalid or the device is not connected.
+	 *
+	 * @param DeviceContext A reference to the device context containing connection and handle details for the target device.
+	 */
+	static void OutputDualShock(FDeviceContext* DeviceContext);
 	/**
 	 * Attempts to retrieve the current input state from the specified DualSense device context.
 	 * This function reads input data from the device handle into the device's buffer, ensuring the device is connected
@@ -102,4 +117,5 @@ public:
 	 * @return The computed CRC32 hash value.
 	 */
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);
+	static UINT32 crc_32(unsigned char* buf, int length);
 };

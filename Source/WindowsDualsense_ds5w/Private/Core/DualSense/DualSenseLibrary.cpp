@@ -14,8 +14,6 @@
 bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
-	StopAll();
-	
 	UE_LOG(LogTemp, Log, TEXT("Initializing device model (%s)"), Context.DeviceType == Edge ? TEXT("DualSense Edge") : TEXT("DualSense Default"));
 	return true;
 }
@@ -23,6 +21,8 @@ bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
+	UE_LOG(LogTemp, Log, TEXT("UDualSenseLibrary ShutdownLibrary()"));
+	CloseHandle(HIDDeviceContexts.Handle);
 	UDeviceHIDManager::FreeContext(&HIDDeviceContexts);
 }
 
@@ -45,7 +45,7 @@ void UDualSenseLibrary::SendOut()
 		return;
 	}
 	
-	UDeviceHIDManager::OutputBuffering(&HIDDeviceContexts);
+	UDeviceHIDManager::OutputDualSense(&HIDDeviceContexts);
 }
 void UDualSenseLibrary::Settings(const FSettings<FFeatureReport>& Settings)
 {
@@ -103,17 +103,10 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
                                     const FPlatformUserId UserId, const FInputDeviceId InputDeviceId)
 {
 	const size_t Padding = HIDDeviceContexts.ConnectionType == Bluetooth ? 2 : 1;
-	if (
-			UDeviceHIDManager::GetDeviceInputState(&HIDDeviceContexts)
-		)
+	if (UDeviceHIDManager::GetDeviceInputState(&HIDDeviceContexts))
 	{
 		const unsigned char* HIDInput = &HIDDeviceContexts.Buffer[Padding];
-
-		/**
-		 * TODO: Implement a conditional that checks if `Context.DeviceType` is set to `Edge`.
-		 * If true, execute the logic specific to the DualSense Edge controller.
-		 */
-
+		
 		// Analogs
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));
 		const float LeftAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x01] - 127) * -1);
@@ -128,19 +121,13 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		                                          RightAnalogX / 128.0f);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId,
 		                                          RightAnalogY / 128.0f);
-
-		// Triggers
-		const bool bLeftTriggerThreshold = HIDInput[0x08] & BTN_LEFT_TRIGGER;
-		const bool bRightTriggerThreshold = HIDInput[0x08] & BTN_RIGHT_TRIGGER;
-		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::LeftTriggerThreshold,
-						 bLeftTriggerThreshold);
-		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::RightTriggerThreshold,
-						 bRightTriggerThreshold);
+		
 		const float TriggerL = HIDInput[0x04] / 256.0f;
 		const float TriggerR = HIDInput[0x05] / 256.0f;
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftTriggerAnalog, UserId, InputDeviceId, TriggerL);
-		InMessageHandler.Get().
-		                 OnControllerAnalog(FGamepadKeyNames::RightTriggerAnalog, UserId, InputDeviceId, TriggerR);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightTriggerAnalog, UserId, InputDeviceId, TriggerR);
+
+		
 
 		uint8_t ButtonsMask = HIDInput[0x07] & 0xF0;
 		const bool bCross = ButtonsMask & BTN_CROSS;
@@ -234,6 +221,13 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::SpecialRight, Start);
 		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::SpecialLeft, Select);
 
+		
+		const bool bLeftTriggerThreshold = HIDInput[0x08] & BTN_LEFT_TRIGGER;
+		const bool bRightTriggerThreshold = HIDInput[0x08] & BTN_RIGHT_TRIGGER;
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::LeftTriggerThreshold,
+						 bLeftTriggerThreshold);
+		CheckButtonInput(InMessageHandler, UserId, InputDeviceId, FGamepadKeyNames::RightTriggerThreshold,
+						 bRightTriggerThreshold);
 		if (EnableTouch)
 		{
 			FTouchPoint1 Touch;
@@ -725,7 +719,7 @@ void UDualSenseLibrary::StopAll()
 	SendOut();
 }
 
-void UDualSenseLibrary::SetLightbar(const FColor Color)
+void UDualSenseLibrary::SetLightbar(FColor Color, float BrithnessTime, float ToggleTime)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
 	HidOutput->Lightbar.R = Color.R;

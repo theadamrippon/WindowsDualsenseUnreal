@@ -15,19 +15,6 @@ To follow ongoing development and planned features for DualShock and DualSense s
 
 ---
 
-## Important Note (since v1.2.7)
-
-Starting from version **1.2.7**, it is recommended to use the following functions from the `USonyGamepadProxy` class for device status and common effect operations.  
-These functions provide unified handling for both DualSense and DualShock (in development):
-
-- `DeviceIsConnected`
-- `DeviceReconnect`
-- `DeviceDisconnect`
-- `LevelBatteryDevice`
-- `LedColorEffects`
-- `LedPlayerEffects`
-- `LedMicEffects`
-
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.

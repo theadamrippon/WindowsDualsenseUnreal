@@ -99,9 +99,6 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 							case 0x0DF2:
 								Context.DeviceType = Edge;
 								break;
-							case 0x0ce6:
-								Context.DeviceType = Default;
-							break;
 							default: Context.DeviceType = Default;
 						}
 						

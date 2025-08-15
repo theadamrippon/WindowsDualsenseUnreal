@@ -5,16 +5,6 @@
 ![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
 
----
-
-## 📍 Roadmap
-
-To follow ongoing development and planned features for DualShock and DualSense support, please check our project roadmap:
-
-[🔗 View the Roadmap on GitHub Projects](https://github.com/users/rafaelvaloto/projects/2)
-
----
-
 ### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
 
 ### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
@@ -400,7 +390,14 @@ If you want to make the plugin available for all Unreal Engine projects, follow 
 3. **Access the Plugin From Any Project**:
    - Now the plugin is installed globally for all Unreal Engine Version projects. You can enable it in any project directly from the Unreal Editor's **Plugins** menu. 
 
+---
+## 📍 Roadmap
 
+To follow ongoing development and planned features for DualShock and DualSense support, please check our project roadmap:
+
+[🔗 View the Roadmap on GitHub Projects](https://github.com/users/rafaelvaloto/projects/2)
+
+---
 
 ## Contributions
 Thanks to,

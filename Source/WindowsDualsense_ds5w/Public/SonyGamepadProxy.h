@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "UObject/Object.h"
 #include "Core/Enums/EDeviceCommons.h"
+#include "Core/Enums/EDeviceConnection.h"
 #include "SonyGamepadProxy.generated.h"
 
 
@@ -25,7 +26,26 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Status")
 	static bool DeviceIsConnected(int32 ControllerId);
-
+	/**
+	 * Retrieves the type of the connected device (e.g., DualSense, DualSense Edge, or DualShock 4)
+	 * based on the specified Controller ID.
+	 *
+	 * @param ControllerId The ID of the connected controller whose type is to be determined.
+	 * @return The type of the device as an EDeviceType enum value. Possible values include:
+	 *         - DualSense
+	 *         - DualSenseEdge
+	 *         - DualShock4
+	 */
+	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Status")
+	static EDeviceType GetDeviceType(int32 ControllerId);
+	/**
+	 * Retrieves the connection type of the DualSense or DualShock device with the specified Controller ID.
+	 *
+	 * @param ControllerId The ID of the controller whose connection type is being queried.
+	 * @return The connection type of the device, which can be USB, Bluetooth, or Unrecognized.
+	 */
+	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Status")
+	static EDeviceConnection GetConnectionType(int32 ControllerId);
 	/**
 	 * Attempts to reconnect a DualSense or DualShock controller based on the given controller ID.
 	 * If the controller is successfully reconnected, the operation returns true;
@@ -36,7 +56,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "SonyGamepad: Dualsense or DualShock Status")
 	static bool DeviceReconnect(int32 ControllerId);
-
 	/**
 	 * Disconnects the DualSense or DualShock device associated with the given Controller ID.
 	 * This method removes the library instance associated with the specified controller.

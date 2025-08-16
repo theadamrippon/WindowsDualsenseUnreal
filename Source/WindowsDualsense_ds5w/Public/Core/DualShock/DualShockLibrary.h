@@ -211,6 +211,33 @@ public:
 		ControllerID = Id;
 	}
 	/**
+	 * @brief Retrieves the connection type of the device.
+	 *
+	 * This method provides information about the connection type of the device,
+	 * such as whether it is connected via USB, Bluetooth, or another supported
+	 * connection type. It overrides the base class implementation to return
+	 * the specific connection type associated with the HID device context.
+	 *
+	 * @return The connection type of the device as an enumerated value of type EDeviceConnection.
+	 */
+	virtual EDeviceConnection GetConnectionType() override
+	{
+		return HIDDeviceContexts.ConnectionType;
+	}
+	/**
+	 * @brief Retrieves the type of device associated with the current context.
+	 *
+	 * This method provides the specific type of device being used, as represented
+	 * by the associated device type enumeration. The retrieved value can be utilized
+	 * to determine the characteristics or capabilities of the device in use.
+	 *
+	 * @return The device type as an enumeration value of EDeviceType.
+	 */
+	virtual EDeviceType GetDeviceType() override
+	{
+		return HIDDeviceContexts.DeviceType;	
+	}
+	/**
 	 * Represents the unique identifier assigned to a specific DualSense controller.
 	 *
 	 * This variable is used to differentiate connected DualSense controllers, enabling the system

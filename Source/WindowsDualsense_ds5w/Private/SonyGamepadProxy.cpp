@@ -15,6 +15,28 @@ bool USonyGamepadProxy::DeviceIsConnected(int32 ControllerId)
 	return true;
 }
 
+EDeviceType USonyGamepadProxy::GetDeviceType(int32 ControllerId)
+{
+	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
+	if (!Gamepad)
+	{
+		return EDeviceType::NotFound;
+	}
+
+	return Gamepad->GetDeviceType();
+}
+
+EDeviceConnection USonyGamepadProxy::GetConnectionType(int32 ControllerId)
+{
+	ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryInstance(ControllerId);
+	if (!Gamepad)
+	{
+		return EDeviceConnection::Unrecognized;
+	}
+
+	return Gamepad->GetConnectionType();
+}
+
 bool USonyGamepadProxy::DeviceReconnect(int32 ControllerId)
 {
 	if (const ISonyGamepadInterface* Gamepad = UDeviceContainerManager::Get()->GetLibraryOrReconnect(ControllerId); !Gamepad)

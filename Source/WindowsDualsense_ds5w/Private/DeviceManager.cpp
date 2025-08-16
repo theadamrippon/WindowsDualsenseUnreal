@@ -60,12 +60,16 @@ void DeviceManager::Tick(float DeltaTime)
 			continue;
 		}
 
-		FString ContextDrive = TEXT("DualShock");
-		if (ISonyGamepadTriggerInterface* IsDualSense = Cast<ISonyGamepadTriggerInterface>(Gamepad->Get()); IsDualSense)
+		FString ContextDrive = TEXT("DualSense");
+		if (Gamepad->GetDeviceType() == EDeviceType::DualShock4)
 		{
-			ContextDrive = TEXT("DualSense");
+			ContextDrive = TEXT("DualShock4");
 		}
-		
+		if (Gamepad->GetDeviceType() == EDeviceType::DualSenseEdge)
+		{
+			ContextDrive = TEXT("DualSenseEdge");
+		}
+	
 		FInputDeviceScope InputScope(this, TEXT("DeviceManager"), Device.GetId(), ContextDrive);
 		if (!Gamepad->UpdateInput(MessageHandler, UserId, Device))
 		{

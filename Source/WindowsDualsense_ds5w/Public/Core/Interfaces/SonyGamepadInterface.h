@@ -60,6 +60,20 @@ public:
 	virtual bool IsConnected() = 0;
 
 	/**
+	 * Retrieves the type of the device.
+	 *
+	 * @return The type of the device as an EDeviceType enumeration.
+	 */
+	virtual EDeviceType GetDeviceType() = 0;
+
+	/**
+	 * Retrieves the connection type of the device.
+	 *
+	 * @return The connection type of the device as an EDeviceConnection enumeration.
+	 */
+	virtual EDeviceConnection GetConnectionType() = 0;
+
+	/**
 	 * Configures device settings for the Sony gamepad interface.
 	 * This pure virtual function must be implemented by derived classes to apply
 	 * specific settings defined in the FDeviceSettings struct to the gamepad device.

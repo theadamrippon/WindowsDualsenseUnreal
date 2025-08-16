@@ -117,5 +117,4 @@ public:
 	 * @return The computed CRC32 hash value.
 	 */
 	static UINT32 Compute(const unsigned char* Buffer, size_t Len);
-	static UINT32 crc_32(unsigned char* buf, int length);
 };

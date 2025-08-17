@@ -87,7 +87,7 @@ The plugin now features audio-based vibration support, enabling controller vibra
 
 ![Unreal Editor](Images/PlayersConnected.png)
 
-# Example of using DualSense effects via C++
+# Example using C++
 
 >NOTE: Support for **DualShock 4** controllers is still under development.  
 Some features may be incomplete or unavailable in the current version.

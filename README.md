@@ -76,165 +76,7 @@ The plugin now features audio-based vibration support, enabling controller vibra
 
 ![Unreal Editor](Images/AudioBased.png)
 
-# Example of using DualSense effects via C++
 
-### Trigger effects
-```
-MyClass::MyClass()
-{
-	/**
-	 * Triggers a haptic feedback effect for an automatic gun using the DualSense controller.
-	 *
-	 * @param ControllerId The ID of the controller to apply the effect on.
-	 * @param BeginStrength The starting vibration strength of the trigger effect. If invalid, a default value of 8 is used.
-	 * @param MiddleStrength The middle vibration strength of the trigger effect. If invalid, a default value of 8 is used.
-	 * @param EndStrength The ending vibration strength of the trigger effect. If invalid, a default value of 8 is used.
-	 * @param Hand The controller hand (left or right) to which the effect is applied.
-	 * @param KeepEffect Whether to keep the effect active continuously.
-	 */
-	UDualSenseProxy::AutomaticGun(0, 0, 0, 8, EControllerHand::Left, true);
-
-	/**
-	 * Configures a weapon effect on the DualSense controller using specified parameters.
-	 *
-	 * @param ControllerId The identifier for the target DualSense controller.
-	 * @param StartPosition The starting position of the effect in the trigger. The value should be validated and within the range of allowed positions.
-	 * @param EndPosition The ending position of the effect in the trigger. The value should be validated and within the range of allowed positions.
-	 * @param Strength The strength of the weapon effect. The value should be validated and within the range of allowed strengths.
-	 * @param Hand Specifies which controller hand (left or right) should be affected by the weapon effect.
-	 */
-	UDualSenseProxy::Weapon(0, 0, 0, 8, EControllerHand::AnyHand);
-
-	/**
-	 * @brief Triggers a galloping vibration effect on a DualSense controller.
-	 *
-	 * This function sets up and activates a galloping vibration pattern by defining
-	 * the movement positions, associated vibration intensity, frequency, and the hand
-	 * where the effect plays.
-	 *
-	 * @param ControllerId The ID of the controller to apply the effect.
-	 * @param StartPosition The initial position of the galloping effect.
-	 * @param EndPosition The final position of the galloping effect.
-	 * @param FirstFoot The intensity for the first "foot" step in the galloping effect. 
-	 * @param SecondFoot The intensity for the second "foot" step in the galloping effect.
-	 * @param Frequency The frequency at which the galloping effect repeats.
-	 * @param Hand Specifies whether the effect is applied to the left or right hand.
-	 */
-	UDualSenseProxy::Galloping(0, 2, 5, 2, 5, 0.005, EControllerHand::Left);
-
-	/**
-	 * Applies a resistance effect to the trigger of a PlayStation DualSense controller.
-	 *
-	 * This method configures the specified trigger to provide resistance feedback based on
-	 * the given start position, end position, and strength parameters. The effect is applied
-	 * to the controller defined by the ControllerId and the trigger specified using the Hand parameter.
-	 *
-	 * @param ControllerId The identifier of the controller to apply the resistance effect.
-	 * @param StartPosition The starting position of the resistance zone within the trigger's range. Value must be between 0 and 8.
-	 * @param EndPosition The ending position of the resistance zone within the trigger's range. Value must be between 0 and 8.
-	 * @param Strength The strength of the resistance effect. Value must be between 0 and 8, with higher values indicating stronger resistance.
-	 * @param Hand The trigger to apply the effect to, specified as EControllerHand (e.g., Left or Right).
-	 */
-	UDualSenseProxy::Resistance(0, 1, 8, 8, EControllerHand::Right);
-	
-}
-```
-### Example reset effects
-```
-MyClass::MyClass()
-{
-	/**
-	 * Stops all trigger effects currently active for the specified DualSense controller.
-	 *
-	 * @param ControllerId The ID of the DualSense controller for which to stop all trigger effects.
-	 */
-	UDualSenseProxy::StopAllTriggersEffects(0);
-
-	/**
-	 * Stops the trigger effect on a specific controller for the specified hand.
-	 *
-	 * @param ControllerId The unique identifier of the controller for which the trigger effect should be stopped.
-	 * @param HandStop Specifies which hand's trigger effect (left or right) should be stopped.
-	 */
-	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Left);
-	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Right);
-	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::AnyHand);
-}
-```
->NOTE: Support for **DualShock 4** controllers is still under development.  
-Some features may be incomplete or unavailable in the current version.
-
-### Configs Commons (DualSense) and (DualShock 4)
-```
-    /**
-	 * Checks if the DualSense or DualShock device with the specified Controller ID is connected.
-	 *
-	 * @param ControllerId The ID of the controller to check for connectivity.
-	 * @return True if the DualSense or DualShock  device is connected, false otherwise.
-	 */
-	USonyGamepadProxy::DeviceIsConnected(int32 ControllerId);
-
-	/**
-	 * Attempts to reconnect a DualSense or DualShock controller based on the given controller ID.
-	 * If the controller is successfully reconnected, the operation returns true;
-	 * otherwise, it returns false.
-	 *
-	 * @param ControllerId The ID of the controller to reconnect.
-	 * @return Returns true if the controller was successfully reconnected, false otherwise.
-	 */
-	USonyGamepadProxy::DeviceReconnect(int32 ControllerId);
-
-	/**
-	 * Disconnects the DualSense or DualShock device associated with the given Controller ID.
-	 * This method removes the library instance associated with the specified controller.
-	 *
-	 * @param ControllerId The ID of the DualSense or DualShock or DualShock controller to be disconnected.
-	 * @return true if the disconnection was initiated successfully.
-	 */
-	USonyGamepadProxy::DeviceDisconnect(int32 ControllerId);
-
-	/**
-	 * Retrieves the battery level of the DualSense or DualShock controller for the specified controller ID.
-	 *
-	 * This method uses the DualSense or DualShock library instance associated with the provided controller ID
-	 * to fetch the battery level. If the library instance is not found, the method returns 0.0f.
-	 *
-	 * @param ControllerId The ID of the DualSense or DualShock controller to query.
-	 * @return The battery level of the controller as a float. Returns 0.0f if the library instance cannot be retrieved.
-	 */
-	USonyGamepadProxy::LevelBatteryDevice(int32 ControllerId);
-
-	/**
-	 * Updates the LED color effects on a DualSense controller using the specified color.
-	 *
-	 * @param ControllerId The identifier of the controller whose LED color will be updated.
-	 * @param Color The color to set on the controller's LED.
-	 */
-	USonyGamepadProxy::LedColorEffects(int32 ControllerId, FColor Color);
-
-	/**
-	 * Controls the LED player light effects on the DualSense controller.
-	 *
-	 * @param ControllerId The identifier for the target controller.
-	 * @param Value The LED pattern enum specifying the LED configuration for the player indicator (e.g., Off, Player One, Player Two, etc.).
-	 * @param Brightness The brightness level of the LED lights specified by an enum (e.g., Low, Medium, High).
-	 */
-	USonyGamepadProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness);
-
-	/**
-	 * Controls the LED and microphone visual effects on a DualSense controller.
-	 *
-	 * @param ControllerId The ID of the DualSense controller to be affected.
-	 * @param Value The desired LED and microphone effect to apply, represented as an ELedMicEnum value.
-	 */
-	USonyGamepadProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value);
-
-```
-### Vibrations
-``` 
-    // Vibrations example
-    PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
-```
 ## Multiple players with multiple controllers
 
 ### In your GameMode, add the players.
@@ -244,6 +86,40 @@ Some features may be incomplete or unavailable in the current version.
 ### After that, connect the players to the controllers.
 
 ![Unreal Editor](Images/PlayersConnected.png)
+
+# Example of using DualSense effects via C++
+
+>NOTE: Support for **DualShock 4** controllers is still under development.  
+Some features may be incomplete or unavailable in the current version.
+
+### USonyGamepadProxy (DualSense) and (DualShock 4)
+```
+	USonyGamepadProxy::DeviceIsConnected(int32 ControllerId);
+	USonyGamepadProxy::DeviceReconnect(int32 ControllerId);
+	USonyGamepadProxy::DeviceDisconnect(int32 ControllerId);
+	USonyGamepadProxy::LevelBatteryDevice(int32 ControllerId);
+	USonyGamepadProxy::LedColorEffects(int32 ControllerId, FColor Color);
+	USonyGamepadProxy::LedPlayerEffects(int32 ControllerId, ELedPlayerEnum Value, ELedBrightnessEnum Brightness);
+	USonyGamepadProxy::LedMicEffects(int32 ControllerId, ELedMicEnum Value);
+	
+	PlayDynamicForceFeedback(0.5f, 3.f, true, true, true, true);
+```
+
+### UDualSenseProxy Trigger effects
+```
+	UDualSenseProxy::AutomaticGun(0, 0, 0, 8, EControllerHand::Left, true);
+	UDualSenseProxy::Weapon(0, 0, 0, 8, EControllerHand::AnyHand);
+	UDualSenseProxy::Galloping(0, 2, 5, 2, 5, 0.005, EControllerHand::Left);
+	UDualSenseProxy::Resistance(0, 1, 8, 8, EControllerHand::Right);
+```
+### UDualSenseProxy Example reset effects
+```
+	UDualSenseProxy::StopAllTriggersEffects(0);
+	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Left);
+	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::Right);
+	UDualSenseProxy::StopTriggerEffect(0, EControllerHand::AnyHand);
+```
+
 
 # Install on FAB official page plugin ![GitHub Release Download Plugin](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
 

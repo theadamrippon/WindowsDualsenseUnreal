@@ -18,6 +18,7 @@ class WINDOWSDUALSENSE_DS5W_API DeviceManager final : public IInputDevice, publi
 {
 public:
 	virtual ~DeviceManager() override;
+	
 	/** 
 	 * Creates a new DualSense input device instance
 	 * @param InMessageHandler Message handler for input events
@@ -153,6 +154,7 @@ public:
 		const FPlatformUserId& User = FPlatformMisc::GetPlatformUserForUserIndex(Device.GetId());
 		DeviceMapper->Get().Internal_MapInputDeviceToUser(Device, User, EInputDeviceConnectionState::Connected);
 	}
+	
 	/**
 	 * Unmaps the specified input device from its associated user and marks its connection state as disconnected.
 	 *

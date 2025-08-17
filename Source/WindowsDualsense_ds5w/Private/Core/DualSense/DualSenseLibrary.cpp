@@ -14,7 +14,7 @@
 bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
-	UE_LOG(LogTemp, Log, TEXT("Initializing device model (%s)"), Context.DeviceType == Edge ? TEXT("DualSense Edge") : TEXT("DualSense Default"));
+	UE_LOG(LogTemp, Log, TEXT("Initializing device model (%s)"), Context.DeviceType == DualSenseEdge ? TEXT("DualSense Edge") : TEXT("DualSense Default"));
 	return true;
 }
 

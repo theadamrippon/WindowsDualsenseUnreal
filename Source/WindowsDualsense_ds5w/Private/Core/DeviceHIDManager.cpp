@@ -10,7 +10,6 @@
 #include <hidsdi.h>
 #include <setupapi.h>
 #include "Core/Structs/FDeviceContext.h"
-#include "Helpers/ValidateHelpers.h"
 #include "Windows/HideWindowsPlatformTypes.h"
 
 const UINT32 UDeviceHIDManager::CRCSeed = 0xeada2d49;
@@ -94,12 +93,12 @@ bool UDeviceHIDManager::FindDevices(TArray<FDeviceContext>& Devices)
 						{
 							case 0x05C4:
 							case 0x09CC:
-								Context.DeviceType = DualShock;
+								Context.DeviceType = DualShock4;
 								break;
 							case 0x0DF2:
-								Context.DeviceType = Edge;
+								Context.DeviceType = DualSenseEdge;
 								break;
-							default: Context.DeviceType = Default;
+							default: Context.DeviceType = DualSense;
 						}
 						
 						Context.IsConnected = true;
@@ -167,14 +166,14 @@ bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 
 	HidD_FlushQueue(DeviceContext->Handle);
 	
-	if (DeviceContext->ConnectionType == Bluetooth && DeviceContext->DeviceType == DualShock)
+	if (DeviceContext->ConnectionType == Bluetooth && DeviceContext->DeviceType == EDeviceType::DualShock4)
 	{
 		DWORD BytesRead = 0;
 		if (!ReadFile(DeviceContext->Handle, &DeviceContext->BufferDS4, 547, &BytesRead,
 					  nullptr))
 		{
 			const DWORD Error = GetLastError();
-			FString Device = DeviceContext->DeviceType == DualShock ? TEXT("DualShock") : TEXT("DualSense");
+			FString Device = DeviceContext->DeviceType == DualShock4 ? TEXT("DualShock") : TEXT("DualSense");
 			UE_LOG(LogTemp, Warning, TEXT("Erro read %s: size buffer %llu, Erro: %d"), *Device, sizeof(DeviceContext->BufferDS4), Error);
 
 			DeviceContext->Handle = INVALID_HANDLE_VALUE;
@@ -190,7 +189,7 @@ bool UDeviceHIDManager::GetDeviceInputState(FDeviceContext* DeviceContext)
 				  nullptr))
 	{
 		const DWORD Error = GetLastError();
-		FString Device = DeviceContext->DeviceType == DualShock ? TEXT("DualShock") : TEXT("DualSense");
+		FString Device = DeviceContext->DeviceType == DualShock4 ? TEXT("DualShock") : TEXT("DualSense");
 		UE_LOG(LogTemp, Warning, TEXT("Erro read %s: size buffer %llu, Erro: %d"), *Device, sizeof(DeviceContext->Buffer), Error);
 
 		DeviceContext->Handle = INVALID_HANDLE_VALUE;
@@ -227,7 +226,7 @@ void UDeviceHIDManager::OutputDualShock(FDeviceContext* DeviceContext)
 	if (DeviceContext->ConnectionType == Bluetooth)
 	{
 		Output[0] = 0x20;
-		Output[1] = 0x07;	
+		Output[1] = 0x07;
 	}
 	else
 	{
@@ -325,20 +324,20 @@ void UDeviceHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTrigger
 {
 	Trigger[0x0] = Effect.Mode;
 
-	if (Effect.Mode == 0x01)
+	if (Effect.Mode == 0x01) // Continuous Resistance
 	{
 		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
 		Trigger[0x2] = ((Effect.Strengths.StrengthZones >> 0) & 0xFF);
 	}
 
-	if (Effect.Mode == 0x02)
+	if (Effect.Mode == 0x02) // Sample Bow
 	{
 		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
 		Trigger[0x2] = ((Effect.Strengths.ActiveZones >> 8) & 0xFF);
 		Trigger[0x3] = ((Effect.Strengths.StrengthZones >> 8) & 0xFF);
 	}
 
-	if (Effect.Mode == 0x21)
+	if (Effect.Mode == 0x21) // Resistance
 	{
 		const uint64_t LeftTriggerStrengthZones = Effect.Strengths.StrengthZones;
 		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
@@ -373,7 +372,7 @@ void UDeviceHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTrigger
 			Trigger[0x3 + i] = (Effect.Strengths.StrengthZones >> (8 * i)) & 0xFF;
 	}
 
-	if (Effect.Mode == 0x26)
+	if (Effect.Mode == 0x26) // Automatic Gun
 	{
 		const uint64_t LeftTriggerStrengthZones = Effect.Strengths.StrengthZones;
 		Trigger[0x1] = ((Effect.Strengths.ActiveZones >> 0) & 0xFF);
@@ -394,7 +393,7 @@ void UDeviceHIDManager::SetTriggerEffects(unsigned char* Trigger, FHapticTrigger
 		Trigger[0x5] = Effect.Strengths.Period;
 	}
 
-	if (Effect.Mode == 0x0) // Machine
+	if (Effect.Mode == 0x0) // Reset
 	{
 		Trigger[0x1] = 0x0;
 		Trigger[0x2] = 0x0;

@@ -15,12 +15,13 @@
  * @value Edge Represents the Edge device type.
  * @value DualShock Represents the DualShock device type.
  */
-UENUM()
+UENUM(Blueprintable)
 enum EDeviceType: uint8
 {
-	Default UMETA(DisplayName = "DualSense Default"),
-	Edge UMETA(DisplayName = "DualSense Edge"),
-	DualShock UMETA(DisplayName = "DualShock")
+	DualSense UMETA(DisplayName = "DualSense Default"),
+	DualSenseEdge UMETA(DisplayName = "DualSense Edge"),
+	DualShock4 UMETA(DisplayName = "DualShock 4"),
+	NotFound UMETA(DisplayName = "Not Found Device")
 };
 
 /**
@@ -31,7 +32,7 @@ enum EDeviceType: uint8
  * @value Bluetooth Represents a Bluetooth connection.
  * @value Unknown Represents an unknown or unrecognized connection type.
  */
-UENUM()
+UENUM(Blueprintable)
 enum EDeviceConnection: uint8
 {
 	Usb UMETA(DisplayName = "USB"),

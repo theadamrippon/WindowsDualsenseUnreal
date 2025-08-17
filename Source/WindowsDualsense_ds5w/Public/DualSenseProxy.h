@@ -35,48 +35,6 @@ public:
 	 */
 	UFUNCTION(BlueprintCallable, Category = "DualSense Settings")
 	static void DeviceSettings(int32 ControllerId, FDualSenseFeatureReport Settings);
-	//
-	// /**
-	//  * Checks if the DualSense device with the specified Controller ID is connected.
-	//  *
-	//  * @param ControllerId The ID of the controller to check for connectivity.
-	//  * @return True if the DualSense device is connected, false otherwise.
-	//  */
-	// UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	// static bool DeviceIsConnected(int32 ControllerId);
-	//
-	// /**
-	//  * Attempts to reconnect a DualSense controller based on the given controller ID.
-	//  * If the controller is successfully reconnected, the operation returns true;
-	//  * otherwise, it returns false.
-	//  *
-	//  * @param ControllerId The ID of the controller to reconnect.
-	//  * @return Returns true if the controller was successfully reconnected, false otherwise.
-	//  */
-	// UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	// static bool DeviceReconnect(int32 ControllerId);
-	//
-	// /**
-	//  * Disconnects the DualSense device associated with the given Controller ID.
-	//  * This method removes the library instance associated with the specified controller.
-	//  *
-	//  * @param ControllerId The ID of the DualSense controller to be disconnected.
-	//  * @return true if the disconnection was initiated successfully.
-	//  */
-	// UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	// static bool DeviceDisconnect(int32 ControllerId);
-
-	// /**
-	//  * Retrieves the battery level of the DualSense controller for the specified controller ID.
-	//  *
-	//  * This method uses the DualSense library instance associated with the provided controller ID
-	//  * to fetch the battery level. If the library instance is not found, the method returns 0.0f.
-	//  *
-	//  * @param ControllerId The ID of the DualSense controller to query.
-	//  * @return The battery level of the controller as a float. Returns 0.0f if the library instance cannot be retrieved.
-	//  */
-	// UFUNCTION(BlueprintCallable, Category = "DualSense Status")
-	// static float LevelBatteryDevice(int32 ControllerId);
 
 	/**
 	 * Sets the vibration for a DualSense controller based on audio envelopes and other parameters.
@@ -121,13 +79,14 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void AutomaticGun(
 		int32 ControllerId,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Begin Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 BeginStrength,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Middle Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 MiddleStrength,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "End Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndStrength,
-		EControllerHand Hand, bool KeepEffect
+		EControllerHand Hand,
+		bool KeepEffect
 	);
 
 	/**
@@ -142,11 +101,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void SetFeedback(
 		int32 ControllerId,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Begin Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 BeginStrength,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Middle Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 MiddleStrength,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "End Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndStrength,
 		EControllerHand Hand
 	);
@@ -167,11 +126,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Resistance(
 		int32 ControllerId,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Start Position min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 StartPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "End Position min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 Strength,
 		EControllerHand Hand
 	);
@@ -187,9 +146,9 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void ContinuousResistance(
 		int32 ControllerId,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Start Position min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 StartPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Strength min: 0 max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 Strength,
 		EControllerHand Hand
 	);
@@ -241,11 +200,11 @@ public:
 		int32 StartPosition,
 		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "First Foot min: 2 max: 6", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 FirstFoot,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Second Foot min: (Greater FirstFoot) max: 7", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 SecondFoot,
-		UPARAM(meta = (ClampMin = "0.01", ClampMax = "1.0", UIMin = "0.01", UIMax = "1.0"))
+		UPARAM(DisplayName = "Frequency Example: 0.015", meta = (ClampMin = "0.001", ClampMax = "1.0", UIMin = "0.001", UIMax = "1.0"))
 		float Frequency,
 		EControllerHand Hand
 	);
@@ -292,11 +251,11 @@ public:
 	UFUNCTION(BlueprintCallable, Category = "DualSense Effects")
 	static void Weapon(
 		int32 ControllerId,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Start Position min: 2", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 StartPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "End Position max: 7", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 EndPosition,
-		UPARAM(meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
+		UPARAM(DisplayName = "Strength max: 8", meta = (ClampMin = "0", ClampMax = "8", UIMin = "0", UIMax = "8"))
 		int32 Strength,
 		EControllerHand Hand
 	);

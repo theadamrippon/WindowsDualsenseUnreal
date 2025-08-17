@@ -1,15 +1,15 @@
-# Windows Dualsense for Unreal Engine version 5.2 ~ 5.6
+# Windows DualSense & DualShock 4 for Unreal Engine version 5.2 ~ 5.6
 
 ![GitHub Release](https://img.shields.io/github/v/release/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub License](https://img.shields.io/github/license/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub contributors](https://img.shields.io/github/contributors/rafaelvaloto/WindowsDualsenseUnreal)
 ![GitHub Issues or Pull Requests](https://img.shields.io/github/issues/rafaelvaloto/WindowsDualsenseUnreal)
 
-### **Plugin with full support for the DualSense PS5 controller in Unreal Engine versions  5.2 ~ 5.6, for Windows platforms. No configuration needed**
+### **Plugin with full support for DualSense (PS5) and DualShock 4 (PS4) controllers in Unreal Engine versions 5.2 ~ 5.6, for Windows platforms. No configuration needed.**
 
-### The controller's customization commands, such as vibration, haptic feedback, and LEDs, can be implemented directly via C++ or Blueprints. Below, we provide examples of both implementations.
+### All controller customization features—such as vibration, haptic feedback, and LEDs—can be implemented directly in C++ or Blueprints. Below, we provide examples of both implementations.
 
-### Supports settings of triggers, haptic feedback triggers, unreal native force feedback blueprint, vibrations, leds, battery level, gyroscope, accelerometer etc..
+### Supports advanced settings for triggers, haptic feedback, native Unreal force feedback Blueprint integration, vibrations, LEDs, battery level, gyroscope, accelerometer, and more.
 
 ### [Links for installation](#Install-on-FAB-official-page-plugin-)
 
@@ -28,6 +28,8 @@ Use vibration mode `EDualSenseDeviceFeatureReport::HapticSoftRumble` when connec
 
 If you are using Bluetooth, use `EDualSenseDeviceFeatureReport::DefaultRumble`. In this case, you will need to configure audio-based vibration manually as shown in the [Audio-Based Vibration Support](#audio-based-vibration-support) section.
 
+Only Usb Conneciton
+![Unreal Editor](Images/SoftSettings.png)
 
 ### Soft Rumble (Motor Force Reduction)
 To provide a softer, less intense vibration, you can reduce the force of the vibration motors. This setting is useful for creating subtle feedback or making long play sessions more comfortable.
@@ -37,20 +39,37 @@ Open the settings menu in your Blueprint graph to adjust vibration mode, toggle 
 
 ![Unreal Editor](Images/Settings.png)
 
-### Basic example to check connection, reconnect or disconnect device.
+### Basic example to check connection or reconnect
 
-![Unreal Editor](Images/ReconnectAndDisconnectDevice.png)
+![Unreal Editor](Images/ConnectCheck.png)
 
-### Basic example apply LEDs to the DualSense.
+### Disconnect device
 
-![Unreal Editor](Images/Basic.png)
+![Unreal Editor](Images/Disconnect.png)
 
-### Haptic trigger feedback
+### Gamepad status
 
-![Unreal Editor](Images/HapticFeedbakc.png)
+![Unreal Editor](Images/GamePadStatus.png)
 
-### Battery level, it's recommended to use a timer to avoid drops in FPS.
-![Unreal Editor](Images/BatteryCharge.png)
+### Basic example apply Lightbar
+
+![Unreal Editor](Images/Lightbar.png)
+
+![Unreal Editor](Images/PlayerLeds.png)
+
+### Vibration force feedback
+
+![Unreal Editor](Images/Vibrations.png)
+
+### Trigger effects - DualSense 
+
+![Unreal Editor](Images/AutomaticGun.png)
+
+![Unreal Editor](Images/Weapon.png)
+
+![Unreal Editor](Images/Resistance.png)
+
+![Unreal Editor](Images/Galloping.png)
 
 ### Audio-Based Vibration Support
 The plugin now features audio-based vibration support, enabling controller vibrations to react dynamically to in-game audio signals. This provides a more immersive and responsive user experience.

@@ -88,9 +88,9 @@ public:
 	static void LedColorEffects(
 		int32 ControllerId,
 		FColor Color,
-		UPARAM(meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) LED brightness transition time, in seconds."))
+		UPARAM(DisplayName = "(DualShock 4) LED brightness transition time min: 0.0f max: 2.5f", meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) LED brightness transition time, in seconds."))
 		const float BrightnessTime = 0.0f,
-		UPARAM(meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) Toggle transition time, in seconds."))
+		UPARAM(DisplayName = "(DualShock 4) Toggle transition time min: 0.0f max: 2.5f",  meta = (ClampMin = "0.0", ClampMax = "2.5", UIMin = "0.0", UIMax = "2.5", ToolTip = "(DualShock) Toggle transition time, in seconds."))
 		const float ToogleTime = 0.0f
 	);
 

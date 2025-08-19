@@ -66,7 +66,7 @@ void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
 
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::Off)
 	{
-		HidOutput->Audio.Mode = 0x31;
+		HidOutput->Audio.Mode = 0x05;
 	}
 	
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
@@ -76,7 +76,7 @@ void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
 	
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::Off && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
 	{
-		HidOutput->Audio.Mode = 0x05;
+		HidOutput->Audio.Mode = 0x31;
 	}
 	
 	SendOut();

@@ -123,7 +123,7 @@ UENUM(BlueprintType)
 enum class EDualSenseDeviceFeatureReport : uint8
 {
 	Off = 0,
-	DefaultRumble = 0xFF UMETA(DisplayName = "Default Rumble"),
+	DefaultRumble = 0xFF UMETA(DisplayName = "Default"),
 	HapticSoftRumble = 0xFC UMETA(DisplayName = "Audio based vibration")
 };
 

@@ -109,22 +109,22 @@ enum class EDualSenseAudioFeatureReport : uint8
 };
 
 /**
- * @brief Enum class representing feature report states for a DualSense device.
+ * @brief Enum class representing the feature report options for a DualSense device.
  *
- * This enum class is used to define different modes or states of operational features
- * for DualSense devices, such as vibration or haptic feedback behaviors.
+ * This enum class defines the various modes that can be used for configuring the DualSense device's
+ * haptic feedback and vibration functionalities.
  *
  * Enum values:
- * - Off: Represents the "Off" state, indicating no active feature.
- * - DefaultRumble: Represents the default rumble behavior of the device.
- * - HapticSoftRumble: Represents a softer haptic feedback mode, often used for advanced vibration control.
+ * - Off: Disables all vibration and haptic feedback.
+ * - DefaultRumble: Activates the default vibration mode.
+ * - HapticSoftRumble: Enables audio-based vibration for a softer haptic experience.
  */
 UENUM(BlueprintType)
 enum class EDualSenseDeviceFeatureReport : uint8
 {
 	Off = 0,
-	DefaultRumble = 0xFF UMETA(DisplayName = "Default Rumble"),
-	HapticSoftRumble = 0xFC UMETA(DisplayName = "Haptic Soft Rumble")
+	DefaultRumble = 0xFF UMETA(DisplayName = "Default"),
+	HapticSoftRumble = 0xFC UMETA(DisplayName = "Audio based vibration")
 };
 
 /**

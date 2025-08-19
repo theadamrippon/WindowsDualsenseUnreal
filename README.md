@@ -29,7 +29,7 @@ Use vibration mode `EDualSenseDeviceFeatureReport::HapticSoftRumble` when connec
 If you are using Bluetooth, use `EDualSenseDeviceFeatureReport::DefaultRumble`. In this case, you will need to configure audio-based vibration manually as shown in the [Audio-Based Vibration Support](#audio-based-vibration-support) section.
 
 Only Usb Conneciton
-![Unreal Editor](Images/SoftSettings.png)
+![Unreal Editor](Images/VibrationSettings.png)
 
 ### Soft Rumble (Motor Force Reduction)
 To provide a softer, less intense vibration, you can reduce the force of the vibration motors. This setting is useful for creating subtle feedback or making long play sessions more comfortable.

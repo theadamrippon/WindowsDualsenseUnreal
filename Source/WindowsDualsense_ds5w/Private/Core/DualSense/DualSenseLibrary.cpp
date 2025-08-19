@@ -14,6 +14,7 @@
 bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 {
 	HIDDeviceContexts = Context;
+	StopAll();
 	UE_LOG(LogTemp, Log, TEXT("Initializing device model (%s)"), Context.DeviceType == DualSenseEdge ? TEXT("DualSense Edge") : TEXT("DualSense Default"));
 	return true;
 }
@@ -21,9 +22,9 @@ bool UDualSenseLibrary::InitializeLibrary(const FDeviceContext& Context)
 void UDualSenseLibrary::ShutdownLibrary()
 {
 	ButtonStates.Reset();
-	UE_LOG(LogTemp, Log, TEXT("UDualSenseLibrary ShutdownLibrary()"));
 	CloseHandle(HIDDeviceContexts.Handle);
 	UDeviceHIDManager::FreeContext(&HIDDeviceContexts);
+	UE_LOG(LogTemp, Log, TEXT("UDualSenseLibrary ShutdownLibrary()"));
 }
 
 void UDualSenseLibrary::Reconnect()
@@ -65,7 +66,7 @@ void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
 
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::Off)
 	{
-		HidOutput->Audio.Mode = 0x31;
+		HidOutput->Audio.Mode = 0x05;
 	}
 	
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::On && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
@@ -75,7 +76,7 @@ void UDualSenseLibrary::Settings(const FDualSenseFeatureReport& Settings)
 	
 	if (Settings.AudioHeadset == EDualSenseAudioFeatureReport::Off && Settings.AudioSpeaker == EDualSenseAudioFeatureReport::On)
 	{
-		HidOutput->Audio.Mode = 0x05;
+		HidOutput->Audio.Mode = 0x31;
 	}
 	
 	SendOut();
@@ -110,24 +111,18 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		// Analogs
 		const float LeftAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x00] - 128));
 		const float LeftAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x01] - 127) * -1);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId,
-		                                          LeftAnalogX / 128.0f);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId, InputDeviceId,
-		                                          LeftAnalogY / 128.0f);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogX, UserId, InputDeviceId, LeftAnalogX / 128.0f);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftAnalogY, UserId, InputDeviceId, LeftAnalogY / 128.0f);
 
 		const float RightAnalogX = static_cast<char>(static_cast<short>(HIDInput[0x02] - 128));
 		const float RightAnalogY = static_cast<char>(static_cast<short>(HIDInput[0x03] - 127) * -1);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogX, UserId, InputDeviceId,
-		                                          RightAnalogX / 128.0f);
-		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId,
-		                                          RightAnalogY / 128.0f);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogX, UserId, InputDeviceId, RightAnalogX / 128.0f);
+		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightAnalogY, UserId, InputDeviceId, RightAnalogY / 128.0f);
 		
 		const float TriggerL = HIDInput[0x04] / 256.0f;
 		const float TriggerR = HIDInput[0x05] / 256.0f;
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::LeftTriggerAnalog, UserId, InputDeviceId, TriggerL);
 		InMessageHandler.Get().OnControllerAnalog(FGamepadKeyNames::RightTriggerAnalog, UserId, InputDeviceId, TriggerR);
-
-		
 
 		uint8_t ButtonsMask = HIDInput[0x07] & 0xF0;
 		const bool bCross = ButtonsMask & BTN_CROSS;
@@ -320,8 +315,7 @@ bool UDualSenseLibrary::UpdateInput(const TSharedRef<FGenericApplicationMessageH
 		// Actions
 		SetHasPhoneConnected(HIDInput[0x35] & 0x01);
 		SetLevelBattery(((HIDInput[0x34] & 0x0F) * 100) / 8, (HIDInput[0x35] & 0x00), (HIDInput[0x36] & 0x20));
-
-		/** UValidateHelpers::PrintBufferAsHex(HIDInput, 78); */
+		
 		return true;
 	}
 
@@ -691,26 +685,36 @@ void UDualSenseLibrary::StopTrigger(const EControllerHand& Hand)
 
 void UDualSenseLibrary::StopAll()
 {
+	if (HIDDeviceContexts.ConnectionType == Bluetooth)
+	{
+		FOutputContext* HidOutput = &HIDDeviceContexts.Output;
+		HidOutput->Feature.VibrationMode = 0xFF;
+		HidOutput->Feature.FeatureMode = 0x1 | 0x2 | 0x4 | 0x8 | 0x10 | 0x40;
+		SendOut();
+	}
+
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->PlayerLed.Brightness = 0x02;
+	HidOutput->Feature.VibrationMode = 0xFF;
+	HidOutput->Feature.FeatureMode = 0xF7;
+	HidOutput->PlayerLed.Brightness = 0x00;
 	if (ControllerID == 0)
 	{
 		HidOutput->Lightbar = {0, 0, 255, 255};
 		HidOutput->PlayerLed.Led = static_cast<unsigned char>(ELedPlayerEnum::One);
 	}
-
+	
 	if (ControllerID == 1)
 	{
 		HidOutput->Lightbar = {255, 0, 0, 255};
 		HidOutput->PlayerLed.Led = static_cast<unsigned char>(ELedPlayerEnum::Two);
 	}
-
+	
 	if (ControllerID == 2)
 	{
 		HidOutput->Lightbar = {0, 255, 0, 255};
 		HidOutput->PlayerLed.Led = static_cast<unsigned char>(ELedPlayerEnum::Three);
 	}
-
+	
 	if (ControllerID == 3)
 	{
 		HidOutput->Lightbar = {255, 255, 255, 255};

@@ -91,8 +91,15 @@ struct FDualSenseFeatureReport : public FFeatureReport
 	 *
 	 * Display Name: Soft haptic feedback, advanced vibrate
 	 */
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense Settings",
-		meta=(DisplayName = "Soft haptic feedback, adivanced vibrate"))
+	UPROPERTY(
+		EditAnywhere,
+		BlueprintReadWrite,
+		Category="DualSense Settings",
+		meta=(
+				DisplayName = "Enables vibration mode",
+				ToolTip = "Advanced vibration that are directly generated from real-time audio analysis for a more immersive haptic experience. Note: This feature is only supported when the controller is connected via USB."
+			)
+		)
 	EDualSenseDeviceFeatureReport VibrationMode;
 	
 	/**

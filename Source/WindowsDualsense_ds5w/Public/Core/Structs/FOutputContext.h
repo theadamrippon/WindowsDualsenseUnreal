@@ -288,7 +288,7 @@ struct FPlayerLed
 	 *
 	 * Modifications to this variable impact the LED brightness visible on the device.
 	 */
-	unsigned char Brightness = 0x02;
+	unsigned char Brightness = 0x00;
 };
 
 /**

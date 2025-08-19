@@ -10,6 +10,7 @@
 #include <hidsdi.h>
 #include <setupapi.h>
 #include "Core/Structs/FDeviceContext.h"
+#include "Helpers/ValidateHelpers.h"
 #include "Windows/HideWindowsPlatformTypes.h"
 
 const UINT32 UDeviceHIDManager::CRCSeed = 0xeada2d49;
@@ -263,7 +264,6 @@ void UDeviceHIDManager::OutputDualShock(FDeviceContext* DeviceContext)
 void UDeviceHIDManager::OutputDualSense(FDeviceContext* DeviceContext)
 {
 	const size_t Padding = DeviceContext->ConnectionType == Bluetooth ? 2 : 1;
-	
 	DeviceContext->BufferOutput[0] = DeviceContext->ConnectionType == Bluetooth ? 0x31 : 0x02;
 	if (DeviceContext->ConnectionType == Bluetooth)
 	{
@@ -286,7 +286,8 @@ void UDeviceHIDManager::OutputDualSense(FDeviceContext* DeviceContext)
 	}
 	Output[8] = HidOut->MicLight.Mode;
 	Output[36] = (HidOut->Feature.TriggerSoftnessLevel << 4) | (HidOut->Feature.SoftRumbleReduce & 0x0F);
-	Output[38] = (1 << 2);
+	Output[38] ^= (1 << 0);
+	Output[38] ^= (1 << 2);
 	Output[42] = HidOut->PlayerLed.Brightness;
 	Output[43] = HidOut->PlayerLed.Led;
 	Output[44] = HidOut->Lightbar.R;
@@ -295,7 +296,6 @@ void UDeviceHIDManager::OutputDualSense(FDeviceContext* DeviceContext)
 	
 	SetTriggerEffects(&Output[10], HidOut->RightTrigger);
 	SetTriggerEffects(&Output[21], HidOut->LeftTrigger);
-	
 	if (DeviceContext->ConnectionType == Bluetooth)
 	{
 		const UINT32 CrcChecksum = Compute(DeviceContext->BufferOutput, 74);

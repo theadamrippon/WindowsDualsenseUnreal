@@ -92,7 +92,7 @@ struct FDualSenseFeatureReport : public FFeatureReport
 	 * Display Name: Soft haptic feedback, advanced vibrate
 	 */
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="DualSense Settings",
-		meta=(DisplayName = "Soft haptic feedback, adivanced vibrate"))
+		meta=(DisplayName = "Advanced vibrate ( USB = )"))
 	EDualSenseDeviceFeatureReport VibrationMode;
 	
 	/**

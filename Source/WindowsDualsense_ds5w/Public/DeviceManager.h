@@ -212,12 +212,12 @@ private:
 	 * When enabled, this feature can improve application performance by
 	 * deferring resource loading until required.
 	 */
-	bool LazyLoading;
+	bool LazyLoading = false;
 	/**
 	 * Tracks the accumulated time or events between periodic polling operations.
 	 * This variable is typically used to manage timing or frequency of polling processes.
 	 */
-	float PollAccumulator;
+	float PollAccumulator = 0.0f;
 	/**
 	 * Defines the interval, in seconds, between periodic polling operations.
 	 * This variable determines how often certain tasks, such as device state checks

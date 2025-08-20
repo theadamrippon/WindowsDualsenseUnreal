@@ -726,25 +726,34 @@ void UDualSenseLibrary::StopAll()
 void UDualSenseLibrary::SetLightbar(FColor Color, float BrithnessTime, float ToggleTime)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->Lightbar.R = Color.R;
-	HidOutput->Lightbar.G = Color.G;
-	HidOutput->Lightbar.B = Color.B;
-	SendOut();
+	if ((HidOutput->Lightbar.R != Color.R) || (HidOutput->Lightbar.G != Color.G) || (HidOutput->Lightbar.B != Color.B))
+	{
+		HidOutput->Lightbar.R = Color.R;
+		HidOutput->Lightbar.G = Color.G;
+		HidOutput->Lightbar.B = Color.B;
+		SendOut();
+	}
 }
 
 void UDualSenseLibrary::SetPlayerLed(ELedPlayerEnum Led, ELedBrightnessEnum Brightness)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->PlayerLed.Led = static_cast<unsigned char>(Led);
-	HidOutput->PlayerLed.Brightness = static_cast<unsigned char>(Brightness);
-	SendOut();
+	if ((HidOutput->PlayerLed.Led != static_cast<unsigned char>(Led)) || (HidOutput->PlayerLed.Brightness != static_cast<unsigned char>(Brightness)))
+	{
+		HidOutput->PlayerLed.Led = static_cast<unsigned char>(Led);
+		HidOutput->PlayerLed.Brightness = static_cast<unsigned char>(Brightness);
+		SendOut();
+	}
 }
 
 void UDualSenseLibrary::SetMicrophoneLed(ELedMicEnum Led)
 {
 	FOutputContext* HidOutput = &HIDDeviceContexts.Output;
-	HidOutput->MicLight.Mode = static_cast<unsigned char>(Led);
-	SendOut();
+	if (HidOutput->MicLight.Mode != static_cast<unsigned char>(Led))
+	{
+		HidOutput->MicLight.Mode = static_cast<unsigned char>(Led);
+		SendOut();
+	}
 }
 
 void UDualSenseLibrary::SetTouch(const bool bIsTouch)

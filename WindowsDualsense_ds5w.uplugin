@@ -15,7 +15,6 @@
 	"Installed": true,
 	"EnabledByDefault": false,
 	"RequiresBuildPlatform": true,
-	"EngineVersion": "5.2.0",
 	"Modules": [
 		{
 			"Name": "WindowsDualsense_ds5w",

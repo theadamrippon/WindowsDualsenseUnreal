@@ -223,7 +223,7 @@ private:
 	 * This variable determines how often certain tasks, such as device state checks
 	 * or updates, are performed within the system.
 	 */
-	float PollInterval = 0.033f;
+	float PollInterval = 0.016f;
 	/**
 	 * Interface pointer to platform-specific input device mapper.
 	 * This variable facilitates the mapping of input devices to platform-specific functionalities,
